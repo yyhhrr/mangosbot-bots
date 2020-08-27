@@ -572,11 +572,11 @@ void PlayerbotFactory::InitSpells()
 
 void PlayerbotFactory::InitTalentsTree(bool incremental)
 {
-	uint32 specNo;
-	if (incremental == true)
-	{
-		specNo = sRandomPlayerbotMgr.GetValue(bot, "specNo") -1;
-	}
+    uint32 specNo = sRandomPlayerbotMgr.GetValue(bot, "specNo");
+    if (incremental && specNo)
+    {
+        specNo -=  1;
+    }
     else
     {
         uint32 point = urand(0, 100);
@@ -590,12 +590,9 @@ void PlayerbotFactory::InitTalentsTree(bool incremental)
 
     InitTalents(specNo);
 
-	if (bot->GetFreeTalentPoints()) {
-		InitTalents(urand(0, 2));
-	}
-	if (bot->GetFreeTalentPoints()) {
-		InitTalents(urand(0, 2));
-	}
+    if (bot->GetFreeTalentPoints()) {
+        InitTalents(2 - specNo);
+    }
 }
 
 
@@ -921,7 +918,7 @@ bool PlayerbotFactory::CanEquipItem(ItemPrototype const* proto, uint32 desiredQu
             (requiredLevel > level || requiredLevel < level - delta))
         return false;
 
-    for (uint32 gap = 60; gap <= 70; gap += 10)
+    for (uint32 gap = 60; gap <= 80; gap += 10)
     {
         if (level > gap && requiredLevel <= gap)
             return false;
@@ -932,11 +929,11 @@ bool PlayerbotFactory::CanEquipItem(ItemPrototype const* proto, uint32 desiredQu
 
 void PlayerbotFactory::InitEquipment(bool incremental)
 {
-	if (bot->getLevel() >= 10)
-	{
+	//if (bot->getLevel() >= 10)
+	//{
         DestroyItemsVisitor visitor(bot);
         IterateItems(&visitor, ITERATE_ALL_ITEMS);
-	}
+	//}
 
     for(uint8 slot = 0; slot < EQUIPMENT_SLOT_END; ++slot)
     {
