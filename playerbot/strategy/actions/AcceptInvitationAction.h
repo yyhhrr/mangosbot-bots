@@ -37,7 +37,7 @@ namespace ai
             if (sRandomPlayerbotMgr.IsRandomBot(bot))
                 bot->GetPlayerbotAI()->SetMaster(inviter);
             
-            ai->ResetStrategies();
+            ai->ResetStrategies(false);
             ai->ChangeStrategy("-rpg", BOT_STATE_NON_COMBAT);
             ai->ChangeStrategy("-grind", BOT_STATE_NON_COMBAT);
             ai->TellMaster("Hello");
