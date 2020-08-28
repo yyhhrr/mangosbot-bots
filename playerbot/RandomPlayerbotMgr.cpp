@@ -367,7 +367,6 @@ bool RandomPlayerbotMgr::ProcessBot(Player* player)
         }
         else
         {
-            Refresh(player);
             RandomTeleportForRpg(player);
         }
 
