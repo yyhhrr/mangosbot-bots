@@ -580,7 +580,7 @@ void PlayerbotFactory::InitSpells()
 
 void PlayerbotFactory::InitTalentsTree(bool incremental)
 {
-    uint32 specNo = sRandomPlayerbotMgr.GetValue(bot, "specNo");
+    uint32 specNo = sRandomPlayerbotMgr.GetValue(bot->GetGUIDLow(), "specNo");
     if (incremental && specNo)
     {
         specNo -=  1;
