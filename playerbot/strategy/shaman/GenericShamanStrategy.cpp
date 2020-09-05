@@ -193,7 +193,6 @@ void ShamanCureStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
         "party member cleanse spirit disease",
         NextAction::array(0, new NextAction("cleanse spirit disease on party", 23.0f), NULL)));
 
-
     triggers.push_back(new TriggerNode(
         "cleanse spirit curse",
         NextAction::array(0, new NextAction("cleanse spirit", 24.0f), NULL)));
