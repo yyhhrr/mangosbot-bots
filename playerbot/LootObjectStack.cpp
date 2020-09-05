@@ -150,7 +150,19 @@ bool LootObject::IsLootPossible(Player* bot)
     PlayerbotAI* ai = bot->GetPlayerbotAI();
 
     if (reqItem && !bot->HasItemCount(reqItem, 1))
+    {
+        /*if (ai->GetMaster())
+        {
+            ItemPrototype const *proto = sObjectMgr.GetItemPrototype(reqItem);
+            ostringstream out;
+            ChatHelper* chat;
+            out << " I need ";
+            out << chat->formatItem(proto, 1);
+            out << " to open it!";
+            ai->TellMaster(out.str());
+        }*/
         return false;
+    }
 
     if (abs(GetWorldObject(bot)->GetPositionZ() - bot->GetPositionZ()) > INTERACTION_DISTANCE)
         return false;
