@@ -104,7 +104,7 @@ bool MovementAction::MoveTo(Unit* target, float distance)
 {
     if (!IsMovingAllowed(target))
     {
-        ai->TellError("Seems I am stuck");
+        //ai->TellError("Seems I am stuck");
         return false;
     }
 
@@ -277,7 +277,7 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
 
     if (sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(bot, target), sPlayerbotAIConfig.followDistance))
     {
-        ai->TellError("No need to follow");
+        //ai->TellError("No need to follow");
         return false;
     }
 
