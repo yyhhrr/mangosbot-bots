@@ -126,7 +126,7 @@ bool AttackersValue::IsPossibleTarget(Unit *attacker, Player *bot)
         bot->IsWithinDistInMap(attacker, sPlayerbotAIConfig.sightDistance) &&
         //!((attacker->getLevel() == 1 && !sServerFacade.IsHostileTo(attacker, bot)) && (!bot->GetGroup())) &&
         !(attacker->GetCreatureType() == CREATURE_TYPE_CRITTER) &&
-		!(sPlayerbotAIConfig.IsInPvpProhibitedZone(attacker->GetAreaId()) && attacker->GetObjectGuid().IsPlayer()) &&
+		!(sPlayerbotAIConfig.IsInPvpProhibitedZone(attacker->GetAreaId()) && attacker->GetObjectGuid().IsPlayer() && attacker->GetObjectGuid().IsPet()) &&
         (!c || (
             !c->IsInEvadeMode() &&
             (!attacker->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_TAPPED)
