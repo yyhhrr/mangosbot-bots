@@ -54,7 +54,7 @@ LootObject::LootObject(Player* bot, ObjectGuid guid)
 
 void LootObject::Refresh(Player* bot, ObjectGuid guid)
 {
-    isUnskilledLockType = false;
+    isQuestGO = false;
     skillId = SKILL_NONE;
     reqSkillValue = 0;
     reqItem = 0;
@@ -105,9 +105,6 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid)
             case LOCK_KEY_SKILL:
                 switch (LockType(lockInfo->Index[i]))
                 {
-                    skillId = SkillByLockType(LockType(lockInfo->Index[i]));
-                    reqSkillValue = max((uint32)2, lockInfo->Skill[i]);
-                    this->guid = guid;
                 case LOCKTYPE_OPEN:
                 case LOCKTYPE_CLOSE:
                 case LOCKTYPE_QUICK_OPEN:
@@ -119,14 +116,33 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid)
 #ifdef MANGOSBOT_TWO
                 case LOCKTYPE_OPEN_FROM_VEHICLE:
 #endif
-                    isUnskilledLockType = true;
-                    this->guid = guid;
-                    return;
+                {
+                    GameObjectInfo const* gInfo = go->GetGOInfo();
+                    for (uint16 slot = 0; slot < MAX_QUEST_LOG_SIZE; ++slot)
+                    {
+                        uint32 questId = bot->GetQuestSlotQuestId(slot);
+                        if (!questId)
+                            continue;
+
+                        if (gInfo->chest.questId != questId)
+                            continue;
+
+                        // check whether the gameobject contains quest items
+                        if (gInfo->chest.questId != 0)
+                        {
+                                isQuestGO = true;
+                                this->guid = guid;
+                                return;
+                        }
+                    }
+
+                    break;
+                }
                 default:
                     if (SkillByLockType(LockType(lockInfo->Index[i])) > 0)
                     {
                         skillId = SkillByLockType(LockType(lockInfo->Index[i]));
-                        reqSkillValue = max((uint32)2, lockInfo->Skill[i]);
+                        reqSkillValue = max((uint32)1, lockInfo->Skill[i]);
                         this->guid = guid;
                     }
                     break;
@@ -138,6 +154,37 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid)
             }
         }
     }
+}
+
+bool LootObject::IsNeededForQuest(Player* bot, uint32 itemId)
+{
+    for (int qs = 0; qs < MAX_QUEST_LOG_SIZE; ++qs)
+    {
+        uint32 questId = bot->GetQuestSlotQuestId(qs);
+        if (questId == 0)
+            continue;
+
+        QuestStatusData& qData = bot->getQuestStatusMap()[questId];
+        if (qData.m_status != QUEST_STATUS_INCOMPLETE)
+            continue;
+
+        Quest const* qInfo = sObjectMgr.GetQuestTemplate(questId);
+        if (!qInfo)
+            continue;
+
+        for (int i = 0; i < QUEST_ITEM_OBJECTIVES_COUNT; ++i)
+        {
+            if (!qInfo->ReqItemCount[i] || (qInfo->ReqItemCount[i] - qData.m_itemcount[i]) <= 0)
+                continue;
+
+            if (qInfo->ReqItemId[i] != itemId)
+                continue;
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 WorldObject* LootObject::GetWorldObject(Player* bot)

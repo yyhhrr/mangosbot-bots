@@ -94,6 +94,9 @@ bool QuestAction::AcceptQuest(Quest const* quest, uint64 questGiver)
         p.rpos(0);
         bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(p);
 
+        if (bot->CanCompleteQuest(questId))
+            bot->CompleteQuest(questId);
+
         if (bot->GetQuestStatus(questId) != QUEST_STATUS_NONE && bot->GetQuestStatus(questId) != QUEST_STATUS_AVAILABLE)
         {
             out << "Accepted " << chat->formatQuest(quest);
