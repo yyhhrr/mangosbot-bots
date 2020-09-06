@@ -175,11 +175,14 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
             if (tab == 0)
                 engine->addStrategies("caster", "caster aoe", "bmana", "threat", "flee", "ranged", NULL);
             else if (tab == 2)
+            {
                 engine->addStrategies("heal", "bmana", "flee", "ranged", NULL);
+                engine->removeStrategy("dps assist");
+            }
             else
                 engine->addStrategies("dps", "melee aoe", "bdps", "threat", "close", NULL);
 
-            engine->addStrategies("dps assist", "cure", NULL);
+            engine->addStrategies("dps assist", "totems", "cure", NULL);
             break;
         case CLASS_PALADIN:
             if (tab == 1)
@@ -352,12 +355,13 @@ void AiFactory::AddDefaultNonCombatStrategies(Player* player, PlayerbotAI* const
             break;
     }
     nonCombatEngine->addStrategies("nc", "food", "stay", "sit", "chat", "follow",
-            "default", "quest", "loot", "gather", "duel", "emote", "conserve mana", "collision", "buff", "reveal", NULL);
+            "default", "quest", "loot", "gather", "duel", "emote", "conserve mana", "buff", "reveal", NULL);
 
     if (sRandomPlayerbotMgr.IsRandomBot(player))
     {
         if (!player->GetGroup())
         {
+            nonCombatEngine->addStrategy("collision");
             nonCombatEngine->ChangeStrategy(sPlayerbotAIConfig.randomBotNonCombatStrategies);
         }
     }
