@@ -140,7 +140,7 @@ bool AttackersValue::IsPossibleTarget(Unit *attacker, Player *bot)
 
 bool AttackersValue::IsValidTarget(Unit *attacker, Player *bot)
 {
-    bool IsGroupTarget = false;
+    /*bool IsGroupTarget = false;
     if (bot->GetGroup() && attacker->IsInCombat())
     {
         Group* grp = bot->GetGroup();
@@ -155,9 +155,9 @@ bool AttackersValue::IsValidTarget(Unit *attacker, Player *bot)
     else
     {
         IsGroupTarget = true;
-    }
+    }*/
 
-    return IsPossibleTarget(attacker, bot) && IsGroupTarget &&
+    return IsPossibleTarget(attacker, bot) &&
         (sServerFacade.GetThreatManager(attacker).getCurrentVictim() || attacker->GetTargetGuid() || attacker->GetObjectGuid().IsPlayer() ||
             attacker->GetObjectGuid() == bot->GetPlayerbotAI()->GetAiObjectContext()->GetValue<ObjectGuid>("pull target")->Get());
 }

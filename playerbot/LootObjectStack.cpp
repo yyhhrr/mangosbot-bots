@@ -103,49 +103,11 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid)
                 }
                 break;
             case LOCK_KEY_SKILL:
-                switch (LockType(lockInfo->Index[i]))
+                if (SkillByLockType(LockType(lockInfo->Index[i])) > 0)
                 {
-                case LOCKTYPE_OPEN:
-                case LOCKTYPE_CLOSE:
-                case LOCKTYPE_QUICK_OPEN:
-                case LOCKTYPE_QUICK_CLOSE:
-                case LOCKTYPE_OPEN_TINKERING:
-                case LOCKTYPE_OPEN_KNEELING:
-                case LOCKTYPE_SLOW_OPEN:
-                case LOCKTYPE_SLOW_CLOSE:
-#ifdef MANGOSBOT_TWO
-                case LOCKTYPE_OPEN_FROM_VEHICLE:
-#endif
-                {
-                    GameObjectInfo const* gInfo = go->GetGOInfo();
-                    for (uint16 slot = 0; slot < MAX_QUEST_LOG_SIZE; ++slot)
-                    {
-                        uint32 questId = bot->GetQuestSlotQuestId(slot);
-                        if (!questId)
-                            continue;
-
-                        if (gInfo->chest.questId != questId)
-                            continue;
-
-                        // check whether the gameobject contains quest items
-                        if (gInfo->chest.questId != 0)
-                        {
-                                isQuestGO = true;
-                                this->guid = guid;
-                                return;
-                        }
-                    }
-
-                    break;
-                }
-                default:
-                    if (SkillByLockType(LockType(lockInfo->Index[i])) > 0)
-                    {
-                        skillId = SkillByLockType(LockType(lockInfo->Index[i]));
-                        reqSkillValue = max((uint32)1, lockInfo->Skill[i]);
-                        this->guid = guid;
-                    }
-                    break;
+                    skillId = SkillByLockType(LockType(lockInfo->Index[i]));
+                    reqSkillValue = max((uint32)1, lockInfo->Skill[i]);
+                    this->guid = guid;
                 }
                 break;
             case LOCK_KEY_NONE:
