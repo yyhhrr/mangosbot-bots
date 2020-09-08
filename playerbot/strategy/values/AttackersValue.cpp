@@ -117,16 +117,16 @@ bool AttackersValue::IsPossibleTarget(Unit *attacker, Player *bot)
         !attacker->IsStunned() &&
 #endif
 #ifdef MANGOS
-        !attacker->hasUnitState(UNIT_STAT_STUNNED) &&
+        //!attacker->hasUnitState(UNIT_STAT_STUNNED) &&
 #endif
         !sServerFacade.IsCharmed(attacker) &&
         !sServerFacade.IsFeared(attacker) &&
-        !sServerFacade.IsInRoots(attacker) &&
+        //!sServerFacade.IsInRoots(attacker) &&
         !sServerFacade.IsFriendlyTo(attacker, bot) &&
         bot->IsWithinDistInMap(attacker, sPlayerbotAIConfig.sightDistance) &&
         //!((attacker->getLevel() == 1 && !sServerFacade.IsHostileTo(attacker, bot)) && (!bot->GetGroup())) &&
         !(attacker->GetCreatureType() == CREATURE_TYPE_CRITTER) &&
-		!(sPlayerbotAIConfig.IsInPvpProhibitedZone(attacker->GetAreaId()) && attacker->GetObjectGuid().IsPlayer() && attacker->GetObjectGuid().IsPet()) &&
+		!(sPlayerbotAIConfig.IsInPvpProhibitedZone(attacker->GetAreaId()) && (attacker->GetObjectGuid().IsPlayer() || attacker->GetObjectGuid().IsPet())) &&
         (!c || (
             !c->IsInEvadeMode() &&
             (!attacker->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_TAPPED)
@@ -140,7 +140,24 @@ bool AttackersValue::IsPossibleTarget(Unit *attacker, Player *bot)
 
 bool AttackersValue::IsValidTarget(Unit *attacker, Player *bot)
 {
-    return IsPossibleTarget(attacker, bot) &&
+    bool IsGroupTarget = false;
+    if (bot->GetGroup() && attacker->IsInCombat())
+    {
+        Group* grp = bot->GetGroup();
+        Group::MemberSlotList const& slots = grp->GetMemberSlots();
+
+        for (Group::member_citerator itr = slots.begin(); itr != slots.end(); ++itr)
+        {
+            if (attacker->GetTargetGuid() == itr->guid)
+                IsGroupTarget = true;
+        }
+    }
+    else
+    {
+        IsGroupTarget = true;
+    }
+
+    return IsPossibleTarget(attacker, bot) && IsGroupTarget &&
         (sServerFacade.GetThreatManager(attacker).getCurrentVictim() || attacker->GetTargetGuid() || attacker->GetObjectGuid().IsPlayer() ||
             attacker->GetObjectGuid() == bot->GetPlayerbotAI()->GetAiObjectContext()->GetValue<ObjectGuid>("pull target")->Get());
 }

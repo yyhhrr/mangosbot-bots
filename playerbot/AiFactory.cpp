@@ -76,10 +76,7 @@ int AiFactory::GetPlayerSpecTab(Player* bot)
         switch (bot->getClass())
         {
         case CLASS_MAGE:
-            if (bot->getLevel() < 5)
-                tab = 1;
-            else
-                tab = 2;
+            tab = 1;
             break;
         case CLASS_PALADIN:
             tab = 2;
@@ -244,8 +241,6 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
             engine->ChangeStrategy(sPlayerbotAIConfig.randomBotCombatStrategies);
             engine->addStrategy("flee");
 
-            engine->addStrategy("heal");
-
             if (player->getClass() == CLASS_MAGE)
             {
                 engine->removeStrategy("ranged");
@@ -268,7 +263,6 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
                 engine->addStrategy("shadow aoe");
                 engine->addStrategies("holy", NULL);
                 engine->removeStrategy("ranged");
-                //player->GetPlayerbotAI()->GetRange
             }
 
             if (player->getClass() == CLASS_SHAMAN && tab == 2)
