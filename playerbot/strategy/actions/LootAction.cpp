@@ -86,7 +86,8 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
 
     if (creature)
     {
-        SkillType skill = creature->GetCreatureInfo()->GetRequiredLootSkill();
+        //SkillType skill = creature->GetCreatureInfo()->GetRequiredLootSkill();
+        SkillType skill = SKILL_SKINNING;
         if (!CanOpenLock(skill, lootObject.reqSkillValue))
             return false;
 
@@ -143,7 +144,7 @@ uint32 OpenLootAction::GetOpeningSpell(LootObject& lootObject, GameObject* go)
     {
         uint32 spellId = itr->first;
 
-		if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || IsPassiveSpell(spellId))
+		if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || Spells::IsPassiveSpell(spellId))
 			continue;
 
 		if (spellId == MINING || spellId == HERB_GATHERING)
@@ -263,7 +264,7 @@ bool StoreLootAction::Execute(Event event)
         p.read_skip<uint32>();  // randomPropertyId
         p >> lootslot_type;     // 0 = can get, 1 = look only, 2 = master get
 
-		if (lootslot_type != LOOT_SLOT_NORMAL
+		if (lootslot_type != LOOT_SLOT_TYPE_ALLOW_LOOT
 #ifndef MANGOSBOT_ZERO
 		        && lootslot_type != LOOT_SLOT_OWNER
 #endif

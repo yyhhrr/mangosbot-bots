@@ -15,7 +15,7 @@ bool ImbueWithPoisonAction::Execute(Event event)
 #ifdef CMANGOS
       if (bot->IsInCombat())
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
       if (bot->IsInCombat())
 #endif
 		  return false;
@@ -25,7 +25,7 @@ bool ImbueWithPoisonAction::Execute(Event event)
          bot->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
 
       // hp check
-      if (bot->getStandState() != UNIT_STAND_STATE_STAND)
+      if (bot->GetStandState() != UNIT_STAND_STATE_STAND)
          bot->SetStandState(UNIT_STAND_STATE_STAND);
 
 
@@ -84,7 +84,7 @@ bool ImbueWithStoneAction::Execute(Event event)
       bot->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
 
    // hp check
-   if (bot->getStandState() != UNIT_STAND_STATE_STAND)
+   if (bot->GetStandState() != UNIT_STAND_STATE_STAND)
       bot->SetStandState(UNIT_STAND_STATE_STAND);
 
 
@@ -134,7 +134,7 @@ bool ImbueWithOilAction::Execute(Event event)
       bot->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
 
    // hp check
-   if (bot->getStandState() != UNIT_STAND_STATE_STAND)
+   if (bot->GetStandState() != UNIT_STAND_STATE_STAND)
       bot->SetStandState(UNIT_STAND_STATE_STAND);
 
 

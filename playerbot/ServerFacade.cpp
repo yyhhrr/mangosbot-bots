@@ -4,11 +4,11 @@
 #include "ServerFacade.h"
 
 #include "../../modules/Bots/ahbot/AhBot.h"
-#include "DatabaseEnv.h"
+#include "Database/DatabaseEnv.h"
 #include "PlayerbotAI.h"
 
 #include "../../modules/Bots/ahbot/AhBotConfig.h"
-#include "MotionGenerators/TargetedMovementGenerator.h"
+#include "Movement/TargetedMovementGenerator.h"
 
 ServerFacade::ServerFacade() {}
 ServerFacade::~ServerFacade() {}
@@ -16,7 +16,7 @@ ServerFacade::~ServerFacade() {}
 float ServerFacade::GetDistance2d(Unit *unit, WorldObject* wo)
 {
     float dist =
-#ifdef MANGOS
+#ifdef VMANGOS
     unit->GetDistance2d(wo);
 #endif
 #ifdef CMANGOS
@@ -28,7 +28,7 @@ float ServerFacade::GetDistance2d(Unit *unit, WorldObject* wo)
 float ServerFacade::GetDistance2d(Unit *unit, float x, float y)
 {
     float dist =
-#ifdef MANGOS
+#ifdef VMANGOS
     unit->GetDistance2d(x, y);
 #endif
 #ifdef CMANGOS
@@ -71,7 +71,7 @@ void ServerFacade::SetFacingTo(Player* bot, WorldObject* wo, bool force)
 
 bool ServerFacade::IsFriendlyTo(Unit* bot, Unit* to)
 {
-#ifdef MANGOS
+#ifdef VMANGOS
     return bot->IsFriendlyTo(to);
 #endif
 #ifdef CMANGOS
@@ -81,7 +81,7 @@ bool ServerFacade::IsFriendlyTo(Unit* bot, Unit* to)
 
 bool ServerFacade::IsHostileTo(Unit* bot, Unit* to)
 {
-#ifdef MANGOS
+#ifdef VMANGOS
     return bot->IsHostileTo(to);
 #endif
 #ifdef CMANGOS
@@ -92,7 +92,7 @@ bool ServerFacade::IsHostileTo(Unit* bot, Unit* to)
 
 bool ServerFacade::IsSpellReady(Player* bot, uint32 spell)
 {
-#ifdef MANGOS
+#ifdef VMANGOS
     return !bot->HasSpellCooldown(spell);
 #endif
 #ifdef CMANGOS
@@ -102,7 +102,7 @@ bool ServerFacade::IsSpellReady(Player* bot, uint32 spell)
 
 bool ServerFacade::IsUnderwater(Unit *unit)
 {
-#ifdef MANGOS
+#ifdef VMANGOS
     return unit->IsUnderWater();
 #endif
 #ifdef CMANGOS
@@ -112,7 +112,7 @@ bool ServerFacade::IsUnderwater(Unit *unit)
 
 FactionTemplateEntry const* ServerFacade::GetFactionTemplateEntry(Unit *unit)
 {
-#ifdef MANGOS
+#ifdef VMANGOS
     return unit->getFactionTemplateEntry();
 #endif
 #ifdef CMANGOS
@@ -124,7 +124,7 @@ Unit* ServerFacade::GetChaseTarget(Unit* target)
 {
     if (target->GetTypeId() == TYPEID_PLAYER)
     {
-#ifdef MANGOS
+#ifdef VMANGOS
         return static_cast<ChaseMovementGenerator<Player> const*>(target->GetMotionMaster()->GetCurrent())->GetTarget();
 #endif
 #ifdef CMANGOS
@@ -133,7 +133,7 @@ Unit* ServerFacade::GetChaseTarget(Unit* target)
     }
     else
     {
-#ifdef MANGOS
+#ifdef VMANGOS
         return static_cast<ChaseMovementGenerator<Creature> const*>(target->GetMotionMaster()->GetCurrent())->GetTarget();
 #endif
 #ifdef CMANGOS
@@ -145,10 +145,10 @@ Unit* ServerFacade::GetChaseTarget(Unit* target)
 
 bool ServerFacade::isMoving(Unit *unit)
 {
-#ifdef MANGOS
+/*#ifdef MANGOS
     return unit->m_movementInfo.HasMovementFlag(movementFlagsMask);
-#endif
-#ifdef CMANGOS
+#endif*/
+#ifdef VMANGOS
     return unit->IsMoving();
 #endif
 }

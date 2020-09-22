@@ -16,7 +16,7 @@ namespace ai
 #ifdef CMANGOS
         string QueryItemUsage(ItemPrototype const *item);
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
         bool QueryItemUsage(ItemPrototype const *item);
 #endif
         string QueryItemPrice(ItemPrototype const *item);

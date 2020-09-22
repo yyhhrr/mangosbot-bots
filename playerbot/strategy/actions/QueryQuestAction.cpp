@@ -81,7 +81,7 @@ void QueryQuestAction::TellObjectives(uint32 questId)
 
                 CreatureInfo const* info = sObjectMgr.GetCreatureTemplate(questTemplate->ReqCreatureOrGOId[i]);
                 if (info)
-                    TellObjective(info->Name, available, required);
+                    TellObjective(info->name, available, required);
             }
         }
     }

@@ -86,7 +86,7 @@ public:
     virtual bool Check(PlayerbotAI *ai, AiObjectContext* context)
     {
         Player* bot = ai->GetBot();
-        if (bot->getClass() == CLASS_HUNTER)
+        if (bot->GetClass() == CLASS_HUNTER)
         {
             if (!bot->GetUInt32Value(PLAYER_AMMO_ID))
             {

@@ -79,8 +79,9 @@ bool AttackAction::Attack(Unit* target)
 
     if (bot->IsMounted())
     {
-        WorldPacket emptyPacket;
-        bot->GetSession()->HandleCancelMountAuraOpcode(emptyPacket);
+        //WorldPacket emptyPacket;
+        //bot->GetSession()->HandleCancelMountAuraOpcode(emptyPacket);
+        bot->Unmount();
     }
 
     ObjectGuid guid = target->GetObjectGuid();
@@ -95,7 +96,7 @@ bool AttackAction::Attack(Unit* target)
     Pet* pet = bot->GetPet();
     if (pet)
     {
-#ifdef MANGOS
+#ifdef VMANGOS
         CreatureAI*
 #endif
 #ifdef CMANGOS
@@ -107,7 +108,7 @@ bool AttackAction::Attack(Unit* target)
 #ifdef CMANGOS
             creatureAI->SetReactState(REACT_PASSIVE);
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
             pet->GetCharmInfo()->SetCommandState(COMMAND_ATTACK);
 #endif
             creatureAI->AttackStart(target);

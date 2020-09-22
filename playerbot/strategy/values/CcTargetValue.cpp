@@ -45,7 +45,7 @@ public:
         if (*ai->GetAiObjectContext()->GetValue<uint8>("aoe count") > 2)
         {
             WorldLocation aoe = *ai->GetAiObjectContext()->GetValue<WorldLocation>("aoe position");
-            if (sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(creature, aoe.coord_x, aoe.coord_y), sPlayerbotAIConfig.aoeRadius))
+            if (sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(creature, aoe.x, aoe.y), sPlayerbotAIConfig.aoeRadius))
                 return;
         }
 

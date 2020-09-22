@@ -46,7 +46,7 @@ bool SendMailAction::Execute(Event event)
 
     if (!mailboxFound && !randomBot)
     {
-        bot->Whisper("There is no mailbox nearby", LANG_UNIVERSAL, tellTo->GetObjectGuid());
+        bot->GetSession()->GetMasterPlayer()->Whisper("There is no mailbox nearby", LANG_UNIVERSAL, tellTo->GetSession()->GetMasterPlayer());
         return false;
     }
 
@@ -54,7 +54,7 @@ bool SendMailAction::Execute(Event event)
     ItemIds ids = chat->parseItems(text);
     if (ids.size() > 1)
     {
-        bot->Whisper("You can not request more than one item", LANG_UNIVERSAL, tellTo->GetObjectGuid());
+        bot->GetSession()->GetMasterPlayer()->Whisper("You can not request more than one item", LANG_UNIVERSAL, tellTo->GetSession()->GetMasterPlayer());
         return false;
     }
 
@@ -66,7 +66,7 @@ bool SendMailAction::Execute(Event event)
 
         if (randomBot)
         {
-            bot->Whisper("I cannot send money", LANG_UNIVERSAL, tellTo->GetObjectGuid());
+            bot->GetSession()->GetMasterPlayer()->Whisper("I cannot send money", LANG_UNIVERSAL, tellTo->GetSession()->GetMasterPlayer());
             return false;
         }
 
@@ -116,7 +116,7 @@ bool SendMailAction::Execute(Event event)
             {
                 ostringstream out;
                 out << "Cannot send " << ChatHelper::formatItem(item->GetProto());
-                bot->Whisper(out.str(), LANG_UNIVERSAL, tellTo->GetObjectGuid());
+                bot->GetSession()->GetMasterPlayer()->Whisper(out.str(), LANG_UNIVERSAL, tellTo->GetSession()->GetMasterPlayer());
                 continue;
             }
 
@@ -133,7 +133,7 @@ bool SendMailAction::Execute(Event event)
                 {
                     ostringstream out;
                     out << ChatHelper::formatItem(item->GetProto()) << ": it is not for sale";
-                    bot->Whisper(out.str(), LANG_UNIVERSAL, tellTo->GetObjectGuid());
+                    bot->GetSession()->GetMasterPlayer()->Whisper(out.str(), LANG_UNIVERSAL, tellTo->GetSession()->GetMasterPlayer());
                     return false;
                 }
                 draft.SetCOD(price);
@@ -141,7 +141,7 @@ bool SendMailAction::Execute(Event event)
             draft.SendMailTo(MailReceiver(receiver), MailSender(bot));
 
             ostringstream out; out << "Sent mail to " << receiver->GetName();
-            bot->Whisper(out.str(), LANG_UNIVERSAL, tellTo->GetObjectGuid());
+            bot->GetSession()->GetMasterPlayer()->Whisper(out.str(), LANG_UNIVERSAL, tellTo->GetSession()->GetMasterPlayer());
             return true;
         }
     }

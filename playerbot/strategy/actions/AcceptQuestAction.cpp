@@ -113,7 +113,7 @@ bool AcceptQuestShareAction::Execute(Event event)
         if( qInfo->GetSrcSpell() > 0 )
         {
             bot->CastSpell( bot, qInfo->GetSrcSpell(),
-#ifdef MANGOS
+#ifdef VMANGOS
                     true
 #endif
 #ifdef CMANGOS

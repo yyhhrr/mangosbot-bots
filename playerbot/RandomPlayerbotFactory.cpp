@@ -5,7 +5,7 @@
 #include "PlayerbotFactory.h"
 #include "AccountMgr.h"
 #include "ObjectMgr.h"
-#include "DatabaseEnv.h"
+#include "Database/DatabaseEnv.h"
 #include "PlayerbotAI.h"
 #include "Player.h"
 #include "RandomPlayerbotFactory.h"
@@ -154,7 +154,8 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls)
 	        face.first,
 	        hair.first,
 	        hair.second, // hairColor,
-	        facialHair, 0))
+            facialHair))
+	        //facialHair, 0))
     {
         player->DeleteFromDB(player->GetObjectGuid(), accountId, true, true);
         delete session;
@@ -164,7 +165,7 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls)
         return false;
     }
 
-    player->setCinematic(2);
+    player->SetCinematic(2);
     player->SetAtLoginFlag(AT_LOGIN_NONE);
     player->SaveToDB();
 

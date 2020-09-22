@@ -20,10 +20,10 @@ bool FollowAction::Execute(Event event)
     else
     {
         WorldLocation loc = formation->GetLocation();
-        if (Formation::IsNullLocation(loc) || loc.mapid == -1)
+        if (Formation::IsNullLocation(loc) || loc.mapId == -1)
             return false;
 
-        moved = MoveTo(loc.mapid, loc.coord_x, loc.coord_y, loc.coord_z);
+        moved = MoveTo(loc.mapId, loc.x, loc.y, loc.z);
     }
 
     if (moved) ai->SetNextCheckDelay(sPlayerbotAIConfig.reactDelay);
@@ -43,10 +43,10 @@ bool FollowAction::isUseful()
     else
     {
         WorldLocation loc = formation->GetLocation();
-        if (Formation::IsNullLocation(loc) || bot->GetMapId() != loc.mapid)
+        if (Formation::IsNullLocation(loc) || bot->GetMapId() != loc.mapId)
             return false;
 
-        distance = sServerFacade.GetDistance2d(bot, loc.coord_x, loc.coord_y);
+        distance = sServerFacade.GetDistance2d(bot, loc.x, loc.y);
     }
 
     return sServerFacade.IsDistanceGreaterThan(distance, formation->GetMaxDistance());

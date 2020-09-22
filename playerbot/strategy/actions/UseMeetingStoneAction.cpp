@@ -144,7 +144,7 @@ bool SummonAction::SummonUsingNpcs(Player *summoner, Player *player)
             if (!spellInfo)
                 return false;
             Spell spell(player, spellInfo,
-#ifdef MANGOS
+#ifdef VMANGOS
                     0
 #endif
 #ifdef CMANGOS

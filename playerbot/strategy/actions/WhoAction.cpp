@@ -55,7 +55,7 @@ bool WhoAction::Execute(Event event)
         return false;
 
     // ignore random bot chat filter
-	bot->Whisper(tell, LANG_UNIVERSAL, owner->GetObjectGuid());
+	bot->GetSession()->GetMasterPlayer()->Whisper(tell, LANG_UNIVERSAL, owner->GetSession()->GetMasterPlayer());
     return true;
 }
 
@@ -89,10 +89,10 @@ string WhoAction::QuerySkill(string text)
     string skillName = chat->formatSkill(skill);
     uint32 spellId = AI_VALUE2(uint32, "spell id", skillName);
     uint16 value = bot->GetSkillValue(skill);
-#ifdef MANGOS
+/*#ifdef MANGOS
     uint16 maxSkill = bot->GetMaxSkillValue(skill);
-#endif
-#ifdef CMANGOS
+#endif*/
+#ifdef VMANGOS
     uint16 maxSkill = bot->GetSkillMax(skill);
 #endif
     ObjectGuid guid = bot->GetObjectGuid();
@@ -113,7 +113,7 @@ string WhoAction::QuerySpec(string text)
 
     int spec = AiFactory::GetPlayerSpecTab(bot);
     out << "|h|cffffffff" << chat->formatClass(bot, spec);
-    out << " (|h|cff00ff00" << (uint32)bot->getLevel() << "|h|cffffffff lvl), ";
+    out << " (|h|cff00ff00" << (uint32)bot->GetLevel() << "|h|cffffffff lvl), ";
     out << "|h|cff00ff00" << ai->GetEquipGearScore(bot, false, false) << "|h|cffffffff GS (";
 
     ItemCountByQuality visitor;

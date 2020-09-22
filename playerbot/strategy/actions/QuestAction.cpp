@@ -127,7 +127,7 @@ bool QuestObjectiveCompletedAction::Execute(Event event)
     {
         CreatureInfo const* info = sObjectMgr.GetCreatureTemplate(entry);
         if (info)
-            ai->TellMaster(chat->formatQuestObjective(info->Name, available, required));
+            ai->TellMaster(chat->formatQuestObjective(info->name, available, required));
     }
 
     return true;

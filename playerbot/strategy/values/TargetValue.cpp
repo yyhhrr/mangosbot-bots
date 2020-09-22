@@ -74,7 +74,7 @@ void FindTargetStrategy::GetPlayerCount(Unit* creature, int* tankCount, int* dps
     *tankCount = 0;
     *dpsCount = 0;
 
-    Unit::AttackerSet attackers(creature->getAttackers());
+    Unit::AttackerSet attackers(creature->GetAttackers());
     for (set<Unit*>::const_iterator i = attackers.begin(); i != attackers.end(); i++)
     {
         Unit* attacker = *i;

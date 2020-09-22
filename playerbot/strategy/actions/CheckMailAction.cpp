@@ -12,11 +12,11 @@ bool CheckMailAction::Execute(Event event)
     WorldPacket p;
     bot->GetSession()->HandleQueryNextMailTime(p);
 
-    if (ai->GetMaster() || !bot->GetMailSize())
+    if (ai->GetMaster() || !bot->GetSession()->GetMasterPlayer()->GetMailSize())
         return false;
 
     list<uint32> ids;
-    for (PlayerMails::iterator i = bot->GetMailBegin(); i != bot->GetMailEnd(); ++i)
+    for (PlayerMails::iterator i = bot->GetSession()->GetMasterPlayer()->GetMailBegin(); i != bot->GetSession()->GetMasterPlayer()->GetMailEnd(); ++i)
     {
         Mail* mail = *i;
 
@@ -39,10 +39,10 @@ bool CheckMailAction::Execute(Event event)
     for (list<uint32>::iterator i = ids.begin(); i != ids.end(); ++i)
     {
         uint32 id = *i;
-        bot->SendMailResult(id, MAIL_DELETED, MAIL_OK);
+        bot->GetSession()->GetMasterPlayer()->SendMailResult(id, MAIL_DELETED, MAIL_OK);
         CharacterDatabase.PExecute("DELETE FROM mail WHERE id = '%u'", id);
         CharacterDatabase.PExecute("DELETE FROM mail_items WHERE mail_id = '%u'", id);
-        bot->RemoveMail(id);
+        bot->GetSession()->GetMasterPlayer()->RemoveMail(id);
     }
 
     return true;
@@ -68,7 +68,7 @@ void CheckMailAction::ProcessMail(Mail* mail, Player* owner)
 
     for (MailItemInfoVec::iterator i = mail->items.begin(); i != mail->items.end(); ++i)
     {
-        Item *item = bot->GetMItem(i->item_guid);
+        Item *item = bot->GetSession()->GetMasterPlayer()->GetMItem(i->item_guid);
         if (!item)
             continue;
 
@@ -84,12 +84,12 @@ void CheckMailAction::ProcessMail(Mail* mail, Player* owner)
 
             MailDraft draft("Item(s) you've sent me", body.str());
             draft.AddItem(item);
-            bot->RemoveMItem(i->item_guid);
+            bot->GetSession()->GetMasterPlayer()->RemoveMItem(i->item_guid);
             draft.SendMailTo(MailReceiver(owner), MailSender(bot));
             return;
         }
 
-        bot->RemoveMItem(i->item_guid);
+        bot->GetSession()->GetMasterPlayer()->RemoveMItem(i->item_guid);
         item->DestroyForPlayer(bot);
     }
 }

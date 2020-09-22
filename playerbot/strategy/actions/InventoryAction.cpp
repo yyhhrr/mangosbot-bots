@@ -163,7 +163,7 @@ void InventoryAction::TellItems(map<uint32, int> itemMap, map<uint32, bool> soul
             case ITEM_CLASS_KEY:
                 ai->TellMaster("--- keys ---");
                 break;
-            case ITEM_CLASS_MISC:
+            case ITEM_CLASS_JUNK:
                 ai->TellMaster("--- other ---");
                 break;
             }

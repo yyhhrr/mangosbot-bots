@@ -26,18 +26,18 @@ void TrainerAction::Learn(uint32 cost, TrainerSpell const* tSpell, ostringstream
     spell->SpellStart(&targets);
 #endif
 
-#ifdef MANGOS
+#ifdef VMANGOS
     bool learned = false;
     for (int j = 0; j < 3; ++j)
     {
         if (proto->Effect[j] == SPELL_EFFECT_LEARN_SPELL)
         {
             uint32 learnedSpell = proto->EffectTriggerSpell[j];
-            bot->learnSpell(learnedSpell, false);
+            bot->LearnSpell(learnedSpell, false);
             learned = true;
         }
     }
-    if (!learned) bot->learnSpell(tSpell->spell, false);
+    if (!learned) bot->LearnSpell(tSpell->spell, false);
 #endif
 
     msg << " - learned";
@@ -65,8 +65,8 @@ void TrainerAction::Iterate(Creature* creature, TrainerSpellAction action, Spell
 
         uint32 reqLevel = 0;
 
-        reqLevel = tSpell->isProvidedReqLevel ? tSpell->reqLevel : std::max(reqLevel, tSpell->reqLevel);
-        TrainerSpellState state = bot->GetTrainerSpellState(tSpell, reqLevel);
+        //reqLevel = tSpell->isProvidedReqLevel ? tSpell->reqLevel : std::max(reqLevel, tSpell->reqLevel);
+        TrainerSpellState state = bot->GetTrainerSpellState(tSpell/*, reqLevel*/);
         if (state != TRAINER_SPELL_GREEN)
             continue;
 

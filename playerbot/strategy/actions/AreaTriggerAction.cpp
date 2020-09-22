@@ -13,12 +13,13 @@ bool ReachAreaTriggerAction::Execute(Event event)
     p.rpos(0);
     p >> triggerId;
 
-    AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(triggerId);
+    /*AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(triggerId);
     if(!atEntry)
         return false;
 
-    AreaTrigger const* at = sObjectMgr.GetAreaTrigger(triggerId);
-    if (!at)
+    AreaTrigger const* at = sObjectMgr.GetAreaTrigger(triggerId);*/
+    AreaTriggerEntry const* atEntry = sObjectMgr.GetAreaTrigger(triggerId);
+    if (!atEntry)
     {
         WorldPacket p1(CMSG_AREATRIGGER);
         p1 << triggerId;
@@ -54,13 +55,13 @@ bool AreaTriggerAction::Execute(Event event)
     uint32 triggerId = movement.lastAreaTrigger;
     movement.lastAreaTrigger = 0;
 
-    AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(triggerId);
+    AreaTriggerEntry const* atEntry = sObjectMgr.GetAreaTrigger(triggerId);
     if(!atEntry)
-        return false;
-
-    AreaTrigger const* at = sObjectMgr.GetAreaTrigger(triggerId);
-    if (!at)
         return true;
+
+    /*AreaTrigger const* at = sObjectMgr.GetAreaTrigger(triggerId);
+    if (!at)
+        return true;*/
 
     WorldPacket p(CMSG_AREATRIGGER);
     p << triggerId;

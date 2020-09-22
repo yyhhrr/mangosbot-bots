@@ -38,7 +38,7 @@ public:
         {
             for (MailItemInfoVec::iterator i = mail->items.begin(); i != mail->items.end(); ++i)
             {
-                Item* item = bot->GetMItem(i->item_guid);
+                Item* item = bot->GetSession()->GetMasterPlayer()->GetMItem(i->item_guid);
                 int count = item ? item->GetCount() : 1;
                 ItemPrototype const *proto = sObjectMgr.GetItemPrototype(i->item_template);
                 if (proto)
@@ -110,7 +110,7 @@ public:
 #ifndef MANGOSBOT_ZERO
                 packet << *i;
 #endif
-                Item* item = bot->GetMItem(*i);
+                Item* item = bot->GetSession()->GetMasterPlayer()->GetMItem(*i);
                 ostringstream out;
                 out << mail->subject << ", " << ChatHelper::formatItem(item->GetProto()) << "|cff00ff00 processed";
 
@@ -235,7 +235,7 @@ bool MailAction::Execute(Event event)
 
     vector<Mail*> mailList;
     time_t cur_time = time(0);
-    for (PlayerMails::iterator itr = bot->GetMailBegin(); itr != bot->GetMailEnd(); ++itr)
+    for (PlayerMails::iterator itr = bot->GetSession()->GetMasterPlayer()->GetMailBegin(); itr != bot->GetSession()->GetMasterPlayer()->GetMailEnd(); ++itr)
     {
         if ((*itr)->state == MAIL_STATE_DELETED || cur_time < (*itr)->deliver_time)
             continue;

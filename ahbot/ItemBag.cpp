@@ -6,10 +6,10 @@
 #include "AhBotConfig.h"
 #include "DBCStructure.h"
 #include "Log.h"
-#include "QueryResult.h"
-#include "DatabaseEnv.h"
-#include "SQLStorage.h"
-#include "DBCStore.h"
+#include "Database/QueryResult.h"
+#include "Database/DatabaseEnv.h"
+#include "Database/SQLStorage.h"
+#include "Database/DBCStore.h"
 #include "SQLStorages.h"
 #include "AuctionHouseMgr.h"
 #include "ObjectMgr.h"
@@ -190,8 +190,10 @@ void InAuctionItemsBag::Load()
         return;
 
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(ahEntry);
-    AuctionHouseObject::AuctionEntryMap const& auctionEntryMap = auctionHouse->GetAuctions();
-    for (AuctionHouseObject::AuctionEntryMap::const_iterator itr = auctionEntryMap.begin(); itr != auctionEntryMap.end(); ++itr)
+    std::map<uint32, AuctionEntry*>* auctionEntryMap = auctionHouse->GetAuctions();
+    //AuctionHouseObject::AuctionEntryMap const& auctionEntryMap = auctionHouse->GetAuctions();
+    //for (AuctionHouseObject::AuctionEntryMap::const_iterator itr = auctionEntryMap.begin(); itr != auctionEntryMap.end(); ++itr)
+    for (std::map<uint32, AuctionEntry*>::iterator itr = auctionEntryMap->begin(); itr != auctionEntryMap->end(); itr++)
     {
         ItemPrototype const* proto = sObjectMgr.GetItemPrototype(itr->second->itemTemplate);
         if (!proto)

@@ -3,9 +3,9 @@
 #include "PlayerbotAIConfig.h"
 #include "RandomItemMgr.h"
 
-#include "DBCStore.h"
+#include "Database/DBCStore.h"
 #include "../../modules/Bots/ahbot/AhBot.h"
-#include "DatabaseEnv.h"
+#include "Database/DatabaseEnv.h"
 #include "PlayerbotAI.h"
 
 #include "../../modules/Bots/ahbot/AhBotConfig.h"

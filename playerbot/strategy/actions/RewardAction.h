@@ -11,7 +11,7 @@ namespace ai
         virtual bool Execute(Event event);
 
     private:
-        bool Reward(uint32 itemId, Object* pNpc);
+        bool Reward(uint32 itemId, WorldObject* pNpc);
     };
 
 }

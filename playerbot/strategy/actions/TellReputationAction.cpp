@@ -23,7 +23,7 @@ bool TellReputationAction::Execute(Event event)
     const FactionTemplateEntry *factionTemplate = sServerFacade.GetFactionTemplateEntry(unit);
 #endif
 
-#ifdef MANGOS
+#ifdef VMANGOS
     const FactionTemplateEntry *factionTemplate = unit->getFactionTemplateEntry();
 #endif
     uint32 faction = factionTemplate->faction;

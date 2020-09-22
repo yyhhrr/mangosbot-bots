@@ -36,7 +36,7 @@ bool RewardAction::Execute(Event event)
     return false;
 }
 
-bool RewardAction::Reward(uint32 itemId, Object* questGiver)
+bool RewardAction::Reward(uint32 itemId, WorldObject* questGiver)
 {
     QuestMenu& questMenu = bot->PlayerTalkClass->GetQuestMenu();
     for (uint32 iI = 0; iI < questMenu.MenuItemCount(); ++iI)

@@ -1,7 +1,7 @@
 #include "botpch.h"
 #include "../../playerbot.h"
 #include "TaxiAction.h"
-#include "../../../../../game/Server/DBCStructure.h"
+#include "DBCStructure.h"
 #include "../values/LastMovementValue.h"
 
 using namespace ai;

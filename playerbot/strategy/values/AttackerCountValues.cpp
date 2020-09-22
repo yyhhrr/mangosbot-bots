@@ -8,7 +8,7 @@ using namespace ai;
 
 uint8 MyAttackerCountValue::Calculate()
 {
-    return bot->getAttackers().size();
+    return bot->GetAttackers().size();
 }
 
 bool HasAggroValue::Calculate()
@@ -25,12 +25,12 @@ bool HasAggroValue::Calculate()
     {
         ThreatManager *threatManager = ref->getSource();
         Unit *attacker = threatManager->getOwner();
-#ifdef CMANGOS
+#ifdef VMANGOS
         Unit *victim = attacker->GetVictim();
 #endif
-#ifdef MANGOS
+/*#ifdef MANGOS
         Unit *victim = attacker->getVictim();
-#endif
+#endif*/
         if (victim == bot && target == attacker)
             return true;
         ref = ref->next();
@@ -85,7 +85,7 @@ uint8 BalancePercentValue::Calculate()
             if( !player || !sServerFacade.IsAlive(player))
                 continue;
 
-            playerLevel += player->getLevel();
+            playerLevel += player->GetLevel();
         }
     }
 
@@ -97,9 +97,9 @@ uint8 BalancePercentValue::Calculate()
         if (!creature || !sServerFacade.IsAlive(creature))
             continue;
 
-        uint32 level = creature->getLevel();
+        uint32 level = creature->GetLevel();
 
-        switch (creature->GetCreatureInfo()->Rank) {
+        switch (creature->GetCreatureInfo()->rank) {
         case CREATURE_ELITE_RARE:
             level *= 2;
             break;

@@ -8,8 +8,8 @@
 #include "Globals/ObjectMgr.h"
 #include "SpellEffectDefines.h"
 #endif
-#ifdef MANGOS
-#include "Object/ObjectMgr.h"
+#ifdef VMANGOS
+#include "ObjectMgr.h"
 #include "SharedDefines.h"
 #endif
 
@@ -45,12 +45,12 @@ bool TradeSkill::ContainsInternal(ItemPrototype const* proto)
     for (uint32 id = 0; id < sCreatureStorage.GetMaxEntry(); ++id)
     {
         CreatureInfo const* co = sCreatureStorage.LookupEntry<CreatureInfo>(id);
-        if (!co || co->TrainerType != TRAINER_TYPE_TRADESKILLS)
+        if (!co || co->trainer_type != TRAINER_TYPE_TRADESKILLS)
             continue;
 
-        uint32 trainerId = co->TrainerTemplateId;
+        uint32 trainerId = co->trainer_id;
         if (!trainerId)
-            trainerId = co->Entry;
+            trainerId = co->entry;
 
         TrainerSpellData const* trainer_spells = sObjectMgr.GetNpcTrainerTemplateSpells(trainerId);
         if (!trainer_spells)

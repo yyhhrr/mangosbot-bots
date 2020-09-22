@@ -6,8 +6,8 @@
 #ifdef CMANGOS
 #include "Entities/Player.h"
 #endif
-#ifdef MANGOS
-#include "Object/Player.h"
+#ifdef VMANGOS
+#include "Player.h"
 #endif
 
 using namespace std;

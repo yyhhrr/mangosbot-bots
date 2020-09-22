@@ -44,7 +44,7 @@ bool TellCastFailedAction::Execute(Event event)
     default:
         out << "cannot cast";
     }
-    int32 castTime = GetSpellCastTime(pSpellInfo
+    int32 castTime = pSpellInfo->GetCastTime(
 #ifdef CMANGOS
             , bot
 #endif

@@ -33,7 +33,7 @@ bool MoveToRpgTargetAction::Execute(Event event)
 
     WaitForReach(distance);
 
-    if (bot->IsSitState())
+    if (bot->IsSittingDown())
         bot->SetStandState(UNIT_STAND_STATE_STAND);
 
     if (bot->IsNonMeleeSpellCasted(true))

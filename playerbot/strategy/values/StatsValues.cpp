@@ -24,10 +24,10 @@ bool IsDeadValue::Calculate()
 bool PetIsDeadValue::Calculate()
 {
 #ifdef MANGOSBOT_ZERO
-#ifdef MANGOS
+/*#ifdef MANGOS
     PetDatabaseStatus status = Pet::GetStatusFromDB(bot);
     if (status == PET_DB_DEAD)
-#endif
+#endif*/
 #endif
     if (!bot->GetPet())
     {
@@ -48,11 +48,11 @@ bool PetIsDeadValue::Calculate()
 bool PetIsHappyValue::Calculate()
 {
 #ifdef MANGOSBOT_ZERO
-#ifndef CMANGOS
+/*#ifdef MANGOS
     PetDatabaseStatus status = Pet::GetStatusFromDB(bot);
     if (status == PET_DB_DEAD)
         return true;
-#endif
+#endif*/
 #endif
 
     return !bot->GetPet() || bot->GetPet()->GetHappinessState() == HAPPY;

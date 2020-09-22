@@ -24,8 +24,9 @@ bool CheckMountStateAction::Execute(Event event)
 	
     if((farFromMaster || !master->IsMounted()) && bot->IsMounted())
 	{
-		WorldPacket emptyPacket;
-		bot->GetSession()->HandleCancelMountAuraOpcode(emptyPacket);
+		//WorldPacket emptyPacket;
+		//bot->GetSession()->HandleCancelMountAuraOpcode(emptyPacket);
+        bot->Unmount();
 		return true;
 	}
 
@@ -47,7 +48,7 @@ bool CheckMountStateAction::Mount()
 	for (PlayerSpellMap::iterator itr = bot->GetSpellMap().begin(); itr != bot->GetSpellMap().end(); ++itr)
 	{
 		uint32 spellId = itr->first;
-		if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || IsPassiveSpell(spellId))
+		if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || Spells::IsPassiveSpell(spellId))
 			continue;
 
 		const SpellEntry* spellInfo = sServerFacade.LookupSpellInfo(spellId);

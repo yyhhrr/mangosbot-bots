@@ -80,7 +80,7 @@ string QueryItemUsageAction::QueryItem(ItemPrototype const *item, uint32 count, 
 #ifdef CMANGOS
     string usage = QueryItemUsage(item);
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
     bool usage = QueryItemUsage(item);
 #endif
     string quest = QueryQuestItem(item->ItemId);
@@ -88,7 +88,7 @@ string QueryItemUsageAction::QueryItem(ItemPrototype const *item, uint32 count, 
 #ifdef CMANGOS
     if (usage.empty())
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
     if (!usage)
 #endif
         usage = (quest.empty() ? "Useless" : "Quest");
@@ -103,7 +103,7 @@ string QueryItemUsageAction::QueryItem(ItemPrototype const *item, uint32 count, 
 #ifdef CMANGOS
 string QueryItemUsageAction::QueryItemUsage(ItemPrototype const *item)
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
 bool QueryItemUsageAction::QueryItemUsage(ItemPrototype const *item)
 #endif
 {

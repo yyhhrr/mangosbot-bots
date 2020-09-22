@@ -75,7 +75,7 @@ bool SayAction::Execute(Event event)
     if (!target) target = AI_VALUE(Unit*, "current target");
     if (target) replaceAll(text, "<target>", target->GetName());
 
-    replaceAll(text, "<randomfaction>", IsAlliance(bot->getRace()) ? "Alliance" : "Horde");
+    replaceAll(text, "<randomfaction>", IsAlliance(bot->GetRace()) ? "Alliance" : "Horde");
 
     if (bot->GetMap())
     {

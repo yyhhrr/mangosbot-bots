@@ -47,7 +47,7 @@ namespace ai
             {
                 Stance* stance = AI_VALUE(Stance*, "stance");
                 WorldLocation loc = stance->GetLocation();
-                return sServerFacade.GetDistance2d(ai->GetBot(), loc.coord_x, loc.coord_y);
+                return sServerFacade.GetDistance2d(ai->GetBot(), loc.x, loc.y);
             }
             else
             {
@@ -56,7 +56,7 @@ namespace ai
                 {
                     Formation* formation = AI_VALUE(Formation*, "formation");
                     WorldLocation loc = formation->GetLocation();
-                    return sServerFacade.GetDistance2d(ai->GetBot(), loc.coord_x, loc.coord_y);
+                    return sServerFacade.GetDistance2d(ai->GetBot(), loc.x, loc.y);
                 }
             }
 

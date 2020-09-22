@@ -47,7 +47,7 @@ bool CompareSpells(pair<uint32, string>& s1, pair<uint32, string>& s2)
 
     if (p1 == p2)
     {
-        return strcmp(si1->SpellName[0], si1->SpellName[1]) > 0;
+        return (si1->SpellName[0] > si1->SpellName[1]) > 0;
     }
 
     return p1 > p2;
@@ -134,7 +134,7 @@ bool ListSpellsAction::Execute(Event event)
     for (PlayerSpellMap::iterator itr = bot->GetSpellMap().begin(); itr != bot->GetSpellMap().end(); ++itr) {
         const uint32 spellId = itr->first;
 
-        if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || IsPassiveSpell(spellId))
+        if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || Spells::IsPassiveSpell(spellId))
             continue;
 
         const SpellEntry* const pSpellInfo = sServerFacade.LookupSpellInfo(spellId);
@@ -149,7 +149,8 @@ bool ListSpellsAction::Execute(Event event)
         if (!(ignoreList.find(comp) == std::string::npos && alreadySeenList.find(comp) == std::string::npos))
             continue;
 
-        if (!filter.empty() && !strstri(pSpellInfo->SpellName[0], filter.c_str()))
+        //if (!filter.empty() && !strstri(pSpellInfo->SpellName[0], filter.c_str()))
+        if (!filter.empty() && filter.find(pSpellInfo->SpellName[0]) == string::npos)
             continue;
 
         bool first = true;

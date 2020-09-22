@@ -102,7 +102,7 @@ namespace ai
             Pet* pet = bot->GetPet();
             if (pet)
             {
-#ifdef MANGOS
+#ifdef VMANGOS
                 CreatureAI*
 #endif
 #ifdef CMANGOS

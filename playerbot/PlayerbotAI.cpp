@@ -114,10 +114,10 @@ PlayerbotAI::PlayerbotAI(Player* bot) :
     botOutgoingPacketHandlers.AddHandler(SMSG_QUESTUPDATE_ADD_KILL, "quest objective completed");
     botOutgoingPacketHandlers.AddHandler(SMSG_ITEM_PUSH_RESULT, "item push result");
     botOutgoingPacketHandlers.AddHandler(SMSG_PARTY_COMMAND_RESULT, "party command");
-#ifdef MANGOS
+/*#ifdef MANGOS
     botOutgoingPacketHandlers.AddHandler(SMSG_CAST_FAILED, "cast failed");
-#endif
-#ifdef CMANGOS
+#endif*/
+#ifdef VMANGOS
     botOutgoingPacketHandlers.AddHandler(SMSG_CAST_RESULT, "cast failed");
 #endif
     botOutgoingPacketHandlers.AddHandler(SMSG_DUEL_REQUESTED, "duel requested");
@@ -185,7 +185,8 @@ void PlayerbotAI::UpdateAIInternal(uint32 elapsed)
 void PlayerbotAI::HandleTeleportAck()
 {
 	bot->GetMotionMaster()->Clear(true);
-	bot->InterruptMoving(1);
+	//bot->InterruptMoving(1);
+    bot->StopMoving(1);
 	if (bot->IsBeingTeleportedNear())
 	{
 		WorldPacket p = WorldPacket(MSG_MOVE_TELEPORT_ACK, 8 + 4 + 4);
@@ -224,9 +225,9 @@ void PlayerbotAI::Reset()
     aiObjectContext->GetValue<LastMovement& >("last taxi")->Get().Set(NULL);
 
     bot->GetMotionMaster()->Clear();
-#ifdef MANGOS
+/*#ifdef MANGOS
     bot->m_taxi.ClearTaxiDestinations();
-#endif
+#endif*/
     InterruptSpell();
 
     for (int i = 0 ; i < BOT_STATE_MAX; i++)
@@ -598,7 +599,7 @@ void PlayerbotAI::DoSpecificAction(string name)
 
 bool PlayerbotAI::PlaySound(uint32 emote)
 {
-    if (EmotesTextSoundEntry const* soundEntry = FindTextSoundEmoteFor(emote, bot->getRace(), bot->getGender()))
+    if (EmotesTextSoundEntry const* soundEntry = FindTextSoundEmoteFor(emote, bot->GetRace(), bot->GetGender()))
     {
         bot->PlayDistanceSound(soundEntry->SoundId);
         return true;
@@ -1048,7 +1049,7 @@ bool PlayerbotAI::IsRanged(Player* player)
     if (botAi)
         return botAi->ContainsStrategy(STRATEGY_TYPE_RANGED);
 
-    switch (player->getClass())
+    switch (player->GetClass())
     {
     case CLASS_PALADIN:
     case CLASS_WARRIOR:
@@ -1066,7 +1067,7 @@ bool PlayerbotAI::IsTank(Player* player)
     if (botAi)
         return botAi->ContainsStrategy(STRATEGY_TYPE_TANK);
 
-    switch (player->getClass())
+    switch (player->GetClass())
     {
     case CLASS_PALADIN:
     case CLASS_WARRIOR:
@@ -1083,7 +1084,7 @@ bool PlayerbotAI::IsHeal(Player* player)
     if (botAi)
         return botAi->ContainsStrategy(STRATEGY_TYPE_HEAL);
 
-    switch (player->getClass())
+    switch (player->GetClass())
     {
     case CLASS_PRIEST:
         return true;
@@ -1252,7 +1253,7 @@ bool IsRealAura(Player* bot, Aura const* aura, Unit* unit)
     if (stacks >= aura->GetSpellProto()->StackAmount)
         return true;
 
-    if (aura->GetCaster() == bot || IsPositiveSpell(aura->GetSpellProto()) || aura->IsAreaAura())
+    if (aura->GetCaster() == bot || aura->GetSpellProto()->IsPositiveSpell() || aura->IsAreaAura())
         return true;
 
     return false;
@@ -1363,7 +1364,7 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, uint8 effectMask, b
 
 	if (!itemTarget)
 	{
-        bool positiveSpell = IsPositiveSpell(spellInfo);
+        bool positiveSpell = spellInfo->IsPositiveSpell();
         if (positiveSpell && sServerFacade.IsHostileTo(bot, target))
             return false;
 
@@ -1493,11 +1494,11 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget)
     if (bot->IsFlying() || bot->IsTaxiFlying())
         return false;
 
-	bot->clearUnitState(UNIT_STAT_CHASE);
-	bot->clearUnitState(UNIT_STAT_FOLLOW);
+	bot->ClearUnitState(UNIT_STAT_CHASE);
+	bot->ClearUnitState(UNIT_STAT_FOLLOW);
 
 	bool failWithDelay = false;
-    if (!bot->IsStandState())
+    if (!bot->IsStandingUp())
     {
         bot->SetStandState(UNIT_STAND_STATE_STAND);
         failWithDelay = true;
@@ -1537,7 +1538,7 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget)
     else if (pSpellInfo->Targets & TARGET_FLAG_DEST_LOCATION)
     {
         WorldLocation aoe = aiObjectContext->GetValue<WorldLocation>("aoe position")->Get();
-        targets.setDestination(aoe.coord_x, aoe.coord_y, aoe.coord_z);
+        targets.setDestination(aoe.x, aoe.y, aoe.z);
     }
     else if (pSpellInfo->Targets & TARGET_FLAG_SOURCE_LOCATION)
     {
@@ -1573,7 +1574,7 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget)
     }
 
 #ifdef MANGOS
-    spell->prepare(&targets);
+    spell->prepare(targets);
 #endif
 #ifdef CMANGOS
     spell->SpellStart(&targets);
@@ -1624,9 +1625,10 @@ void PlayerbotAI::WaitForSpellCast(Spell *spell)
     const SpellEntry* const pSpellInfo = spell->m_spellInfo;
 
     float castTime = spell->GetCastTime();
-	if (IsChanneledSpell(pSpellInfo))
+	if (pSpellInfo->IsChanneledSpell())
     {
-        int32 duration = GetSpellDuration(pSpellInfo);
+        //int32 duration = GetSpellDuration(pSpellInfo);
+        int32 duration = pSpellInfo->GetDuration();
         if (duration > 0)
             castTime += duration;
     }
@@ -1648,7 +1650,7 @@ void PlayerbotAI::InterruptSpell()
         if (!spell)
             continue;
 
-        if (IsPositiveSpell(spell->m_spellInfo))
+        if (spell->m_spellInfo->IsPositiveSpell())
             continue;
 
         bot->InterruptSpell((CurrentSpellTypes)type);
@@ -1713,7 +1715,7 @@ bool PlayerbotAI::HasAuraToDispel(Unit* target, uint32 dispelType)
 			const SpellEntry* entry = aura->GetSpellProto();
 			uint32 spellId = entry->Id;
 
-			bool isPositiveSpell = IsPositiveSpell(spellId);
+			bool isPositiveSpell = Spells::IsPositiveSpell(spellId);
 			if (isPositiveSpell && sServerFacade.IsFriendlyTo(bot, target))
 				continue;
 
@@ -1745,13 +1747,13 @@ bool PlayerbotAI::canDispel(const SpellEntry* entry, uint32 dispelType)
     if (entry->Dispel != dispelType)
         return false;
 
-    return !entry->SpellName[0] ||
-        (strcmpi((const char*)entry->SpellName[0], "demon skin") &&
-        strcmpi((const char*)entry->SpellName[0], "mage armor") &&
-        strcmpi((const char*)entry->SpellName[0], "frost armor") &&
-        strcmpi((const char*)entry->SpellName[0], "wavering will") &&
-        strcmpi((const char*)entry->SpellName[0], "chilled") &&
-        strcmpi((const char*)entry->SpellName[0], "ice armor"));
+    return entry->SpellName[0].empty() ||
+        !(entry->SpellName[0] > "demon skin") &&
+        !(entry->SpellName[0] > "mage armor") &&
+        !(entry->SpellName[0] > "frost armor") &&
+        !(entry->SpellName[0] > "wavering will") &&
+        !(entry->SpellName[0] > "chilled") &&
+        !(entry->SpellName[0] > "ice armor");
 }
 
 bool IsAlliance(uint8 race)
@@ -1765,7 +1767,7 @@ bool IsAlliance(uint8 race)
 
 bool PlayerbotAI::IsOpposing(Player* player)
 {
-    return IsOpposing(player->getRace(), bot->getRace());
+    return IsOpposing(player->GetRace(), bot->GetRace());
 }
 
 bool PlayerbotAI::IsOpposing(uint8 race1, uint8 race2)
@@ -2091,7 +2093,7 @@ void PlayerbotAI::Ping(float x, float y)
     data << x;
     data << y;
     bot->GetGroup()->BroadcastPacket(
-#ifdef MANGOS
+#ifdef VMANGOS
         &data,
 #endif
 #ifdef CMANGOS
@@ -2364,7 +2366,7 @@ void PlayerbotAI::ImbueItem(Item* item, uint32 targetFlag, ObjectGuid targetGUID
 #ifdef CMANGOS
    std::unique_ptr<WorldPacket> packet(new WorldPacket(CMSG_USE_ITEM, 20));
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
    WorldPacket* packet = new WorldPacket(CMSG_USE_ITEM, 20);
 #endif
 
@@ -2378,7 +2380,7 @@ void PlayerbotAI::ImbueItem(Item* item, uint32 targetFlag, ObjectGuid targetGUID
 #ifdef CMANGOS
    if (targetFlag & (TARGET_FLAG_UNIT | TARGET_FLAG_ITEM | TARGET_FLAG_GAMEOBJECT))
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
    if (targetFlag & (TARGET_FLAG_UNIT | TARGET_FLAG_ITEM | TARGET_FLAG_OBJECT))
 #endif
       *packet << targetGUID.WriteAsPacked();
@@ -2386,7 +2388,7 @@ void PlayerbotAI::ImbueItem(Item* item, uint32 targetFlag, ObjectGuid targetGUID
 #ifdef CMANGOS
    bot->GetSession()->QueuePacket(std::move(packet));
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
    bot->GetSession()->QueuePacket(packet);
 #endif
 }
@@ -2396,8 +2398,8 @@ void PlayerbotAI::EnchantItemT(uint32 spellid, uint8 slot)
    Item* pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
    if (!pItem)
     return;
-#ifdef MANGOS
-   SpellEntry const* spellInfo = sSpellStore.LookupEntry(spellid);
+#ifdef VMANGOS
+   SpellEntry const* spellInfo = sServerFacade.LookupSpellInfo(spellid);
 #else
    SpellEntry const* spellInfo = sSpellTemplate.LookupEntry<SpellEntry>(spellid);
 #endif

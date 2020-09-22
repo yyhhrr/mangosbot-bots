@@ -11,7 +11,7 @@ WorldLocation Formation::NullLocation = WorldLocation();
 
 bool IsSameLocation(WorldLocation const &a, WorldLocation const &b)
 {
-	return a.coord_x == b.coord_x && a.coord_y == b.coord_y && a.coord_z == b.coord_z && a.mapid == b.mapid;
+	return a.x == b.x && a.y == b.y && a.z == b.z && a.mapId == b.mapId;
 }
 
 bool Formation::IsNullLocation(WorldLocation const& loc)
@@ -30,9 +30,9 @@ WorldLocation MoveAheadFormation::GetLocation()
     if (Formation::IsNullLocation(loc))
         return loc;
 
-    float x = loc.coord_x;
-    float y = loc.coord_y;
-    float z = loc.coord_z;
+    float x = loc.x;
+    float y = loc.y;
+    float z = loc.z;
 
     if (sServerFacade.isMoving(master)) {
         float ori = master->GetOrientation();
@@ -170,7 +170,7 @@ namespace ai
             if (!target)
 				return Formation::NullLocation;
 
-            switch (bot->getClass())
+            switch (bot->GetClass())
             {
             case CLASS_HUNTER:
             case CLASS_MAGE:
@@ -507,7 +507,7 @@ bool SetFormationAction::Execute(Event event)
     {
         WorldLocation loc = value->Get()->GetLocation();
         if (!Formation::IsNullLocation(loc))
-            ai->Ping(loc.coord_x, loc.coord_y);
+            ai->Ping(loc.x, loc.y);
 
         return true;
     }

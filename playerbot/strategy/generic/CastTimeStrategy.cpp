@@ -28,7 +28,7 @@ float CastTimeMultiplier::GetValue(Action* action)
         else if (spellId && pSpellInfo->Targets & TARGET_FLAG_SOURCE_LOCATION)
             return 1.0f;
 
-        uint32 castTime = GetSpellCastTime(pSpellInfo
+        uint32 castTime = pSpellInfo->GetCastTime(
 #ifdef CMANGOS
                 , bot
 #endif

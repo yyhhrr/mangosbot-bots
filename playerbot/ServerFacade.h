@@ -7,8 +7,8 @@
 #ifdef CMANGOS
 #include "Entities/GameObject.h"
 #endif
-#ifdef MANGOS
-#include "Object/GameObject.h"
+#ifdef VMANGOS
+#include "Objects/GameObject.h"
 #endif
 #include "PlayerbotAIBase.h"
 #include "PlayerbotAIConfig.h"
@@ -99,7 +99,7 @@ class ServerFacade
 
         bool IsInRoots(Unit *unit)
         {
-#ifdef MANGOS
+#ifdef VMANGOS
             return unit->IsInRoots();
 #endif
 #ifdef CMANGOS
@@ -109,7 +109,7 @@ class ServerFacade
 
         bool IsCharmed(Unit *unit)
         {
-#ifdef MANGOS
+#ifdef VMANGOS
             return unit->GetCharmerGuid() && unit->GetCharmerGuid().IsPlayer();
 #endif
 #ifdef CMANGOS
@@ -119,7 +119,7 @@ class ServerFacade
 
         bool IsFeared(Unit *unit)
         {
-#ifdef MANGOS
+#ifdef VMANGOS
 #ifndef MANGOSBOT_TWO
             return unit->IsFeared();
 #else
@@ -133,17 +133,17 @@ class ServerFacade
 
         bool IsInFront(Unit *unit, WorldObject const* target, float distance,  float arc /*= M_PI_F*/)
         {
-#ifdef MANGOS
+/*#ifdef MANGOS
             return unit->IsInFront(target, distance, arc);
-#endif
-#ifdef CMANGOS
+#endif*/
+#ifdef VMANGOS
             return unit->isInFront(target, distance, arc);
 #endif
         }
 
         HostileRefManager& GetHostileRefManager(Unit *unit)
         {
-#ifdef MANGOS
+#ifdef VMANGOS
             return unit->GetHostileRefManager();
 #endif
 #ifdef CMANGOS
@@ -163,7 +163,7 @@ class ServerFacade
 
         void SendPacket(Player *player, WorldPacket &packet)
         {
-#ifdef MANGOS
+#ifdef VMANGOS
             return player->GetSession()->SendPacket(&packet);
 #endif
 #ifdef CMANGOS
@@ -183,21 +183,27 @@ class ServerFacade
 
         SpellEntry const* LookupSpellInfo(uint32 spellId)
         {
-#ifdef MANGOS
+/*#ifdef MANGOS
             return sSpellStore.LookupEntry(spellId);
-#endif
+#endif*/
 #ifdef CMANGOS
             return sSpellTemplate.LookupEntry<SpellEntry>(spellId);
+#endif
+#ifdef VMANGOS
+            return sSpellMgr.GetSpellEntry(spellId);
 #endif
         }
 
         uint32 GetSpellInfoRows()
         {
-#ifdef MANGOS
+/*#ifdef MANGOS
             return sSpellStore.GetNumRows();
-#endif
+#endif*/
 #ifdef CMANGOS
             return sSpellTemplate.GetMaxEntry();
+#endif
+#ifdef VMANGOS
+            return sSpellMgr.GetMaxSpellId();
 #endif
         }
 

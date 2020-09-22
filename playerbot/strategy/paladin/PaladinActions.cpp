@@ -6,7 +6,7 @@ using namespace ai;
 
 string GetActualBlessingOfMight(Unit* target)
 {
-    switch (target->getClass())
+    switch (target->GetClass())
     {
     case CLASS_MAGE:
     case CLASS_PRIEST:
@@ -18,7 +18,7 @@ string GetActualBlessingOfMight(Unit* target)
 
 string GetActualBlessingOfWisdom(Unit* target)
 {
-    switch (target->getClass())
+    switch (target->GetClass())
     {
     case CLASS_WARRIOR:
     case CLASS_ROGUE:

@@ -3,7 +3,7 @@
 #include "UseItemAction.h"
 
 #include "../../PlayerbotAIConfig.h"
-#include "DBCStore.h"
+#include "Database/DBCStore.h"
 #include "../../ServerFacade.h"
 using namespace ai;
 
@@ -203,8 +203,8 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget)
       }
    }
 
-   bot->clearUnitState(UNIT_STAT_CHASE);
-   bot->clearUnitState(UNIT_STAT_FOLLOW);
+   bot->ClearUnitState(UNIT_STAT_CHASE);
+   bot->ClearUnitState(UNIT_STAT_FOLLOW);
 
    if (sServerFacade.isMoving(bot))
    {
@@ -276,7 +276,7 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget)
       if (sServerFacade.IsInCombat(bot))
          return false;
 
-      bot->addUnitState(UNIT_STAND_STATE_SIT);
+      bot->AddUnitState(UNIT_STAND_STATE_SIT);
       ai->InterruptSpell();
 
       float hp = bot->GetHealthPercent();

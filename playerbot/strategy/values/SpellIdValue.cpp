@@ -40,7 +40,7 @@ uint32 SpellIdValue::Calculate()
     {
         uint32 spellId = itr->first;
 
-        if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || IsPassiveSpell(spellId))
+        if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || Spells::IsPassiveSpell(spellId))
             continue;
 
         const SpellEntry* pSpellInfo = sServerFacade.LookupSpellInfo(spellId);
@@ -60,8 +60,8 @@ uint32 SpellIdValue::Calculate()
             }
         }
 
-        char* spellName = pSpellInfo->SpellName[loc];
-        if (!useByItem && (tolower(spellName[0]) != firstSymbol || strlen(spellName) != spellLength || !Utf8FitTo(spellName, wnamepart)))
+        const std::string spellName = pSpellInfo->SpellName[loc];
+        if (!useByItem && (tolower(spellName[0]) != firstSymbol || spellName.length() != spellLength || !Utf8FitTo(spellName, wnamepart)))
             continue;
 
         spellIds.insert(spellId);
@@ -70,7 +70,7 @@ uint32 SpellIdValue::Calculate()
     Pet* pet = bot->GetPet();
     if (spellIds.empty() && pet)
     {
-        for (PetSpellMap::const_iterator itr = pet->m_spells.begin(); itr != pet->m_spells.end(); ++itr)
+        for (PetSpellMap::const_iterator itr = pet->m_petSpells.begin(); itr != pet->m_petSpells.end(); ++itr)
         {
             if(itr->second.state == PETSPELL_REMOVED)
                 continue;
@@ -83,8 +83,8 @@ uint32 SpellIdValue::Calculate()
             if (pSpellInfo->Effect[0] == SPELL_EFFECT_LEARN_SPELL)
                 continue;
 
-            char* spellName = pSpellInfo->SpellName[loc];
-            if (tolower(spellName[0]) != firstSymbol || strlen(spellName) != spellLength || !Utf8FitTo(spellName, wnamepart))
+            const std::string spellName = pSpellInfo->SpellName[loc];
+            if (tolower(spellName[0]) != firstSymbol || spellName.length() != spellLength || !Utf8FitTo(spellName, wnamepart))
                 continue;
 
             spellIds.insert(spellId);

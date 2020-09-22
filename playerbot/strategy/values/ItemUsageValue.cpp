@@ -61,10 +61,10 @@ ItemUsage ItemUsageValue::QueryItemUsageForEquip(ItemPrototype const * item)
     if( result != EQUIP_ERR_OK )
         return ITEM_USAGE_NONE;
 
-    if (item->Class == ITEM_CLASS_WEAPON && !sRandomItemMgr.CanEquipWeapon(bot->getClass(), item))
+    if (item->Class == ITEM_CLASS_WEAPON && !sRandomItemMgr.CanEquipWeapon(bot->GetClass(), item))
         return ITEM_USAGE_NONE;
 
-    if (item->Class == ITEM_CLASS_ARMOR && !sRandomItemMgr.CanEquipArmor(bot->getClass(), bot->getLevel(), item))
+    if (item->Class == ITEM_CLASS_ARMOR && !sRandomItemMgr.CanEquipArmor(bot->GetClass(), bot->GetLevel(), item))
         return ITEM_USAGE_NONE;
 
     Item* existingItem = bot->GetItemByPos(dest);
@@ -95,7 +95,7 @@ bool ItemUsageValue::IsItemUsefulForSkill(ItemPrototype const * proto)
     switch (proto->Class)
     {
     case ITEM_CLASS_TRADE_GOODS:
-    case ITEM_CLASS_MISC:
+    case ITEM_CLASS_JUNK:
     case ITEM_CLASS_REAGENT:
         {
             if (ai->HasSkill(SKILL_TAILORING) && auctionbot.IsUsedBySkill(proto, SKILL_TAILORING))

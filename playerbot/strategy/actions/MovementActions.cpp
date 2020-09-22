@@ -10,7 +10,7 @@
 #include "../../ServerFacade.h"
 #include "../values/PositionValue.h"
 #include "../values/Stances.h"
-#include "MotionGenerators/TargetedMovementGenerator.h"
+#include "Movement/TargetedMovementGenerator.h"
 
 using namespace ai;
 
@@ -78,7 +78,7 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle)
         WaitForReach(distance);
 
         bot->HandleEmoteState(0);
-        if (bot->IsSitState())
+        if (bot->IsSittingDown())
             bot->SetStandState(UNIT_STAND_STATE_STAND);
 
         if (bot->IsNonMeleeSpellCasted(true))
@@ -115,15 +115,15 @@ bool MovementAction::MoveTo(Unit* target, float distance)
     {
         Stance* stance = AI_VALUE(Stance*, "stance");
         WorldLocation loc = stance->GetLocation();
-        if (Formation::IsNullLocation(loc) || loc.mapid == -1)
+        if (Formation::IsNullLocation(loc) || loc.mapId == -1)
         {
             //ai->TellError("Nowhere to move");
             return false;
         }
 
-        tx = loc.coord_x;
-        ty = loc.coord_y;
-        tz = loc.coord_z;
+        tx = loc.x;
+        ty = loc.y;
+        tz = loc.z;
 }
 
     float distanceToTarget = sServerFacade.GetDistance2d(bot, tx, ty);
@@ -282,7 +282,7 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
     }
 
     bot->HandleEmoteState(0);
-    if (bot->IsSitState())
+    if (bot->IsSittingDown())
         bot->SetStandState(UNIT_STAND_STATE_STAND);
 
     if (bot->IsNonMeleeSpellCasted(true))
@@ -304,10 +304,10 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
     }
 
     mm.MoveFollow(target,
-#ifdef MANGOS
+/*#ifdef MANGOS
             distance,
-#endif
-#ifdef CMANGOS
+#endif*/
+#ifdef VMANGOS
             distance - target->GetObjectBoundingRadius(),
 #endif
             angle);
@@ -419,7 +419,7 @@ bool FleeWithPetAction::Execute(Event event)
     Pet* pet = bot->GetPet();
     if (pet)
     {
-#ifdef MANGOS
+#ifdef VMANGOS
         CreatureAI*
 #endif
 #ifdef CMANGOS
@@ -431,7 +431,7 @@ bool FleeWithPetAction::Execute(Event event)
 #ifdef CMANGOS
             creatureAI->SetReactState(REACT_PASSIVE);
 #endif
-#ifdef MANGOS
+#ifdef VMANGOS
             pet->GetCharmInfo()->SetReactState(REACT_PASSIVE);
             pet->GetCharmInfo()->SetCommandState(COMMAND_FOLLOW);
 #endif

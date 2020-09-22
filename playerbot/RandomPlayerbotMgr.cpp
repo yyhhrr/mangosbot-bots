@@ -5,7 +5,7 @@
 #include "PlayerbotFactory.h"
 #include "AccountMgr.h"
 #include "ObjectMgr.h"
-#include "DatabaseEnv.h"
+#include "Database/DatabaseEnv.h"
 #include "PlayerbotAI.h"
 #include "Player.h"
 #include "AiFactory.h"
@@ -433,7 +433,7 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, vector<WorldLocation> &locs
     if (bot->IsBeingTeleported())
         return;
 
-	if (bot->getLevel() < 5)
+	if (bot->GetLevel() < 5)
 		return;
 
     if (locs.empty())
@@ -447,11 +447,11 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, vector<WorldLocation> &locs
     {
         int index = urand(0, locs.size() - 1);
         WorldLocation loc = locs[index];
-        float x = loc.coord_x + (attemtps > 0 ? urand(0, sPlayerbotAIConfig.grindDistance) - sPlayerbotAIConfig.grindDistance / 2 : 0);
-        float y = loc.coord_y + (attemtps > 0 ? urand(0, sPlayerbotAIConfig.grindDistance) - sPlayerbotAIConfig.grindDistance / 2 : 0);
-        float z = loc.coord_z;
+        float x = loc.x + (attemtps > 0 ? urand(0, sPlayerbotAIConfig.grindDistance) - sPlayerbotAIConfig.grindDistance / 2 : 0);
+        float y = loc.y + (attemtps > 0 ? urand(0, sPlayerbotAIConfig.grindDistance) - sPlayerbotAIConfig.grindDistance / 2 : 0);
+        float z = loc.z;
 
-        Map* map = sMapMgr.FindMap(loc.mapid, 0);
+        Map* map = sMapMgr.FindMap(loc.mapId, 0);
         if (!map)
             continue;
 
@@ -480,7 +480,7 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, vector<WorldLocation> &locs
                 bot->GetName(), area->area_name[0], x, y, z, attemtps, locs.size());
 
         bot->GetMotionMaster()->Clear();
-        bot->TeleportTo(loc.mapid, x, y, z, 0);
+        bot->TeleportTo(loc.mapId, x, y, z, 0);
         bot->SendHeartBeat();
         if (pmo) pmo->finish();
         return;
@@ -605,8 +605,8 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
 
 void RandomPlayerbotMgr::RandomTeleportForLevel(Player* bot)
 {
-    sLog.outDetail("Preparing location to random teleporting bot %s for level %u", bot->GetName(), bot->getLevel());
-    RandomTeleport(bot, locsPerLevelCache[bot->getLevel()]);
+    sLog.outDetail("Preparing location to random teleporting bot %s for level %u", bot->GetName(), bot->GetLevel());
+    RandomTeleport(bot, locsPerLevelCache[bot->GetLevel()]);
 }
 
 void RandomPlayerbotMgr::RandomTeleport(Player* bot)
@@ -647,7 +647,7 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot)
 
 void RandomPlayerbotMgr::Randomize(Player* bot)
 {
-    if (bot->getLevel() == 1)
+    if (bot->GetLevel() == 1)
         RandomizeFirst(bot);
     else
         IncreaseLevel(bot);
@@ -663,7 +663,7 @@ void RandomPlayerbotMgr::IncreaseLevel(Player* bot)
 
 	PerformanceMonitorOperation *pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "IncreaseLevel");
 	uint32 lastLevel = GetValue(bot, "level");
-	uint32 level = bot->getLevel();
+	uint32 level = bot->GetLevel();
 	if (lastLevel != level)
 	{
         PlayerbotFactory factory(bot, level);
@@ -755,7 +755,7 @@ void RandomPlayerbotMgr::Refresh(Player* bot)
 	bot->SetHealthPercent(100);
 	bot->SetPvP(true);
 
-    PlayerbotFactory factory(bot, bot->getLevel());
+    PlayerbotFactory factory(bot, bot->GetLevel());
     factory.Refresh();
 
     if (bot->GetMaxPower(POWER_MANA) > 0)
@@ -765,7 +765,7 @@ void RandomPlayerbotMgr::Refresh(Player* bot)
         bot->SetPower(POWER_ENERGY, bot->GetMaxPower(POWER_ENERGY));
 
     uint32 money = bot->GetMoney();
-    bot->SetMoney(money + 500 * sqrt(urand(1, bot->getLevel() * 5)));
+    bot->SetMoney(money + 500 * sqrt(urand(1, bot->GetLevel() * 5)));
 
     if (pmo) pmo->finish();
 }
@@ -1090,13 +1090,13 @@ void RandomPlayerbotMgr::PrintStats()
     for (PlayerBotMap::iterator i = playerBots.begin(); i != playerBots.end(); ++i)
     {
         Player* bot = i->second;
-        if (IsAlliance(bot->getRace()))
-            alliance[bot->getLevel() / 10]++;
+        if (IsAlliance(bot->GetRace()))
+            alliance[bot->GetLevel() / 10]++;
         else
-            horde[bot->getLevel() / 10]++;
+            horde[bot->GetLevel() / 10]++;
 
-        perRace[bot->getRace()]++;
-        perClass[bot->getClass()]++;
+        perRace[bot->GetRace()]++;
+        perClass[bot->GetClass()]++;
 
         if (bot->GetPlayerbotAI()->IsActive())
             active++;
@@ -1122,7 +1122,7 @@ void RandomPlayerbotMgr::PrintStats()
         }
 
         int spec = AiFactory::GetPlayerSpecTab(bot);
-        switch (bot->getClass())
+        switch (bot->GetClass())
         {
         case CLASS_DRUID:
             if (spec == 2)
@@ -1302,8 +1302,8 @@ void RandomPlayerbotMgr::ChangeStrategy(Player* player)
 
 void RandomPlayerbotMgr::RandomTeleportForRpg(Player* bot)
 {
-    uint32 race = bot->getRace();
-	uint32 level = bot->getLevel();
+    uint32 race = bot->GetRace();
+	uint32 level = bot->GetLevel();
     sLog.outDetail("Random teleporting bot %s for RPG (%zu locations available)", bot->GetName(), rpgLocsCacheLevel[race][level].size());
     RandomTeleport(bot, rpgLocsCacheLevel[race][level]);
 	Refresh(bot);
@@ -1320,9 +1320,9 @@ void RandomPlayerbotMgr::Remove(Player* bot)
 
 void RandomPlayerbotMgr::Hotfix(Player* bot, uint32 version)
 {
-    PlayerbotFactory factory(bot, bot->getLevel());
+    PlayerbotFactory factory(bot, bot->GetLevel());
     uint32 exp = bot->GetUInt32Value(PLAYER_XP);
-    uint32 level = bot->getLevel();
+    uint32 level = bot->GetLevel();
     uint32 id = bot->GetGUIDLow();
 
     for (int fix = version; fix <= MANGOSBOT_VERSION; fix++)
@@ -1343,7 +1343,7 @@ void RandomPlayerbotMgr::Hotfix(Player* bot, uint32 version)
                     Quest const *quest = sObjectMgr.GetQuestTemplate(questId);
 
                     if (!bot->SatisfyQuestClass(quest, false) ||
-                        quest->GetMinLevel() > bot->getLevel() ||
+                        quest->GetMinLevel() > bot->GetLevel() ||
                         !bot->SatisfyQuestRace(quest, false) || bot->GetQuestStatus(questId) == QUEST_STATUS_COMPLETE)
                         continue;
 
