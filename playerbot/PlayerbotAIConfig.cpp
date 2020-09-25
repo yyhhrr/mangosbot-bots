@@ -6,6 +6,7 @@
 #include "SystemConfig.h"
 #include "PlayerbotFactory.h"
 #include "RandomItemMgr.h"
+#include "Policies/SingletonImp.h"
 
 using namespace std;
 

@@ -459,7 +459,7 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, vector<WorldLocation> &locs
 		if (!terrain)
 			continue;
 
-		AreaTableEntry const* area = GetAreaEntryByAreaID(terrain->GetAreaId(x, y, z));
+		AreaEntry const* area = sAreaStorage.LookupEntry<AreaEntry>(terrain->GetAreaId(x, y, z));
 		if (!area)
 			continue;
 
@@ -477,7 +477,7 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, vector<WorldLocation> &locs
 
         z = 0.05f + ground;
         sLog.outDetail("Random teleporting bot %s to %s %f,%f,%f (%u/%zu locations)",
-                bot->GetName(), area->area_name[0], x, y, z, attemtps, locs.size());
+                bot->GetName(), area->Name[0], x, y, z, attemtps, locs.size());
 
         bot->GetMotionMaster()->Clear();
         bot->TeleportTo(loc.mapId, x, y, z, 0);
@@ -565,7 +565,8 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
         }
     }
 
-    sLog.outString("Preparing RPG teleport caches for %d factions...", sFactionTemplateStore.GetNumRows());
+    //sLog.outString("Preparing RPG teleport caches for %d factions...", sFactionTemplateStore.GetNumRows());
+    sLog.outString("Preparing RPG teleport caches...");
 
 		    results = WorldDatabase.PQuery("SELECT map, position_x, position_y, position_z, "
 				"r.race, r.minl, r.maxl "

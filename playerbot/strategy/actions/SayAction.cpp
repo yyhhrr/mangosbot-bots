@@ -79,8 +79,8 @@ bool SayAction::Execute(Event event)
 
     if (bot->GetMap())
     {
-        if (AreaTableEntry const* area = GetAreaEntryByAreaID(bot->GetAreaId()))
-            replaceAll(text, "<subzone>", area->area_name[0]);
+        //if (AreaEntry const* area = sAreaStorage.LookupEntry<AreaEntry>(bot->GetAreaId()))
+            //replaceAll(text, "<subzone>", area->Name[0]);
     }
 
     if (text.find("/y ") == 0)

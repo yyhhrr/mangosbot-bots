@@ -38,9 +38,10 @@ bool WhoAction::Execute(Event event)
 
     if (!out.str().empty())
     {
-        if (AreaTableEntry const* areaEntry = GetAreaEntryByAreaID(bot->GetAreaId()))
+        //if (AreaTableEntry const* areaEntry = GetAreaEntryByAreaID(bot->GetAreaId()))
+        if (AreaEntry const* areaEntry = sAreaStorage.LookupEntry<AreaEntry>(bot->GetAreaId()))
         {
-            out << ", (|cffb04040" << areaEntry->area_name[0] << "|r)";
+            out << ", (|cffb04040" << areaEntry->Name[0] << "|r)";
         }
     }
 

@@ -18,6 +18,7 @@
 #include "Player.h"
 #include "Mail.h"
 #include "Util.h"
+#include "Policies/SingletonImp.h"
 
 #ifdef CMANGOS
 #include <boost/thread/thread.hpp>

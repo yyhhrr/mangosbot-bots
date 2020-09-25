@@ -12,6 +12,7 @@
 #include "../../modules/Bots/ahbot/AhBotConfig.h"
 #include "RandomItemMgr.h"
 #include "ServerFacade.h"
+#include "Policies/SingletonImp.h"
 
 INSTANTIATE_SINGLETON_1(GuildTaskMgr);
 
@@ -354,9 +355,9 @@ bool GuildTaskMgr::SendKillAdvertisement(uint32 creatureId, uint32 owner, uint32
         Map* map = sMapMgr.FindMap(mapid, 0);
         if (!map) continue;
         uint32 area = map->GetTerrain()->GetAreaId(x, y, z);
-        const AreaTableEntry* entry = GetAreaEntryByAreaID(area);
+        const AreaEntry* entry = sAreaStorage.LookupEntry<AreaEntry>(area);
         if (!entry) continue;
-        location = entry->area_name[0];
+        location = entry->Name[0];
         break;
     } while (result->NextRow());
     delete result;

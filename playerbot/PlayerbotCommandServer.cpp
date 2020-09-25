@@ -3,6 +3,7 @@
 #include "PlayerbotAIConfig.h"
 #include "PlayerbotFactory.h"
 #include "PlayerbotCommandServer.h"
+#include "Policies/SingletonImp.h"
 #include <cstdlib>
 #include <iostream>
 

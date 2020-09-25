@@ -10,7 +10,7 @@ ObjectGuid Event::getObject()
     if (packet.empty())
         return ObjectGuid();
 
-    WorldPacket const* p(packet);
+    WorldPacket p(packet);
     p.rpos(0);
     
     ObjectGuid guid;

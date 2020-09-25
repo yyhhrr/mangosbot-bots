@@ -106,9 +106,12 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls)
 
     vector<uint8> skinColors, facialHairTypes;
     vector<pair<uint8,uint8>> faces, hairs;
-    for (CharSectionsMap::const_iterator itr = sCharSectionMap.begin(); itr != sCharSectionMap.end(); ++itr)
+    //for (CharSectionsMap::const_iterator itr = sCharSectionMap.begin(); itr != sCharSectionMap.end(); ++itr)
+    //{
+    for (uint32 i = 0; i < sCharSectionsStore.GetNumRows(); ++i)
     {
-        CharSectionsEntry const* entry = itr->second;
+        CharSectionsEntry const* entry = sCharSectionsStore.LookupEntry(i);
+        //CharSectionsEntry const* entry = itr->second;
         if (entry->Race != race || entry->Gender != gender)
             continue;
 

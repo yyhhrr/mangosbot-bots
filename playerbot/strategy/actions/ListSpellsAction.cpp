@@ -23,9 +23,9 @@ bool CompareSpells(pair<uint32, string>& s1, pair<uint32, string>& s2)
 
     uint32 skill1 = 0, skill2 = 0;
     uint32 skillValue1 = 0, skillValue2 = 0;
-    for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
+    for (uint32 j = 0; j < sObjectMgr.GetMaxSkillLineAbilityId(); ++j)
     {
-        SkillLineAbilityEntry const* skillLine = sSkillLineAbilityStore.LookupEntry(j);
+        SkillLineAbilityEntry const* skillLine = sObjectMgr.GetSkillLineAbility(j);
         if (skillLine && skillLine->spellId == s1.first)
         {
             skill1 = skillLine->skillId;
@@ -61,9 +61,9 @@ bool ListSpellsAction::Execute(Event event)
 
     if (skillSpells.empty())
     {
-        for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
+        for (uint32 j = 0; j < sObjectMgr.GetMaxSkillLineAbilityId(); ++j)
         {
-            SkillLineAbilityEntry const* skillLine = sSkillLineAbilityStore.LookupEntry(j);
+            SkillLineAbilityEntry const* skillLine = sObjectMgr.GetSkillLineAbility(j);
             if (skillLine)
                 skillSpells[skillLine->spellId] = skillLine;
         }

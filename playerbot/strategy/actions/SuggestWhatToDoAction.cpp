@@ -260,12 +260,12 @@ void SuggestWhatToDoAction::something()
     map<string, string> placeholders;
     placeholders["%role"] = chat->formatClass(bot, AiFactory::GetPlayerSpecTab(bot));
 
-    AreaTableEntry const* entry = GetAreaEntryByAreaID(bot->GetAreaId());
+    AreaEntry const* entry = sAreaStorage.LookupEntry<AreaEntry>(bot->GetAreaId());
     if (!entry)
         return;
 
     ostringstream out;
-    out << "|cffb04040" << entry->area_name[0] << "|r";
+    out << "|cffb04040" << entry->Name[0] << "|r";
     placeholders["%zone"] = out.str();
 
     spam(sPlayerbotTextMgr.Format("suggest_something", placeholders));
@@ -279,13 +279,13 @@ void SuggestWhatToDoAction::spam(string msg, uint32 channelId)
         ChatChannelsEntry const* channel = sChatChannelsStore.LookupEntry(i);
         if (!channel || channel->ChannelID != channelId) continue;
 
-        for (uint32 j = 0; j < sAreaStore.GetNumRows(); ++j)
+        for (uint32 j = 0; j < sAreaStorage.GetMaxEntry(); ++j)
         {
-            AreaTableEntry const* area = sAreaStore.LookupEntry(j);
+            AreaEntry const* area = sAreaStorage.LookupEntry<AreaEntry>(j);
             if (!area) continue;
 
             char channelName[255];
-            snprintf(channelName, 255, channel->pattern[0], area->area_name[0]);
+            snprintf(channelName, 255, channel->pattern[0], area->Name[0]);
             if (said.find(channelName) != said.end()) continue;
 
             if (ChannelMgr* cMgr = channelMgr(bot->GetTeam()))

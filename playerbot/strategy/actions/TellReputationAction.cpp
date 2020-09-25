@@ -27,7 +27,7 @@ bool TellReputationAction::Execute(Event event)
     const FactionTemplateEntry *factionTemplate = unit->getFactionTemplateEntry();
 #endif
     uint32 faction = factionTemplate->faction;
-    const FactionEntry* entry = sFactionStore.LookupEntry
+    const FactionEntry* entry = sObjectMgr.GetFactionEntry
 #ifdef CMANGOS
     #ifdef MANGOSBOT_ONE
             <FactionEntry>

@@ -1986,10 +1986,10 @@ string PlayerbotAI::HandleRemoteCommand(string command)
     {
         ostringstream out; out << bot->GetPositionX() << " " << bot->GetPositionY() << " " << bot->GetPositionZ() << " " << bot->GetMapId() << " " << bot->GetOrientation();
         uint32 area = bot->GetAreaId();
-        if (const AreaTableEntry* areaEntry = GetAreaEntryByAreaID(area))
+        if (const AreaEntry* areaEntry = sAreaStorage.LookupEntry<AreaEntry>(area))
         {
-            if (AreaTableEntry const* zoneEntry = areaEntry->zone ? GetAreaEntryByAreaID(areaEntry->zone) : areaEntry)
-                out << " |" << zoneEntry->area_name[0] << "|";
+            if (AreaEntry const* zoneEntry = areaEntry->ZoneId ? sAreaStorage.LookupEntry<AreaEntry>(areaEntry->ZoneId) : areaEntry)
+                out << " |" << zoneEntry->Name[0] << "|";
         }
         return out.str();
     }
