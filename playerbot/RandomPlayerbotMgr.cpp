@@ -520,14 +520,14 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
         for (uint8 level = 1; level <= maxLevel; level++)
         {
             QueryResult* results = WorldDatabase.PQuery("select map, position_x, position_y, position_z "
-                "from (select map, position_x, position_y, position_z, avg(t.maxlevel), avg(t.minlevel), "
-                "%u - (avg(t.maxlevel) + avg(t.minlevel)) / 2 delta "
-                "from creature c inner join creature_template t on c.id = t.entry where t.NpcFlags = 0 group by t.entry) q "
+                "from (select map, position_x, position_y, position_z, avg(t.level_max), avg(t.level_min), "
+                "%u - (avg(t.level_max) + avg(t.level_min)) / 2 delta "
+                "from creature c inner join creature_template t on c.id = t.entry where t.npc_flags = 0 group by t.entry) q "
                 "where delta >= 0 and delta <= %u and map in (%s) and not exists ( "
                 "select map, position_x, position_y, position_z from "
                 "("
-                "select map, c.position_x, c.position_y, c.position_z, avg(t.maxlevel), avg(t.minlevel), "
-                "%u - (avg(t.maxlevel) + avg(t.minlevel)) / 2 delta "
+                "select map, c.position_x, c.position_y, c.position_z, avg(t.level_max), avg(t.level_min), "
+                "%u - (avg(t.level_max) + avg(t.level_min)) / 2 delta "
                 "from creature c "
                 "inner join creature_template t on c.id = t.entry group by t.entry "
                 ") q1 "
@@ -712,9 +712,9 @@ uint32 RandomPlayerbotMgr::GetZoneLevel(uint16 mapId, float teleX, float teleY, 
 	uint32 maxLevel = sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL);
 
 	uint32 level;
-    QueryResult* results = WorldDatabase.PQuery("select avg(t.minlevel) minlevel, avg(t.maxlevel) maxlevel from creature c "
+    QueryResult* results = WorldDatabase.PQuery("select avg(t.level_min) level_min, avg(t.level_max) level_max from creature c "
             "inner join creature_template t on c.id = t.entry "
-            "where map = '%u' and minlevel > 1 and abs(position_x - '%f') < '%u' and abs(position_y - '%f') < '%u'",
+            "where map = '%u' and level_min > 1 and abs(position_x - '%f') < '%u' and abs(position_y - '%f') < '%u'",
             mapId, teleX, sPlayerbotAIConfig.randomBotTeleportDistance / 2, teleY, sPlayerbotAIConfig.randomBotTeleportDistance / 2);
 
     if (results)

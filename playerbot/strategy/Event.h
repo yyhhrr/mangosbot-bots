@@ -21,7 +21,7 @@ namespace ai
 	public:
         string getSource() { return source; }
         string getParam() { return param; }
-        WorldPacket  getPacket() { return packet; }
+        WorldPacket& getPacket() { return packet; }
         ObjectGuid getObject();
         Player* getOwner() { return owner; }
         bool operator! () const { return source.empty(); }

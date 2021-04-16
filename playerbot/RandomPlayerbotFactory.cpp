@@ -104,41 +104,43 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls)
     if (name.empty())
         return false;
 
-    vector<uint8> skinColors, facialHairTypes;
+    vector<uint8> skinColorIndexs, facialHairVariationIndexs;
     vector<pair<uint8,uint8>> faces, hairs;
     //for (CharSectionsMap::const_iterator itr = sCharSectionMap.begin(); itr != sCharSectionMap.end(); ++itr)
     //{
     for (uint32 i = 0; i < sCharSectionsStore.GetNumRows(); ++i)
     {
         CharSectionsEntry const* entry = sCharSectionsStore.LookupEntry(i);
-        //CharSectionsEntry const* entry = itr->second;
+        if (!entry)
+            continue;
+        //CharSectionsEntry const* entry = itr-> second;
         if (entry->Race != race || entry->Gender != gender)
             continue;
 
-        switch (entry->GenType)
+        switch (entry->BaseSection)
         {
         case SECTION_TYPE_SKIN:
-            skinColors.push_back(entry->Color);
+            skinColorIndexs.push_back(entry->ColorIndex);
             break;
         case SECTION_TYPE_FACE:
-            faces.push_back(pair<uint8,uint8>(entry->Type, entry->Color));
+            faces.push_back(pair<uint8,uint8>(entry->VariationIndex, entry->ColorIndex));
             break;
         case SECTION_TYPE_FACIAL_HAIR:
-            facialHairTypes.push_back(entry->Type);
+            facialHairVariationIndexs.push_back(entry->VariationIndex);
             break;
         case SECTION_TYPE_HAIR:
-            hairs.push_back(pair<uint8,uint8>(entry->Type, entry->Color));
+            hairs.push_back(pair<uint8,uint8>(entry->VariationIndex, entry->ColorIndex));
             break;
         }
     }
 
-    uint8 skinColor = skinColors[urand(0, skinColors.size() - 1)];
+    uint8 skinColorIndex = skinColorIndexs[urand(0, skinColorIndexs.size() - 1)];
     pair<uint8,uint8> face = faces[urand(0, faces.size() - 1)];
     pair<uint8,uint8> hair = hairs[urand(0, hairs.size() - 1)];
 
 	bool excludeCheck = (race == RACE_TAUREN) || (gender == GENDER_FEMALE && race != RACE_NIGHTELF && race != RACE_UNDEAD);
 #ifndef MANGOSBOT_TWO
-	uint8 facialHair = excludeCheck ? 0 : facialHairTypes[urand(0, facialHairTypes.size() - 1)];
+	uint8 facialHair = excludeCheck ? 0 : facialHairVariationIndexs[urand(0, facialHairVariationIndexs.size() - 1)];
 #else
 	uint8 facialHair = 0;
 #endif
@@ -153,10 +155,10 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls)
 
     Player *player = new Player(session);
 	if (!player->Create(sObjectMgr.GeneratePlayerLowGuid(), name, race, cls, gender,
-	        face.second, // skinColor,
+	        face.second, // skinColorIndex,
 	        face.first,
 	        hair.first,
-	        hair.second, // hairColor,
+	        hair.second, // hairColorIndex,
             facialHair))
 	        //facialHair, 0))
     {

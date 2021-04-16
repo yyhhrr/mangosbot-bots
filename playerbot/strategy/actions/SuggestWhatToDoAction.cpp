@@ -265,7 +265,7 @@ void SuggestWhatToDoAction::something()
         return;
 
     ostringstream out;
-    out << "|cffb04040" << entry->Name[0] << "|r";
+    out << "|cffb04040" << entry->Name << "|r";
     placeholders["%zone"] = out.str();
 
     spam(sPlayerbotTextMgr.Format("suggest_something", placeholders));
