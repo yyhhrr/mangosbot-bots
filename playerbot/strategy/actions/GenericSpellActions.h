@@ -229,35 +229,94 @@ namespace ai
         virtual ActionThreatType getThreatType() { return ACTION_THREAT_NONE; }
     };
 
-	class CastLifeBloodAction : public CastHealingSpellAction
-	{
-	public:
-		CastLifeBloodAction(PlayerbotAI* ai) : CastHealingSpellAction(ai, "lifeblood") {}
-	};
+    //heal
 
-	class CastGiftOfTheNaaruAction : public CastHealingSpellAction
-	{
-	public:
-		CastGiftOfTheNaaruAction(PlayerbotAI* ai) : CastHealingSpellAction(ai, "gift of the naaru") {}
-	};
-
-    class CastArcaneTorrentAction : public CastBuffSpellAction
+#ifndef MANGOSBOT_ZERO
+    class CastGiftOfTheNaaruAction : public CastHealingSpellAction
     {
     public:
-        CastArcaneTorrentAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "arcane torrent") {}
+        CastGiftOfTheNaaruAction(PlayerbotAI* ai) : CastHealingSpellAction(ai, "gift of the naaru") {}
+    };
+#endif
+    class CastCannibalizeAction : public CastHealingSpellAction
+    {
+    public:
+        CastCannibalizeAction(PlayerbotAI* ai) : CastHealingSpellAction(ai, "cannibalize") {}
     };
 
+    //buff
+
+#ifndef MANGOSBOT_ZERO
     class CastManaTapAction : public CastBuffSpellAction
     {
     public:
         CastManaTapAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "mana tap") {}
     };
 
+    class CastArcaneTorrentAction : public CastBuffSpellAction
+    {
+    public:
+        CastArcaneTorrentAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "arcane torrent") {}
+    };
+#endif
+    class CastShadowmeldAction : public CastBuffSpellAction
+    {
+    public:
+        CastShadowmeldAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "shadowmeld") {}
+    };
+
+    class CastBerserkingAction : public CastBuffSpellAction
+    {
+    public:
+        CastBerserkingAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "berserking") {}
+    };
+
+    class CastBloodFuryAction : public CastBuffSpellAction
+    {
+    public:
+        CastBloodFuryAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "blood fury") {}
+    };
+
+    class CastStoneformAction : public CastBuffSpellAction
+    {
+    public:
+        CastStoneformAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "stoneform") {}
+    };
+
+    class CastPerceptionAction : public CastBuffSpellAction
+    {
+    public:
+        CastPerceptionAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "perception") {}
+    };
+
+    //spells 
+
     class CastWarStompAction : public CastSpellAction
     {
     public:
         CastWarStompAction(PlayerbotAI* ai) : CastSpellAction(ai, "war stomp") {}
     };
+
+    //cc breakers
+
+    class CastWillOfTheForsakenAction : public CastSpellAction
+    {
+    public:
+        CastWillOfTheForsakenAction(PlayerbotAI* ai) : CastSpellAction(ai, "will of the forsaken") {}
+    };
+
+    class CastEscapeArtistAction : public CastSpellAction
+    {
+    public:
+        CastEscapeArtistAction(PlayerbotAI* ai) : CastSpellAction(ai, "escape artist") {}
+    };
+#ifdef MANGOSBOT_TWO
+    class CastEveryManforHimselfAction : public CastSpellAction
+    {
+    public:
+        CastEveryManforHimselfAction(PlayerbotAI* ai) : CastSpellAction(ai, "every man for himself") {}
+    };
+#endif
 
     class CastSpellOnEnemyHealerAction : public CastSpellAction
     {
