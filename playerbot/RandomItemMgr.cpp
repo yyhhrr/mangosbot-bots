@@ -393,7 +393,54 @@ bool RandomItemMgr::CanEquipItemNew(ItemPrototype const* proto)
     return properSlot;
 }
 
-void RandomItemMgr::AddItemStats(uint32 mod, uint8 &sp, uint8 &ap, uint8 &tank)
+void RandomItemMgr::AddItemSpellStats(uint32 smod, uint8& sp, uint8& ap, uint8& tank)
+{
+    switch (smod)
+    {
+    case SPELL_AURA_MOD_DAMAGE_DONE:
+    case SPELL_AURA_MOD_HEALING_DONE:
+    case SPELL_AURA_MOD_SPELL_CRIT_CHANCE:
+    case SPELL_AURA_MOD_POWER_REGEN:
+    case SPELL_AURA_MOD_MANA_REGEN_FROM_STAT:
+    case SPELL_AURA_HASTE_SPELLS:
+        sp++;
+        break;
+    }
+
+    switch (smod)
+    {
+
+    case SPELL_AURA_MOD_EXPERTISE:
+    case SPELL_AURA_MOD_ATTACK_POWER:
+    case SPELL_AURA_MOD_CRIT_PERCENT:
+    case SPELL_AURA_MOD_HIT_CHANCE:
+    case SPELL_AURA_MOD_RANGED_ATTACK_POWER:
+    case SPELL_AURA_EXTRA_ATTACKS:
+    case SPELL_AURA_MOD_MELEE_HASTE:
+    case SPELL_AURA_MOD_RANGED_HASTE:
+        ap++;
+        break;
+    }
+
+    switch (smod)
+    {
+    case SPELL_AURA_MOD_PARRY_PERCENT:
+    case SPELL_AURA_MOD_DODGE_PERCENT:
+    case SPELL_AURA_MOD_BLOCK_PERCENT:
+    case SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN:
+    case SPELL_AURA_MOD_BASE_RESISTANCE_PCT:
+    case SPELL_AURA_MOD_BASE_RESISTANCE:
+        //case SPELL_AURA_MOD_BLOCK_SKILL:
+    case SPELL_AURA_MOD_SKILL:
+    case SPELL_AURA_MOD_SHIELD_BLOCKVALUE:
+    case SPELL_AURA_MOD_SHIELD_BLOCKVALUE_PCT:
+        //case SPELL_AURA_MOD_HEALING_RECEIVED:
+        tank++;
+        break;
+    }
+}
+
+void RandomItemMgr::AddItemStats(uint32 mod, uint8& sp, uint8& ap, uint8& tank)
 {
     switch (mod)
     {
@@ -402,6 +449,18 @@ void RandomItemMgr::AddItemStats(uint32 mod, uint8 &sp, uint8 &ap, uint8 &tank)
     case ITEM_MOD_MANA:
     case ITEM_MOD_INTELLECT:
     case ITEM_MOD_SPIRIT:
+#ifndef MANGOSBOT_ZERO
+    case ITEM_MOD_HIT_SPELL_RATING:
+#endif
+#ifdef MANGOSBOT_TWO
+    case ITEM_MOD_SPELL_HEALING_DONE:
+    case ITEM_MOD_SPELL_DAMAGE_DONE:
+    case ITEM_MOD_MANA_REGENERATION:
+    case ITEM_MOD_ARMOR_PENETRATION_RATING:
+    case ITEM_MOD_SPELL_POWER:
+    case ITEM_MOD_HEALTH_REGEN:
+    case ITEM_MOD_SPELL_PENETRATION:
+#endif
         sp++;
         break;
     }
@@ -412,6 +471,25 @@ void RandomItemMgr::AddItemStats(uint32 mod, uint8 &sp, uint8 &ap, uint8 &tank)
     case ITEM_MOD_STRENGTH:
     case ITEM_MOD_HEALTH:
     case ITEM_MOD_STAMINA:
+#ifndef MANGOSBOT_ZERO
+    case ITEM_MOD_DEFENSE_SKILL_RATING:
+    case ITEM_MOD_DODGE_RATING:
+    case ITEM_MOD_PARRY_RATING:
+    case ITEM_MOD_BLOCK_RATING:
+    case ITEM_MOD_CRIT_SPELL_RATING:
+    case ITEM_MOD_HIT_TAKEN_MELEE_RATING:
+    case ITEM_MOD_HIT_TAKEN_RANGED_RATING:
+    case ITEM_MOD_HIT_TAKEN_SPELL_RATING:
+    case ITEM_MOD_CRIT_TAKEN_MELEE_RATING:
+    case ITEM_MOD_CRIT_TAKEN_RANGED_RATING:
+    case ITEM_MOD_CRIT_TAKEN_SPELL_RATING:
+    case ITEM_MOD_HIT_TAKEN_RATING:
+    case ITEM_MOD_CRIT_TAKEN_RATING:
+    case ITEM_MOD_RESILIENCE_RATING:
+#endif
+#ifdef MANGOSBOT_TWO
+    case ITEM_MOD_BLOCK_VALUE:
+#endif
         tank++;
         break;
     }
@@ -422,6 +500,23 @@ void RandomItemMgr::AddItemStats(uint32 mod, uint8 &sp, uint8 &ap, uint8 &tank)
     case ITEM_MOD_STAMINA:
     case ITEM_MOD_AGILITY:
     case ITEM_MOD_STRENGTH:
+#ifndef MANGOSBOT_ZERO:
+    case ITEM_MOD_HIT_MELEE_RATING:
+    case ITEM_MOD_HIT_RANGED_RATING:
+    case ITEM_MOD_CRIT_MELEE_RATING:
+    case ITEM_MOD_CRIT_RANGED_RATING:
+    case ITEM_MOD_HASTE_MELEE_RATING:
+    case ITEM_MOD_HASTE_RANGED_RATING:
+    case ITEM_MOD_HIT_RATING:
+    case ITEM_MOD_CRIT_RATING:
+    case ITEM_MOD_HASTE_RATING:
+    case ITEM_MOD_EXPERTISE_RATING:
+#endif
+#ifdef MANGOSBOT_TWO
+    case ITEM_MOD_ATTACK_POWER:
+    case ITEM_MOD_RANGED_ATTACK_POWER:
+    case ITEM_MOD_FERAL_ATTACK_POWER:
+#endif
         ap++;
         break;
     }
@@ -439,12 +534,20 @@ bool RandomItemMgr::CheckItemStats(uint8 clazz, uint8 sp, uint8 ap, uint8 tank)
         break;
     case CLASS_PALADIN:
     case CLASS_WARRIOR:
+#ifdef MANGOSBOT_TWO
+    case CLASS_DEATH_KNIGHT:
+#endif
         if ((!ap && !tank) || sp > ap || sp > tank)
             return false;
         break;
     case CLASS_HUNTER:
     case CLASS_ROGUE:
         if (!ap || sp > ap || sp > tank)
+            return false;
+        break;
+    case CLASS_DRUID:
+    case CLASS_SHAMAN:
+        if ((!ap && !sp) || sp > ap || tank > sp)
             return false;
         break;
     }
@@ -545,30 +648,34 @@ bool RandomItemMgr::ShouldEquipArmorForSpec(uint8 playerclass, uint8 spec, ItemP
 
 bool RandomItemMgr::CanEquipArmor(uint8 clazz, uint32 level, ItemPrototype const* proto)
 {
-    if (proto->InventoryType == INVTYPE_TABARD)
+    if (proto->InventoryType == INVTYPE_TABARD || proto->InventoryType == INVTYPE_NECK || proto->InventoryType == INVTYPE_CLOAK || proto->InventoryType == INVTYPE_FINGER || proto->InventoryType == INVTYPE_TRINKET)
         return true;
 
-    if ((clazz == CLASS_WARRIOR || clazz == CLASS_PALADIN || clazz == CLASS_SHAMAN)
-            && proto->SubClass == ITEM_SUBCLASS_ARMOR_SHIELD)
+    if ((clazz == CLASS_WARRIOR || clazz == CLASS_PALADIN)
+        && proto->SubClass == ITEM_SUBCLASS_ARMOR_SHIELD || proto->SubClass == ITEM_SUBCLASS_ARMOR_BUCKLER)
+        return true;
+
+    if ((clazz == CLASS_SHAMAN)
+        && proto->SubClass == ITEM_SUBCLASS_ARMOR_SHIELD || proto->SubClass == ITEM_SUBCLASS_ARMOR_BUCKLER || proto->SubClass == ITEM_SUBCLASS_ARMOR_MISC)
         return true;
 
     if ((clazz == CLASS_WARRIOR || clazz == CLASS_PALADIN) && level >= 40)
     {
-        if (proto->SubClass != ITEM_SUBCLASS_ARMOR_PLATE && proto->InventoryType != INVTYPE_CLOAK)
+        if (proto->SubClass != ITEM_SUBCLASS_ARMOR_PLATE)
             return false;
     }
 
     if (((clazz == CLASS_WARRIOR || clazz == CLASS_PALADIN) && level < 40) ||
             ((clazz == CLASS_HUNTER || clazz == CLASS_SHAMAN) && level >= 40))
     {
-        if (proto->SubClass != ITEM_SUBCLASS_ARMOR_MAIL && proto->InventoryType != INVTYPE_CLOAK)
+        if (proto->SubClass != ITEM_SUBCLASS_ARMOR_MAIL)
             return false;
     }
 
     if (((clazz == CLASS_HUNTER || clazz == CLASS_SHAMAN) && level < 40) ||
             (clazz == CLASS_DRUID || clazz == CLASS_ROGUE))
     {
-        if (proto->SubClass != ITEM_SUBCLASS_ARMOR_LEATHER && proto->InventoryType != INVTYPE_CLOAK)
+        if (proto->SubClass != ITEM_SUBCLASS_ARMOR_LEATHER)
             return false;
     }
 
@@ -584,7 +691,21 @@ bool RandomItemMgr::CanEquipArmor(uint8 clazz, uint32 level, ItemPrototype const
 
         AddItemStats(proto->ItemStat[j].ItemStatType, sp, ap, tank);
     }
+    //filtering "spellstats" on items like spellpower/healing, attackpower,crit,hit,etc..
+    for (int k = 0; k < MAX_ITEM_PROTO_SPELLS; k++)
+    {
+        const SpellEntry* const spellInfo = sServerFacade.LookupSpellInfo(proto->Spells[k].SpellId);
+        if (!spellInfo)
+            continue;
 
+        for (int l = 0; l < 3; l++)
+        {
+            if (spellInfo->Effect[l] != SPELL_EFFECT_APPLY_AURA)
+                continue;
+
+            AddItemSpellStats(spellInfo->EffectApplyAuraName[l], sp, ap, tank);
+        }
+    }
     return CheckItemStats(clazz, sp, ap, tank);
 }
 
@@ -753,68 +874,102 @@ bool RandomItemMgr::CanEquipWeapon(uint8 clazz, ItemPrototype const* proto)
     {
     case CLASS_PRIEST:
         if (proto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_WAND &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE)
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_WAND &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_DAGGER &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE)
             return false;
         break;
     case CLASS_MAGE:
     case CLASS_WARLOCK:
         if (proto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_WAND &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD)
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_WAND &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_DAGGER &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD)
             return false;
         break;
     case CLASS_WARRIOR:
         if (proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_GUN &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_CROSSBOW &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_BOW &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_THROWN)
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_FIST &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_GUN &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_CROSSBOW &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_BOW &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_POLEARM &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_THROWN)
             return false;
         break;
     case CLASS_PALADIN:
         if (proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD)
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_POLEARM &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD)
             return false;
         break;
     case CLASS_SHAMAN:
         if (proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF)
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_DAGGER &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_FIST &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF)
             return false;
         break;
     case CLASS_DRUID:
         if (proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_DAGGER &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF)
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_POLEARM &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_FIST &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_DAGGER &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF)
             return false;
         break;
     case CLASS_HUNTER:
         if (proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_GUN &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_CROSSBOW &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_BOW)
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_POLEARM &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_DAGGER &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_FIST &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_GUN &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_CROSSBOW &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_BOW)
             return false;
         break;
     case CLASS_ROGUE:
         if (proto->SubClass != ITEM_SUBCLASS_WEAPON_DAGGER &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_GUN &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_CROSSBOW &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_BOW &&
-                proto->SubClass != ITEM_SUBCLASS_WEAPON_THROWN)
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_GUN &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_FIST &&
+#ifdef MANGOSBOT_TWO
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE &&
+#endif
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_CROSSBOW &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_BOW &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_THROWN)
             return false;
         break;
+#ifdef MANGOSBOT_TWO
+    case CLASS_DEATH_KNIGHT:
+        if (proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_POLEARM &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2 &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_MACE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE &&
+            proto->SubClass != ITEM_SUBCLASS_WEAPON_AXE2)
+            return false;
+        break;
+#endif
     }
 
     return true;
@@ -2067,9 +2222,9 @@ void RandomItemMgr::BuildEquipCache()
                                 continue;
 
                             if (proto->Class != ITEM_CLASS_WEAPON &&
-                                proto->Class != ITEM_CLASS_ARMOR &&
+                                proto->Class != ITEM_CLASS_ARMOR /*&&
                                 proto->Class != ITEM_CLASS_CONTAINER &&
-                                proto->Class != ITEM_CLASS_PROJECTILE)
+                                proto->Class != ITEM_CLASS_PROJECTILE*/)
                                 continue;
 
                             if (!CanEquipItem(key, proto))
@@ -2077,19 +2232,31 @@ void RandomItemMgr::BuildEquipCache()
 
                             if (proto->Class == ITEM_CLASS_ARMOR && (
                                 slot == EQUIPMENT_SLOT_HEAD ||
+                                slot == EQUIPMENT_SLOT_NECK ||
                                 slot == EQUIPMENT_SLOT_SHOULDERS ||
+                                slot == EQUIPMENT_SLOT_BACK ||
                                 slot == EQUIPMENT_SLOT_CHEST ||
                                 slot == EQUIPMENT_SLOT_WAIST ||
                                 slot == EQUIPMENT_SLOT_LEGS ||
                                 slot == EQUIPMENT_SLOT_FEET ||
                                 slot == EQUIPMENT_SLOT_WRISTS ||
-                                slot == EQUIPMENT_SLOT_HANDS) && !CanEquipArmor(key.clazz, key.level, proto))
+                                slot == EQUIPMENT_SLOT_HANDS ||
+                                slot == EQUIPMENT_SLOT_FINGER1 ||
+                                slot == EQUIPMENT_SLOT_FINGER2 ||
+                                slot == EQUIPMENT_SLOT_TRINKET1 ||
+                                slot == EQUIPMENT_SLOT_TRINKET2) && !CanEquipArmor(key.clazz, key.level, proto))
                                     continue;
 
                             if (proto->Class == ITEM_CLASS_WEAPON && !CanEquipWeapon(key.clazz, proto))
                                 continue;
 
                             if (slot == EQUIPMENT_SLOT_OFFHAND && key.clazz == CLASS_ROGUE && proto->Class != ITEM_CLASS_WEAPON)
+                                continue;
+
+                            if (slot == EQUIPMENT_SLOT_OFFHAND && key.clazz == CLASS_PALADIN && proto->SubClass != ITEM_SUBCLASS_ARMOR_BUCKLER && proto->SubClass != ITEM_SUBCLASS_ARMOR_SHIELD)
+                                continue;
+
+                            if (slot == EQUIPMENT_SLOT_OFFHAND && key.clazz == CLASS_WARRIOR && proto->SubClass != ITEM_SUBCLASS_ARMOR_BUCKLER && proto->SubClass != ITEM_SUBCLASS_ARMOR_SHIELD && proto->Class != ITEM_CLASS_WEAPON)
                                 continue;
 
                             items.push_back(itemId);
