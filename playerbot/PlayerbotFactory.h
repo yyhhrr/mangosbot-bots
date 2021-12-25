@@ -101,6 +101,7 @@ private:
     void AddConsumables();
     static void AddPrevQuests(uint32 questId, list<uint32>& questIds);
     void LoadEnchantContainer();
+    void InitGlyphs();
     void ApplyEnchantTemplate();
     void ApplyEnchantTemplate(uint8 spec);
     EnchantContainer::const_iterator GetEnchantContainerBegin() { return m_EnchantContainer.begin(); }
