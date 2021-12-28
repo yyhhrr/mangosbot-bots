@@ -158,7 +158,8 @@ class RandomItemMgr
         bool ShouldEquipWeaponForSpec(uint8 playerclass, uint8 spec, ItemPrototype const* proto);
         float GetItemRarity(uint32 itemId);
         uint32 GetQuestIdForItem(uint32 itemId);
-        vector<uint32> GetQuestIdsForItem(uint32 itemId);
+        vector<uint32> GetQuestIdsForItem(uint32 itemId);      
+        vector<uint32> GetGemsList();
 
     private:
         void BuildRandomItemCache();

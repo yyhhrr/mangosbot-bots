@@ -2925,3 +2925,23 @@ float RandomItemMgr::GetItemRarity(uint32 itemId)
 {
     return rarityCache[itemId];
 }
+
+vector<uint32> RandomItemMgr::GetGemsList() 
+{
+    vector<uint32>_gems;
+
+    if (_gems.empty()) 
+    {
+        for (uint32 itemId = 0; itemId < sItemStorage.GetMaxEntry(); ++itemId)
+        {
+            ItemPrototype const* proto = sObjectMgr.GetItemPrototype(itemId);
+            if (!proto)
+                continue;
+
+            if (proto->Class != ITEM_CLASS_GEM)
+                continue;
+            _gems.push_back(proto->ItemId);
+        }
+    }
+    return _gems;
+}
