@@ -263,10 +263,11 @@ void PlayerbotFactory::Randomize(bool incremental)
     pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_EqSets");
     sLog.outDetail("Initializing second equipment set...");
     InitSecondEquipmentSet();
-    InitGems();
+    //InitGems();
     if (bot->getLevel() >= sPlayerbotAIConfig.minEnchantingBotLevel)
     {
         ApplyEnchantTemplate();
+        InitGems();
     }
     if (pmo) pmo->finish();
 
@@ -353,7 +354,7 @@ void PlayerbotFactory::AddConsumables()
             StoreItem(CONSUM_ID_SUPERIOR_MANA_OIL, 5);
             StoreItem(CONSUM_ID_BRILLIANT_WIZARD_OIL, 5);
          }
-         if (level >= 58) {
+         if (level >= 58 && level < 72) {
            StoreItem(CONSUM_ID_SUPERIOR_MANA_OIL, 5);
            StoreItem(CONSUM_ID_SUPERIOR_WIZARD_OIL, 5);
       }
@@ -413,17 +414,29 @@ void PlayerbotFactory::AddConsumables()
             StoreItem(CONSUM_ID_DEADLY_POISON, 5);
             StoreItem(CONSUM_ID_INSTANT_POISON_II, 5);
          }
-         if (level >= 36 && level < 44) {
-            StoreItem(CONSUM_ID_DEADLY_POISON_II, 5);
+         if (level >= 36 && level < 38) {
+            StoreItem(CONSUM_ID_DEADLY_POISON, 5);
            StoreItem(CONSUM_ID_INSTANT_POISON_III, 5);
          }
-         if (level >= 44 && level < 52) {
-            StoreItem(CONSUM_ID_DEADLY_POISON_III, 5);
+         if (level >= 38 && level < 44) {
+             StoreItem(CONSUM_ID_DEADLY_POISON_II, 5);
+             StoreItem(CONSUM_ID_INSTANT_POISON_III, 5);
+         }
+         if (level >= 44 && level < 46) {
+            StoreItem(CONSUM_ID_DEADLY_POISON_II, 5);
             StoreItem(CONSUM_ID_INSTANT_POISON_IV, 5);
          }
-         if (level >= 52 && level < 60) {
-            StoreItem(CONSUM_ID_DEADLY_POISON_IV, 5);
+         if (level >= 46 && level < 52) {
+             StoreItem(CONSUM_ID_DEADLY_POISON_III, 5);
+             StoreItem(CONSUM_ID_INSTANT_POISON_IV, 5);
+         }
+         if (level >= 52 && level < 54) {
+            StoreItem(CONSUM_ID_DEADLY_POISON_III, 5);
             StoreItem(CONSUM_ID_INSTANT_POISON_V, 5);
+         }
+         if (level >= 54 && level < 60) {
+             StoreItem(CONSUM_ID_DEADLY_POISON_IV, 5);
+             StoreItem(CONSUM_ID_INSTANT_POISON_V, 5);
          }
          if (level >= 60 && level < 62) {
             StoreItem(CONSUM_ID_DEADLY_POISON_V, 5);
@@ -433,9 +446,29 @@ void PlayerbotFactory::AddConsumables()
             StoreItem(CONSUM_ID_DEADLY_POISON_VI, 5);
             StoreItem(CONSUM_ID_INSTANT_POISON_VI, 5);
          }
-         if (level >= 68) {
-            StoreItem(CONSUM_ID_DEADLY_POISON_VII, 5);
+         if (level >= 68 && level < 70) {
+            StoreItem(CONSUM_ID_DEADLY_POISON_VI, 5);
             StoreItem(CONSUM_ID_INSTANT_POISON_VII, 5);
+         }
+         if (level >= 70 && level < 73) {
+             StoreItem(CONSUM_ID_DEADLY_POISON_VII, 5);
+             StoreItem(CONSUM_ID_INSTANT_POISON_VII, 5);
+         }
+         if (level >= 73 && level < 76) {
+             StoreItem(CONSUM_ID_DEADLY_POISON_VII, 5);
+             StoreItem(CONSUM_ID_INSTANT_POISON_VIII, 5);
+         }
+         if (level >= 76 && level < 79) {
+             StoreItem(CONSUM_ID_DEADLY_POISON_VIII, 5);
+             StoreItem(CONSUM_ID_INSTANT_POISON_VIII, 5);
+         }
+         if (level >= 79 && level < 80) {
+             StoreItem(CONSUM_ID_DEADLY_POISON_VIII, 5);
+             StoreItem(CONSUM_ID_INSTANT_POISON_IX, 5);
+         }
+         if (level = 80) {
+             StoreItem(CONSUM_ID_DEADLY_POISON_IX, 5);
+             StoreItem(CONSUM_ID_INSTANT_POISON_IX, 5);
          }
          break;
       }
