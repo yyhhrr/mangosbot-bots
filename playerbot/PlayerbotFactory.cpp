@@ -2988,18 +2988,20 @@ void PlayerbotFactory::InitGems() //WIP
         for (int slot = EQUIPMENT_SLOT_START; slot < EQUIPMENT_SLOT_END; slot++)
         {
             if (Item* item = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot))
-            {
-                //WorldPacket data;
+            {               
                 if (ItemPrototype const* proto = item->GetProto())
                 {
-                    WorldPacket data;
+                    
+                    WorldPacket data(CMSG_SOCKET_GEMS);
+                    
                     data << item->GetObjectGuid();
                     uint32 gem_placed[MAX_GEM_SOCKETS];
 
                     for (int i = 0; i < MAX_GEM_SOCKETS; i++) gem_placed[i] = 0;
                     for (uint32 enchant_slot = SOCK_ENCHANTMENT_SLOT; enchant_slot < SOCK_ENCHANTMENT_SLOT + MAX_GEM_SOCKETS; ++enchant_slot)
                     {
-                        uint64 gem_GUID = 0;
+                        ObjectGuid gem_GUID;
+                        //uint64 gem_GUID = 0;
                         uint32 SocketColor = proto->Socket[enchant_slot - SOCK_ENCHANTMENT_SLOT].Color;
                         uint32 SocketContent = proto->Socket[enchant_slot - SOCK_ENCHANTMENT_SLOT].Content;
                         uint32 gem_id = 0;
@@ -3009,33 +3011,46 @@ void PlayerbotFactory::InitGems() //WIP
                             break;
                         default:
                         {
-                            for (vector<uint32>::const_iterator itr = gems.begin(); itr != gems.end(); itr++) {
-                                if (ItemPrototype const* gemProto = sObjectMgr.GetItemPrototype(*itr)) {
+                            for (vector<uint32>::const_iterator itr = gems.begin(); itr != gems.end(); itr++)
+                            {
+                                if (ItemPrototype const* gemProto = sObjectMgr.GetItemPrototype(*itr)) 
+                                {
                                     // We don't want the same gem twice on the same piece 
                                     bool already_placed = false;
                                     for (int i = 0; i < MAX_GEM_SOCKETS; i++)
-                                        if (gem_placed[i] == gemProto->ItemId) {
+                                        if (gem_placed[i] == gemProto->ItemId)
+                                        {
                                             already_placed = true;
-                                        }
+                                        }                                  
                                     if (already_placed) continue;
 
-                                    if (GemPropertiesEntry const* gemProperty = sGemPropertiesStore.LookupEntry(gemProto->GemProperties)) {
-                                        if (SpellItemEnchantmentEntry const* pEnchant = sSpellItemEnchantmentStore.LookupEntry(gemProperty->spellitemenchantement)) {
+                                    if (GemPropertiesEntry const* gemProperty = sGemPropertiesStore.LookupEntry(gemProto->GemProperties))
+                                    {
+                                        if (SpellItemEnchantmentEntry const* pEnchant = sSpellItemEnchantmentStore.LookupEntry(gemProperty->spellitemenchantement))
+                                        {
                                             uint32 GemColor = gemProperty->color;
-                                            uint8 sp = 0, ap = 0, tank = 0;
-                                            if (GemColor & SocketColor)                 
-                                            for (int i = ITEM_MOD_MANA; i < MAX_ITEM_MOD; ++i)
-                                            {
 
+                                            if (GemColor == 14)
+                                                if ((bot->HasItemOrGemWithIdEquipped(gemProto->ItemId, 1)) || (bot->HasItemCount(gemProto->ItemId, 1)))
+                                                continue;
+
+                                            if (gemProto->RequiredSkillRank > bot->GetSkillValue(SKILL_JEWELCRAFTING))
+                                                continue;
+
+                                            if ((bot->getLevel()) < (gemProto->ItemLevel -10))
+                                                continue;
+
+                                            uint8 sp = 0, ap = 0, tank = 0;
+                                            if (GemColor & SocketColor)                                                 
+                                            for (int i = 0; i < 3; ++i)
+                                            {
                                                 if (pEnchant->type[i] != ITEM_ENCHANTMENT_TYPE_STAT)
                                                     continue;
-
                                                 AddItemStats(pEnchant->spellid[i], sp, ap, tank);
                                             }
-
                                             if (!CheckItemStats(sp, ap, tank))
                                                 continue;
-                                                    gem_id = gemProto->ItemId;
+                                                    gem_id = gemProto->ItemId;                                            
                                         }
                                     }
                                 }
@@ -3043,23 +3058,27 @@ void PlayerbotFactory::InitGems() //WIP
                         }
                         break;
                         }
-                        if (gem_id > 0) {
+                        if (gem_id > 0)
+                        {
                             gem_placed[enchant_slot - SOCK_ENCHANTMENT_SLOT] = gem_id;
+
+                           
                             ItemPosCountVec dest;
                             InventoryResult res = bot->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, gem_id, 1);
                             if (res == EQUIP_ERR_OK)
                             {
-                                if (Item* gem = bot->StoreNewItem(dest, gem_id, true)) 
-                                {
+                                if (Item* gem = bot->StoreNewItem(dest, gem_id, true))
+                                {                                 
                                     bot->SendNewItem(gem, 1, false, true, false);
                                     gem_GUID = gem->GetObjectGuid();
+                                    
                                 }
                             }
-                        }
-                    }
-                    bot->GetSession()->HandleSocketOpcode(data);
+                        }         
+                        data << gem_GUID;
+                    }                  
+                    bot->GetSession()->HandleSocketOpcode(data);                   
                 }
             }
         }
 }
-
