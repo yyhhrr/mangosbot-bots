@@ -130,65 +130,48 @@ private:
 void RacialsStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
 {
     triggers.push_back(new TriggerNode(
-        "low health", 
-        NextAction::array(0, new NextAction("gift of the naaru", 71.0f), NULL)));
+        "stoneform", 
+        NextAction::array(0, new NextAction("stoneform", ACTION_DISPEL), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "medium aoe",
-        NextAction::array(0, new NextAction("war stomp", 71.0f), NULL)));
-
-    /*triggers.push_back(new TriggerNode(
-        "low health",
-        NextAction::array(0, new NextAction("war stomp", 71.0f), NULL)));
+        "war stomp",
+        NextAction::array(0, new NextAction("war stomp", ACTION_INTERRUPT + 6), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "low mana", 
-        NextAction::array(0, new NextAction("arcane torrent", ACTION_EMERGENCY + 6), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "medium mana",
-        NextAction::array(0, new NextAction("mana tap", ACTION_EMERGENCY + 6), NULL)));
+        "berserking",
+        NextAction::array(0, new NextAction("berserking", 71.0f), NULL)));
 
         triggers.push_back(new TriggerNode(
-        "critical health",
-        NextAction::array(0, new NextAction("stoneform", ACTION_EMERGENCY + 6),
-            new NextAction("desperate prayer", ACTION_EMERGENCY + 6),
-            new NextAction("elune's grace", ACTION_EMERGENCY + 6), NULL)));
+        "blood fury",
+        NextAction::array(0, new NextAction("blood fury", 71.0f), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "loot available",
-        NextAction::array(0, new NextAction("cannibalize", ACTION_HIGH + 6), NULL)));
+        "arcane torrent", 
+        NextAction::array(0, new NextAction("arcane torrent", ACTION_INTERRUPT + 6), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "often",
-        NextAction::array(0, new NextAction("berserking", ACTION_HIGH + 6),
-            new NextAction("blood fury", ACTION_HIGH + 6),
-            new NextAction("starshards", ACTION_HIGH + 6),
-            new NextAction("touch of weakness", ACTION_HIGH + 6),
-            new NextAction("devouring plague", ACTION_HIGH + 6),
-            new NextAction("hex of weakness", ACTION_HIGH + 6),
-            new NextAction("war stomp", ACTION_HIGH + 6),
-            NULL)));
+        "mana tap",
+        NextAction::array(0, new NextAction("mana tap", ACTION_INTERRUPT + 6), NULL)));
+     
+    triggers.push_back(new TriggerNode(
+        "cannibalize",
+        NextAction::array(0, new NextAction("cannibalize", ACTION_MEDIUM_HEAL + 6), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "often",
-        NextAction::array(0, new NextAction("fear ward", ACTION_EMERGENCY + 6), NULL)));
+        "WOtF",
+        NextAction::array(0, new NextAction("WOtF", ACTION_EMERGENCY + 6), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "fear ward",
-        NextAction::array(0, new NextAction("fear ward", ACTION_NORMAL + 6), NULL)));
+        "EMfH",
+        NextAction::array(0, new NextAction("EMfH", ACTION_EMERGENCY + 6), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "fear ward on party",
-        NextAction::array(0, new NextAction("fear ward on party", ACTION_NORMAL + 6), NULL)));
+        "escape artist",
+        NextAction::array(0, new NextAction("escape artist", ACTION_EMERGENCY + 6), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "panic",
-        NextAction::array(0, new NextAction("shadowmeld", ACTION_EMERGENCY + 6), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "enemy player is attacking",
-        NextAction::array(0, new NextAction("shadowguard", ACTION_EMERGENCY + 6), NULL)));*/
+        "perception",
+        NextAction::array(0, new NextAction("perception", ACTION_HIGH + 6), NULL)));
 }
 
 RacialsStrategy::RacialsStrategy(PlayerbotAI* ai) : Strategy(ai)

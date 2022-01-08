@@ -12,6 +12,7 @@
 #include "CureTriggers.h"
 #include "GuildTriggers.h"
 #include "StuckTriggers.h"
+#include "RacialsTriggers.h"
 
 namespace ai
 {
@@ -182,6 +183,28 @@ namespace ai
             creators["rpg craft"] = &TriggerContext::rpg_craft;
             creators["rpg trade useful"] = &TriggerContext::rpg_trade_useful;
             creators["rpg duel"] = &TriggerContext::rpg_duel;
+
+            //Racials
+            creators["war stomp"] = &TriggerContext::war_stomp;
+            creators["berserking"] = &TriggerContext::berserking;
+            creators["blood fury"] = &TriggerContext::blood_fury;
+            creators["cannibalize"] = &TriggerContext::cannibalize;
+            creators["escape artist"] = &TriggerContext::escape_artist;
+            creators["shadowmeld"] = &TriggerContext::shadowmeld;
+            creators["stoneform"] = &TriggerContext::stoneformpoison;
+            creators["stoneform"] = &TriggerContext::stoneformdisease;
+            creators["perception"] = &TriggerContext::perception;
+            creators["will of the forsaken"] = &TriggerContext::will_of_the_forsaken;
+#ifndef MANGOSBOT_ZERO
+            creators["mana tap"] = &TriggerContext::mana_tap;
+            creators["arcane torrent"] = &TriggerContext::arcane_torrent;
+            creators["gift of the naaru"] = &TriggerContext::gift_of_the_naaru;
+#endif
+#ifdef MANGOSBOT_TWO
+            creators["every_man_for_himself"] = &TriggerContext::every_man_for_himself;
+#endif    
+
+
         }
 
     private:
@@ -319,5 +342,25 @@ namespace ai
         static Trigger* rpg_craft(PlayerbotAI* ai) { return new RpgCraftTrigger(ai); }
         static Trigger* rpg_trade_useful(PlayerbotAI* ai) { return new RpgTradeUsefulTrigger(ai); }
         static Trigger* rpg_duel(PlayerbotAI* ai) { return new RpgDuelTrigger(ai); }
+
+        //racials      
+        static Trigger* war_stomp(PlayerbotAI* ai) { return new WarStompTrigger(ai); }
+        static Trigger* berserking(PlayerbotAI* ai) { return new BerserkingTrigger(ai); }
+        static Trigger* blood_fury(PlayerbotAI* ai) { return new BloodFuryTrigger(ai); }
+        static Trigger* cannibalize(PlayerbotAI* ai) { return new CannibalizeTrigger(ai); }
+        static Trigger* escape_artist(PlayerbotAI* ai) { return new EscapeArtistTrigger(ai); }
+        static Trigger* shadowmeld(PlayerbotAI* ai) { return new ShadowmeldTrigger(ai); }
+        static Trigger* stoneformpoison(PlayerbotAI* ai) { return new StoneformPoisonTrigger(ai); }
+        static Trigger* stoneformdisease(PlayerbotAI* ai) { return new StoneformDiseaseTrigger(ai); }
+        static Trigger* perception(PlayerbotAI* ai) { return new PerceptionTrigger(ai); }
+        static Trigger* will_of_the_forsaken(PlayerbotAI* ai) { return new WoTFTrigger(ai); }
+#ifndef MANGOSBOT_ZERO
+        static Trigger* gift_of_the_naaru(PlayerbotAI* ai) { return new GiftOfTheNaaruTrigger(ai); }
+        static Trigger* arcane_torrent(PlayerbotAI* ai) { return new ArcanetorrentTrigger(ai); }
+        static Trigger* mana_tap(PlayerbotAI* ai) { return new ManaTapTrigger(ai); }
+#endif 
+#ifdef MANGOSBOT_TWO
+        static Trigger* every_man_for_himself(PlayerbotAI* ai) { return new EMfHTrigger(ai); }
+#endif 
     };
 };
