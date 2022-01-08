@@ -2940,6 +2940,10 @@ vector<uint32> RandomItemMgr::GetGemsList()
 
             if (proto->Class != ITEM_CLASS_GEM)
                 continue;
+
+            if (proto->SubClass == ITEM_SUBCLASS_GEM_SIMPLE)
+               continue;
+
             _gems.push_back(proto->ItemId);
         }
     }
