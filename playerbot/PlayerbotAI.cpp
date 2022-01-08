@@ -80,7 +80,7 @@ void PacketHandlingHelper::AddPacket(const WorldPacket& packet)
         if (!source.IsPlayer())
             return;
     }
-	if (handlers.find(packet.GetOpcode()) != handlers.end())
+    if (handlers.find(packet.GetOpcode()) != handlers.end())
         queue.push(WorldPacket(packet));
 }
 
@@ -101,7 +101,7 @@ PlayerbotAI::PlayerbotAI() : PlayerbotAIBase(), bot(NULL), aiObjectContext(NULL)
 PlayerbotAI::PlayerbotAI(Player* bot) :
     PlayerbotAIBase(), chatHelper(this), chatFilter(this), security(bot), master(NULL)
 {
-	this->bot = bot;    
+    this->bot = bot;    
     if (!bot->isTaxiCheater() && HasCheat(BotCheatMask::taxi))
         bot->SetTaxiCheater(true);
 
@@ -111,7 +111,7 @@ PlayerbotAI::PlayerbotAI(Player* bot) :
         allowActive[i] = false;
     }
 
-	accountId = sObjectMgr.GetPlayerAccountIdByGUID(bot->GetObjectGuid());
+    accountId = sObjectMgr.GetPlayerAccountIdByGUID(bot->GetObjectGuid());
 
     aiObjectContext = AiFactory::createAiObjectContext(bot, this);
 
@@ -358,8 +358,8 @@ void PlayerbotAI::UpdateAIInternal(uint32 elapsed, bool minimal)
     masterIncomingPacketHandlers.Handle(helper);
     masterOutgoingPacketHandlers.Handle(helper);
 
-	DoNextAction(minimal);
-	if (pmo) pmo->finish();
+    DoNextAction(minimal);
+    if (pmo) pmo->finish();
 }
 
 void PlayerbotAI::HandleTeleportAck()
@@ -367,30 +367,30 @@ void PlayerbotAI::HandleTeleportAck()
     if (IsRealPlayer())
         return;
 
-	bot->GetMotionMaster()->Clear(true);
-	bot->InterruptMoving(1);
-	if (bot->IsBeingTeleportedNear())
-	{
-		WorldPacket p = WorldPacket(MSG_MOVE_TELEPORT_ACK, 8 + 4 + 4);
+    bot->GetMotionMaster()->Clear(true);
+    bot->InterruptMoving(1);
+    if (bot->IsBeingTeleportedNear())
+    {
+        WorldPacket p = WorldPacket(MSG_MOVE_TELEPORT_ACK, 8 + 4 + 4);
 #ifdef MANGOSBOT_TWO
         p << bot->GetObjectGuid().WriteAsPacked();
 #else
         p << bot->GetObjectGuid();
 #endif
-		p << (uint32) 0; // supposed to be flags? not used currently
-		p << (uint32) time(0); // time - not currently used
+        p << (uint32) 0; // supposed to be flags? not used currently
+        p << (uint32) time(0); // time - not currently used
         bot->GetSession()->HandleMoveTeleportAckOpcode(p);
 
         // add delay to simulate teleport delay
         SetNextCheckDelay(urand(1000, 3000));
-	}
-	else if (bot->IsBeingTeleportedFar())
-	{
+    }
+    else if (bot->IsBeingTeleportedFar())
+    {
         bot->GetSession()->HandleMoveWorldportAckOpcode();
 
         // add delay to simulate teleport delay
         SetNextCheckDelay(urand(2000, 5000));
-	}
+    }
 
     Reset();
 }
@@ -611,41 +611,41 @@ void PlayerbotAI::HandleCommand(uint32 type, const string& text, Player& fromPla
 
 void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
 {
-	switch (packet.GetOpcode())
-	{
-	case SMSG_SPELL_FAILURE:
-	{
-		WorldPacket p(packet);
-		p.rpos(0);
-		ObjectGuid casterGuid;
+    switch (packet.GetOpcode())
+    {
+    case SMSG_SPELL_FAILURE:
+    {
+        WorldPacket p(packet);
+        p.rpos(0);
+        ObjectGuid casterGuid;
         p >> casterGuid.ReadAsPacked();
-		if (casterGuid != bot->GetObjectGuid())
-			return;
+        if (casterGuid != bot->GetObjectGuid())
+            return;
 
-		uint32 spellId;
-		p >> spellId;
-		SpellInterrupted(spellId);
-		return;
-	}
-	case SMSG_SPELL_DELAYED:
-	{
-		WorldPacket p(packet);
-		p.rpos(0);
-		ObjectGuid casterGuid;
+        uint32 spellId;
+        p >> spellId;
+        SpellInterrupted(spellId);
+        return;
+    }
+    case SMSG_SPELL_DELAYED:
+    {
+        WorldPacket p(packet);
+        p.rpos(0);
+        ObjectGuid casterGuid;
         p >> casterGuid.ReadAsPacked();
 
-		if (casterGuid != bot->GetObjectGuid())
-			return;
+        if (casterGuid != bot->GetObjectGuid())
+            return;
 
-		uint32 delaytime;
-		p >> delaytime;
-		if (delaytime <= 1000)
-			IncreaseNextCheckDelay(delaytime);
-		return;
-	}
-	default:
-		botOutgoingPacketHandlers.AddPacket(packet);
-	}
+        uint32 delaytime;
+        p >> delaytime;
+        if (delaytime <= 1000)
+            IncreaseNextCheckDelay(delaytime);
+        return;
+    }
+    default:
+        botOutgoingPacketHandlers.AddPacket(packet);
+    }
 }
 
 void PlayerbotAI::SpellInterrupted(uint32 spellid)
@@ -896,9 +896,9 @@ void PlayerbotAI::DoNextAction(bool min)
     }
 
     if (master && master->IsInWorld())
-	{       
-		if (master->m_movementInfo.HasMovementFlag(MOVEFLAG_WALK_MODE) && sServerFacade.GetDistance2d(bot, master) < 20.0f) bot->m_movementInfo.AddMovementFlag(MOVEFLAG_WALK_MODE);
-		else bot->m_movementInfo.RemoveMovementFlag(MOVEFLAG_WALK_MODE);
+    {       
+        if (master->m_movementInfo.HasMovementFlag(MOVEFLAG_WALK_MODE) && sServerFacade.GetDistance2d(bot, master) < 20.0f) bot->m_movementInfo.AddMovementFlag(MOVEFLAG_WALK_MODE);
+        else bot->m_movementInfo.RemoveMovementFlag(MOVEFLAG_WALK_MODE);
 
         if (master->IsSitState() && nextAICheckDelay < 1000)
         {
@@ -912,8 +912,8 @@ void PlayerbotAI::DoNextAction(bool min)
         {
             bot->GetPlayerbotAI()->SetMaster(nullptr);
         }
-	}
-	else if (bot->m_movementInfo.HasMovementFlag(MOVEFLAG_WALK_MODE)) bot->m_movementInfo.RemoveMovementFlag(MOVEFLAG_WALK_MODE);
+    }
+    else if (bot->m_movementInfo.HasMovementFlag(MOVEFLAG_WALK_MODE)) bot->m_movementInfo.RemoveMovementFlag(MOVEFLAG_WALK_MODE);
     else if ((nextAICheckDelay < 1000) && bot->IsSitState()) bot->SetStandState(UNIT_STAND_STATE_STAND);
 
 #ifndef MANGOSBOT_ZERO
@@ -1411,29 +1411,29 @@ bool PlayerbotAI::HasAura(string name, Unit* unit, bool maxStack)
 
     wstrToLower(wnamepart);
 
-	for (uint32 auraType = SPELL_AURA_BIND_SIGHT; auraType < TOTAL_AURAS; auraType++)
-	{
-		Unit::AuraList const& auras = unit->GetAurasByType((AuraType)auraType);
+    for (uint32 auraType = SPELL_AURA_BIND_SIGHT; auraType < TOTAL_AURAS; auraType++)
+    {
+        Unit::AuraList const& auras = unit->GetAurasByType((AuraType)auraType);
 
         if (auras.empty())
             continue;
 
-		for (Unit::AuraList::const_iterator i = auras.begin(); i != auras.end(); i++)
-		{
-			Aura* aura = *i;
-			if (!aura)
-				continue;
+        for (Unit::AuraList::const_iterator i = auras.begin(); i != auras.end(); i++)
+        {
+            Aura* aura = *i;
+            if (!aura)
+                continue;
 
-			const string auraName = aura->GetSpellProto()->SpellName[0];
-			if (auraName.empty() || auraName.length() != wnamepart.length() || !Utf8FitTo(auraName, wnamepart))
-				continue;
+            const string auraName = aura->GetSpellProto()->SpellName[0];
+            if (auraName.empty() || auraName.length() != wnamepart.length() || !Utf8FitTo(auraName, wnamepart))
+                continue;
 
-			if (IsRealAura(bot, aura, unit))
+            if (IsRealAura(bot, aura, unit))
             {
                 uint32 maxStackAmount = aura->GetSpellProto()->StackAmount;
                 return maxStack && maxStackAmount ? aura->GetStackAmount() >= maxStackAmount : true;
             }
-		}
+        }
     }
 
     return false;
@@ -1441,20 +1441,115 @@ bool PlayerbotAI::HasAura(string name, Unit* unit, bool maxStack)
 
 bool PlayerbotAI::HasAura(uint32 spellId, const Unit* unit)
 {
-	if (!spellId || !unit)
-		return false;
+    if (!spellId || !unit)
+        return false;
 
-	for (uint32 effect = EFFECT_INDEX_0; effect <= EFFECT_INDEX_2; effect++)
-	{
-		Aura* aura = ((Unit*)unit)->GetAura(spellId, (SpellEffectIndex)effect);
+    for (uint32 effect = EFFECT_INDEX_0; effect <= EFFECT_INDEX_2; effect++)
+    {
+        Aura* aura = ((Unit*)unit)->GetAura(spellId, (SpellEffectIndex)effect);
 
-		if (IsRealAura(bot, aura, (Unit*)unit))
-			return true;
-	}
+        if (IsRealAura(bot, aura, (Unit*)unit))
+            return true;
+    }
 
-	return false;
+    return false;
 }
 
+bool PlayerbotAI::HasAuraCount(string name, Unit* unit, uint8 count = 1)
+{
+    if (!unit)
+        return false;
+
+    wstring wnamepart;
+    if (!Utf8toWStr(name, wnamepart))
+        return 0;
+
+    wstrToLower(wnamepart);
+
+    for (uint32 auraType = SPELL_AURA_NONE; auraType < TOTAL_AURAS; auraType++)
+    {
+        Unit::AuraList const& auras = unit->GetAurasByType((AuraType)auraType);
+        for (Unit::AuraList::const_iterator i = auras.begin(); i != auras.end(); i++)
+        {
+            Aura* aura = *i;
+            if (!aura)
+                continue;
+
+            const string auraName = aura->GetSpellProto()->SpellName[0];
+            if (auraName.empty() || auraName.length() != wnamepart.length() || !Utf8FitTo(auraName, wnamepart))
+                continue;
+
+            if (IsRealAura(bot, aura, unit) && aura->GetStackAmount() >= count)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+bool PlayerbotAI::HasAuraCount(uint32 spellId, Unit* unit, uint8 count = 1)
+{
+    if (!spellId || !unit)
+        return false;
+
+    for (uint32 effect = EFFECT_INDEX_0; effect <= EFFECT_INDEX_2; effect++)
+    {
+        Aura* aura = ((Unit*)unit)->GetAura(spellId, (SpellEffectIndex)effect);
+
+        if (IsRealAura(bot, aura, (Unit*)unit) && aura->GetStackAmount() >= count)
+            return true;
+    }
+
+    return false;
+}
+
+uint8 PlayerbotAI::GetAuraCount(string name, Unit* unit)
+{
+    if (!unit)
+        return 0;
+
+    wstring wnamepart;
+    if (!Utf8toWStr(name, wnamepart))
+        return 0;
+
+    wstrToLower(wnamepart);
+
+    for (uint32 auraType = SPELL_AURA_BIND_SIGHT; auraType < TOTAL_AURAS; auraType++)
+    {
+        Unit::AuraList const& auras = unit->GetAurasByType((AuraType)auraType);
+        for (Unit::AuraList::const_iterator i = auras.begin(); i != auras.end(); i++)
+        {
+            Aura* aura = *i;
+            if (!aura)
+                continue;
+
+            const string auraName = aura->GetSpellProto()->SpellName[0];
+            if (auraName.empty() || auraName.length() != wnamepart.length() || !Utf8FitTo(auraName, wnamepart))
+                continue;
+
+            if (IsRealAura(bot, aura, unit))
+                return aura->GetStackAmount();
+        }
+    }
+
+    return 0;
+}
+
+uint8 PlayerbotAI::GetAuraCount(uint32 spellId, Unit* unit)
+{
+    if (!spellId || !unit)
+        return false;
+
+    for (uint32 effect = EFFECT_INDEX_0; effect <= EFFECT_INDEX_2; effect++)
+    {
+        Aura* aura = ((Unit*)unit)->GetAura(spellId, (SpellEffectIndex)effect);
+
+        if (IsRealAura(bot, aura, (Unit*)unit))
+            return aura->GetStackAmount();
+    }
+
+    return 0;
+}
 
 bool PlayerbotAI::HasAnyAuraOf(Unit* player, ...)
 {
@@ -1510,8 +1605,8 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, uint8 effectMask, b
         return false;
 #endif
 
-	SpellEntry const *spellInfo = sServerFacade.LookupSpellInfo(spellid);
-	if (!spellInfo)
+    SpellEntry const *spellInfo = sServerFacade.LookupSpellInfo(spellid);
+    if (!spellInfo)
         return false;
 
     uint32 CastingTime = !IsChanneledSpell(spellInfo) ? GetSpellCastTime(spellInfo, bot) : GetSpellDuration(spellInfo);
@@ -1519,8 +1614,8 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, uint8 effectMask, b
     if (CastingTime && bot->IsMoving())
         return false;
 
-	if (!itemTarget)
-	{
+    if (!itemTarget)
+    {
         bool positiveSpell = IsPositiveSpell(spellInfo);
         if (positiveSpell && sServerFacade.IsHostileTo(bot, target))
             return false;
@@ -1558,11 +1653,11 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, uint8 effectMask, b
 
         if (bot != target && bot->GetDistance(target) > sPlayerbotAIConfig.sightDistance)
             return false;
-	}
+    }
 
-	ObjectGuid oldSel = bot->GetSelectionGuid();
-	bot->SetSelectionGuid(target->GetObjectGuid());
-	Spell *spell = new Spell(bot, spellInfo, false);
+    ObjectGuid oldSel = bot->GetSelectionGuid();
+    bot->SetSelectionGuid(target->GetObjectGuid());
+    Spell *spell = new Spell(bot, spellInfo, false);
 
     spell->m_targets.setUnitTarget(target);
 #ifndef MANGOSBOT_ONE
@@ -1575,8 +1670,8 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, uint8 effectMask, b
 
     SpellCastResult result = spell->CheckCast(true);
     delete spell;
-	if (oldSel)
-		bot->SetSelectionGuid(oldSel);
+    if (oldSel)
+        bot->SetSelectionGuid(oldSel);
 
     switch (result)
     {
@@ -1765,23 +1860,23 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget)
         target = bot;
 
     Pet* pet = bot->GetPet();
-	SpellEntry const *pSpellInfo = sServerFacade.LookupSpellInfo(spellId);
-	if (pet && pet->HasSpell(spellId))
+    SpellEntry const *pSpellInfo = sServerFacade.LookupSpellInfo(spellId);
+    if (pet && pet->HasSpell(spellId))
     {
-	    bool autocast = false;
-	    for(AutoSpellList::iterator i = pet->m_autospells.begin(); i != pet->m_autospells.end(); ++i)
-	    {
-	        if (*i == spellId)
-	        {
-	            autocast = true;
-	            break;
-	        }
-	    }
+        bool autocast = false;
+        for(AutoSpellList::iterator i = pet->m_autospells.begin(); i != pet->m_autospells.end(); ++i)
+        {
+            if (*i == spellId)
+            {
+                autocast = true;
+                break;
+            }
+        }
 
-		pet->ToggleAutocast(spellId, !autocast);
-		ostringstream out;
-		out << (autocast ? "|cffff0000|Disabling" : "|cFF00ff00|Enabling") << " pet auto-cast for ";
-		out << chatHelper.formatSpell(pSpellInfo);
+        pet->ToggleAutocast(spellId, !autocast);
+        ostringstream out;
+        out << (autocast ? "|cffff0000|Disabling" : "|cFF00ff00|Enabling") << " pet auto-cast for ";
+        out << chatHelper.formatSpell(pSpellInfo);
         TellMaster(out);
         return true;
     }
@@ -1794,18 +1889,18 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget)
     if (bot->IsFlying() || bot->IsTaxiFlying())
         return false;
 
-	bot->clearUnitState(UNIT_STAT_CHASE);
-	bot->clearUnitState(UNIT_STAT_FOLLOW);
+    bot->clearUnitState(UNIT_STAT_CHASE);
+    bot->clearUnitState(UNIT_STAT_FOLLOW);
 
-	bool failWithDelay = false;
+    bool failWithDelay = false;
     if (!bot->IsStandState())
     {
         bot->SetStandState(UNIT_STAND_STATE_STAND);
         failWithDelay = true;
     }
 
-	ObjectGuid oldSel = bot->GetSelectionGuid();
-	bot->SetSelectionGuid(target->GetObjectGuid());
+    ObjectGuid oldSel = bot->GetSelectionGuid();
+    bot->SetSelectionGuid(target->GetObjectGuid());
 
     WorldObject* faceTo = target;
     if (!sServerFacade.IsInFront(bot, faceTo, sPlayerbotAIConfig.sightDistance, CAST_ANGLE_IN_FRONT))
@@ -1836,7 +1931,7 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget)
         if (bot->GetTradeData())
         {
             bot->GetTradeData()->SetSpell(spellId);
-			delete spell;
+            delete spell;
             return true;
         }
     }
@@ -2379,7 +2474,7 @@ void PlayerbotAI::WaitForSpellCast(Spell *spell)
     const SpellEntry* const pSpellInfo = spell->m_spellInfo;
 
     float castTime = spell->GetCastTime();
-	if (IsChanneledSpell(pSpellInfo))
+    if (IsChanneledSpell(pSpellInfo))
     {
         int32 duration = GetSpellDuration(pSpellInfo);
         if (duration > 0)
@@ -2436,58 +2531,58 @@ void PlayerbotAI::RemoveAura(string name)
 
 bool PlayerbotAI::IsInterruptableSpellCasting(Unit* target, string spell, uint8 effectMask)
 {
-	uint32 spellid = aiObjectContext->GetValue<uint32>("spell id", spell)->Get();
-	if (!spellid || !target->IsNonMeleeSpellCasted(true))
-		return false;
+    uint32 spellid = aiObjectContext->GetValue<uint32>("spell id", spell)->Get();
+    if (!spellid || !target->IsNonMeleeSpellCasted(true))
+        return false;
 
-	SpellEntry const *spellInfo = sServerFacade.LookupSpellInfo(spellid);
-	if (!spellInfo)
-		return false;
+    SpellEntry const *spellInfo = sServerFacade.LookupSpellInfo(spellid);
+    if (!spellInfo)
+        return false;
 
-	for (int32 i = EFFECT_INDEX_0; i <= EFFECT_INDEX_2; i++)
-	{
-		if ((spellInfo->InterruptFlags & SPELL_INTERRUPT_FLAG_INTERRUPT) && spellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE)
-			return true;
+    for (int32 i = EFFECT_INDEX_0; i <= EFFECT_INDEX_2; i++)
+    {
+        if ((spellInfo->InterruptFlags & SPELL_INTERRUPT_FLAG_INTERRUPT) && spellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE)
+            return true;
 
-		if ((spellInfo->Effect[i] == SPELL_EFFECT_INTERRUPT_CAST) &&
-			!target->IsImmuneToSpellEffect(spellInfo, (SpellEffectIndex)i, true))
-			return true;
+        if ((spellInfo->Effect[i] == SPELL_EFFECT_INTERRUPT_CAST) &&
+            !target->IsImmuneToSpellEffect(spellInfo, (SpellEffectIndex)i, true))
+            return true;
 
         if ((spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AURA) && spellInfo->EffectApplyAuraName[i] == SPELL_AURA_MOD_SILENCE)
             return true;
-	}
+    }
 
-	return false;
+    return false;
 }
 
 bool PlayerbotAI::HasAuraToDispel(Unit* target, uint32 dispelType)
 {
     bool isFriend = sServerFacade.IsFriendlyTo(bot, target);
     bool isHostile = sServerFacade.IsHostileTo(bot, target);
-	for (uint32 type = SPELL_AURA_NONE; type < TOTAL_AURAS; ++type)
-	{
-		Unit::AuraList const& auras = target->GetAurasByType((AuraType)type);
-		for (Unit::AuraList::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
-		{
-			const Aura* aura = *itr;
-			const SpellEntry* entry = aura->GetSpellProto();
-			uint32 spellId = entry->Id;
+    for (uint32 type = SPELL_AURA_NONE; type < TOTAL_AURAS; ++type)
+    {
+        Unit::AuraList const& auras = target->GetAurasByType((AuraType)type);
+        for (Unit::AuraList::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
+        {
+            const Aura* aura = *itr;
+            const SpellEntry* entry = aura->GetSpellProto();
+            uint32 spellId = entry->Id;
 
-			bool isPositiveSpell = IsPositiveSpell(spellId);
-			if (isPositiveSpell && isFriend)
-				continue;
+            bool isPositiveSpell = IsPositiveSpell(spellId);
+            if (isPositiveSpell && isFriend)
+                continue;
 
-			if (!isPositiveSpell && isHostile)
-				continue;
+            if (!isPositiveSpell && isHostile)
+                continue;
 
-			if (sPlayerbotAIConfig.dispelAuraDuration && aura->GetAuraDuration() && aura->GetAuraDuration() < (int32)sPlayerbotAIConfig.dispelAuraDuration)
-			    return false;
+            if (sPlayerbotAIConfig.dispelAuraDuration && aura->GetAuraDuration() && aura->GetAuraDuration() < (int32)sPlayerbotAIConfig.dispelAuraDuration)
+                return false;
 
-			if (canDispel(entry, dispelType))
-				return true;
-		}
-	}
-	return false;
+            if (canDispel(entry, dispelType))
+                return true;
+        }
+    }
+    return false;
 }
 
 

@@ -43,8 +43,8 @@ uint32 PlayerbotFactory::tradeSkills[] =
     SKILL_FIRST_AID,
     SKILL_FISHING
 #ifndef MANGOSBOT_ZERO
-	,
-	SKILL_JEWELCRAFTING
+    ,
+    SKILL_JEWELCRAFTING
 #endif
 };
 
@@ -53,20 +53,20 @@ list<uint32> PlayerbotFactory::specialQuestIds;
 
 void PlayerbotFactory::Init()
 {
-	if (sPlayerbotAIConfig.randomBotPreQuests) {
-		ObjectMgr::QuestMap const& questTemplates = sObjectMgr.GetQuestTemplates();
-		for (ObjectMgr::QuestMap::const_iterator i = questTemplates.begin(); i != questTemplates.end(); ++i)
-		{
-			uint32 questId = i->first;
-			Quest const *quest = i->second;
+    if (sPlayerbotAIConfig.randomBotPreQuests) {
+        ObjectMgr::QuestMap const& questTemplates = sObjectMgr.GetQuestTemplates();
+        for (ObjectMgr::QuestMap::const_iterator i = questTemplates.begin(); i != questTemplates.end(); ++i)
+        {
+            uint32 questId = i->first;
+            Quest const *quest = i->second;
 
-			if (!quest->GetRequiredClasses() || quest->IsRepeatable() || quest->GetMinLevel() < 10)
-				continue;
+            if (!quest->GetRequiredClasses() || quest->IsRepeatable() || quest->GetMinLevel() < 10)
+                continue;
 
-			AddPrevQuests(questId, classQuestIds);
-			classQuestIds.remove(questId);
-			classQuestIds.push_back(questId);
-		}
+            AddPrevQuests(questId, classQuestIds);
+            classQuestIds.remove(questId);
+            classQuestIds.push_back(questId);
+        }
         for (list<uint32>::iterator i = sPlayerbotAIConfig.randomBotQuestIds.begin(); i != sPlayerbotAIConfig.randomBotQuestIds.end(); ++i)
         {
             uint32 questId = *i;
@@ -74,7 +74,7 @@ void PlayerbotFactory::Init()
             specialQuestIds.remove(questId);
             specialQuestIds.push_back(questId);
         }
-	}
+    }
 }
 
 void PlayerbotFactory::Prepare()
@@ -88,15 +88,15 @@ void PlayerbotFactory::Prepare()
         else if (level < 60)
 #ifdef MANGOSBOT_ZERO
             itemQuality = urand(ITEM_QUALITY_RARE, ITEM_QUALITY_EPIC);
-		else if (level < 70)
-			itemQuality = ITEM_QUALITY_EPIC;
+        else if (level < 70)
+            itemQuality = ITEM_QUALITY_EPIC;
 #else
-			itemQuality = urand(ITEM_QUALITY_UNCOMMON, ITEM_QUALITY_EPIC);
-		else if (level < 70)
-			itemQuality = urand(ITEM_QUALITY_RARE, ITEM_QUALITY_EPIC);
+            itemQuality = urand(ITEM_QUALITY_UNCOMMON, ITEM_QUALITY_EPIC);
+        else if (level < 70)
+            itemQuality = urand(ITEM_QUALITY_RARE, ITEM_QUALITY_EPIC);
 #endif
-		else if (level < 80)
-			itemQuality = urand(ITEM_QUALITY_RARE, ITEM_QUALITY_EPIC);
+        else if (level < 80)
+            itemQuality = urand(ITEM_QUALITY_RARE, ITEM_QUALITY_EPIC);
         else
             itemQuality = urand(ITEM_QUALITY_RARE, ITEM_QUALITY_EPIC);
     }
@@ -158,23 +158,23 @@ void PlayerbotFactory::Randomize(bool incremental)
     InitImmersive();
     if (pmo) pmo->finish();*/
 
-	if (sPlayerbotAIConfig.randomBotPreQuests) {
-		sLog.outDetail("Initializing quests...");
-		pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Quests");
+    if (sPlayerbotAIConfig.randomBotPreQuests) {
+        sLog.outDetail("Initializing quests...");
+        pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Quests");
         InitQuests(classQuestIds);
         InitQuests(specialQuestIds);
-		// quest rewards boost bot level, so reduce back
-		if (sPlayerbotAIConfig.disableRandomLevels)
-		{
-			if (bot->getLevel() < sPlayerbotAIConfig.randombotStartingLevel)
-			{
-				bot->SetLevel(sPlayerbotAIConfig.randombotStartingLevel);
-			}
-		}
-		if (!sPlayerbotAIConfig.disableRandomLevels)
-		{
-			bot->SetLevel(level);
-		}
+        // quest rewards boost bot level, so reduce back
+        if (sPlayerbotAIConfig.disableRandomLevels)
+        {
+            if (bot->getLevel() < sPlayerbotAIConfig.randombotStartingLevel)
+            {
+                bot->SetLevel(sPlayerbotAIConfig.randombotStartingLevel);
+            }
+        }
+        if (!sPlayerbotAIConfig.disableRandomLevels)
+        {
+            bot->SetLevel(level);
+        }
         ClearInventory();
         bot->SetUInt32Value(PLAYER_XP, 0);
         CancelAuras();
@@ -226,13 +226,13 @@ void PlayerbotFactory::Randomize(bool incremental)
     pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Equip");
     sLog.outDetail("Initializing equipmemt...");
     InitEquipment(incremental);
-	
-	if (bot->getLevel() >= sPlayerbotAIConfig.minEnchantingBotLevel)
-	{
-		sLog.outDetail("Initializing enchant templates...");
-		LoadEnchantContainer();
-		if (pmo) pmo->finish();
-	}
+    
+    if (bot->getLevel() >= sPlayerbotAIConfig.minEnchantingBotLevel)
+    {
+        sLog.outDetail("Initializing enchant templates...");
+        LoadEnchantContainer();
+        if (pmo) pmo->finish();
+    }
 
     pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Bags");
     sLog.outDetail("Initializing bags...");
@@ -260,14 +260,14 @@ void PlayerbotFactory::Randomize(bool incremental)
     InitReagents();
     if (pmo) pmo->finish();
 
-	pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_EqSets");
+    pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_EqSets");
     sLog.outDetail("Initializing second equipment set...");
     InitSecondEquipmentSet();
     InitGems();
-	if (bot->getLevel() >= sPlayerbotAIConfig.minEnchantingBotLevel)
-	{
-		ApplyEnchantTemplate();
-	}
+    if (bot->getLevel() >= sPlayerbotAIConfig.minEnchantingBotLevel)
+    {
+        ApplyEnchantTemplate();
+    }
     if (pmo) pmo->finish();
 
     pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Inventory");
@@ -286,12 +286,12 @@ void PlayerbotFactory::Randomize(bool incremental)
 #endif
     if (pmo) pmo->finish();
 
-	if (bot->getLevel() >= 10) {
-		pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Pet");
-		sLog.outDetail("Initializing pet...");
-		InitPet();
-		if (pmo) pmo->finish();
-	}
+    if (bot->getLevel() >= 10) {
+        pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Pet");
+        sLog.outDetail("Initializing pet...");
+        InitPet();
+        if (pmo) pmo->finish();
+    }
 
     pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Save");
     sLog.outDetail("Saving to DB...");
@@ -454,12 +454,12 @@ void PlayerbotFactory::InitPet()
         if (!map)
             return;
 
-		vector<uint32> ids;
+        vector<uint32> ids;
         for (uint32 id = 0; id < sCreatureStorage.GetMaxEntry(); ++id)
         {
             CreatureInfo const* co = sCreatureStorage.LookupEntry<CreatureInfo>(id);
-			if (!co)
-				continue;
+            if (!co)
+                continue;
 
 #ifdef MANGOSBOT_TWO
             if (!co->isTameable(bot->CanTameExoticPets()))
@@ -471,8 +471,8 @@ void PlayerbotFactory::InitPet()
             if ((int)co->MinLevel > (int)bot->getLevel())
                 continue;
 
-			ids.push_back(id);
-		}
+            ids.push_back(id);
+        }
 
         if (ids.empty())
         {
@@ -480,9 +480,9 @@ void PlayerbotFactory::InitPet()
             return;
         }
 
-		for (int i = 0; i < 100; i++)
-		{
-			int index = urand(0, ids.size() - 1);
+        for (int i = 0; i < 100; i++)
+        {
+            int index = urand(0, ids.size() - 1);
             CreatureInfo const* co = sCreatureStorage.LookupEntry<CreatureInfo>(ids[index]);
             if (!co)
                 continue;
@@ -599,8 +599,8 @@ void PlayerbotFactory::ClearSpells()
     for(PlayerSpellMap::iterator itr = bot->GetSpellMap().begin(); itr != bot->GetSpellMap().end(); ++itr)
     {
         uint32 spellId = itr->first;
-		if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || IsPassiveSpell(spellId))
-			continue;
+        if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || IsPassiveSpell(spellId))
+            continue;
 
         spells.push_back(spellId);
     }
@@ -653,9 +653,9 @@ void PlayerbotFactory::InitTalentsTree(bool incremental)
 {
     uint32 specNo = sRandomPlayerbotMgr.GetValue(bot->GetGUIDLow(), "specNo");
     if (incremental && specNo)
-	{
+    {
         specNo -= 1;
-	}
+    }
     else
     {
         uint32 point = urand(0, 100);
@@ -1569,7 +1569,7 @@ void PlayerbotFactory::EnchantItem(Item* item)
             if (!enchant || enchant->slot != PERM_ENCHANTMENT_SLOT)
                 continue;
 
-			const SpellEntry *enchantSpell = sServerFacade.LookupSpellInfo(enchant->spellid[0]);
+            const SpellEntry *enchantSpell = sServerFacade.LookupSpellInfo(enchant->spellid[0]);
             if (!enchantSpell || (enchantSpell->spellLevel && enchantSpell->spellLevel > level))
                 continue;
 
@@ -1682,8 +1682,8 @@ void PlayerbotFactory::InitTradeSkills()
             firstSkill = SKILL_HERBALISM;
             secondSkill = SKILL_SKINNING;
 #else
-			firstSkill = SKILL_JEWELCRAFTING;
-			secondSkill = SKILL_MINING;
+            firstSkill = SKILL_JEWELCRAFTING;
+            secondSkill = SKILL_MINING;
 #endif
             break;
         default:
@@ -1868,14 +1868,14 @@ void PlayerbotFactory::SetRandomSkill(uint16 id)
 
 // do not let skill go beyond limit even if maxlevel > blizzlike
 #ifndef MANGOSBOT_ZERO
-	if (level > 60)
+    if (level > 60)
     {
 #ifdef MANGOSBOT_ONE
         maxValue = (level + 5) * 5;   // tbc (70 + 5)*5 = 375
 #else
         maxValue = (level + 10) * 5;  // wotlk (80 + 10)*5 = 450
 #endif
-	}
+    }
 #endif
 
     uint32 value = urand(maxValue - level, maxValue);

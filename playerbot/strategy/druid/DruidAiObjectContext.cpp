@@ -200,12 +200,20 @@ namespace ai
                 creators["regrowth"] = &AiObjectContextInternal::regrowth;
                 creators["rejuvenation"] = &AiObjectContextInternal::rejuvenation;
                 creators["healing touch"] = &AiObjectContextInternal::healing_touch;
+                creators["swiftmend"] = &AiObjectContextInternal::swiftmend;
+                creators["lifebloom"] = &AiObjectContextInternal::lifebloom;
+                creators["nourish"] = &AiObjectContextInternal::nourish;
+                creators["wild growth"] = &AiObjectContextInternal::wild_growth;
                 creators["regrowth on party"] = &AiObjectContextInternal::regrowth_on_party;
                 creators["rejuvenation on party"] = &AiObjectContextInternal::rejuvenation_on_party;
                 creators["healing touch on party"] = &AiObjectContextInternal::healing_touch_on_party;
+                creators["swiftmend on party"] = &AiObjectContextInternal::swiftmend_on_party;
+                creators["lifebloom on party"] = &AiObjectContextInternal::lifebloom_on_party;
+                creators["nourish on party"] = &AiObjectContextInternal::nourish_on_party;
+                creators["wild growth on party"] = &AiObjectContextInternal::wild_growth_on_party;
                 creators["rebirth"] = &AiObjectContextInternal::rebirth;
                 creators["revive"] = &AiObjectContextInternal::revive;
-                creators["barskin"] = &AiObjectContextInternal::barskin;
+                creators["barkskin"] = &AiObjectContextInternal::barkskin;
                 creators["lacerate"] = &AiObjectContextInternal::lacerate;
                 creators["hurricane"] = &AiObjectContextInternal::hurricane;
                 creators["innervate"] = &AiObjectContextInternal::innervate;
@@ -279,12 +287,20 @@ namespace ai
             static Action* regrowth(PlayerbotAI* ai) { return new CastRegrowthAction(ai); }
             static Action* rejuvenation(PlayerbotAI* ai) { return new CastRejuvenationAction(ai); }
             static Action* healing_touch(PlayerbotAI* ai) { return new CastHealingTouchAction(ai); }
+            static Action* swiftmend(PlayerbotAI* ai) { return new CastSwiftmendAction(ai); }
+            static Action* lifebloom(PlayerbotAI* ai) { return new CastLifeBloomAction(ai); }
+            static Action* nourish(PlayerbotAI* ai) { return new CastNourishAction(ai); }
+            static Action* wild_growth(PlayerbotAI* ai) { return new CastWildGrowthAction(ai); }
             static Action* regrowth_on_party(PlayerbotAI* ai) { return new CastRegrowthOnPartyAction(ai); }
             static Action* rejuvenation_on_party(PlayerbotAI* ai) { return new CastRejuvenationOnPartyAction(ai); }
             static Action* healing_touch_on_party(PlayerbotAI* ai) { return new CastHealingTouchOnPartyAction(ai); }
+            static Action* swiftmend_on_party(PlayerbotAI* ai) { return new CastSwiftmendOnPartyAction(ai); }
+            static Action* lifebloom_on_party(PlayerbotAI* ai) { return new CastLifeBloomOnPartyAction(ai); }
+            static Action* nourish_on_party(PlayerbotAI* ai) { return new CastNourishOnPartyAction(ai); }
+            static Action* wild_growth_on_party(PlayerbotAI* ai) { return new CastWildGrowthOnPartyAction(ai); }
             static Action* rebirth(PlayerbotAI* ai) { return new CastRebirthAction(ai); }
             static Action* revive(PlayerbotAI* ai) { return new CastReviveAction(ai); }
-            static Action* barskin(PlayerbotAI* ai) { return new CastBarskinAction(ai); }
+            static Action* barkskin(PlayerbotAI* ai) { return new CastBarkskinAction(ai); }
             static Action* lacerate(PlayerbotAI* ai) { return new CastLacerateAction(ai); }
             static Action* hurricane(PlayerbotAI* ai) { return new CastHurricaneAction(ai); }
             static Action* innervate(PlayerbotAI* ai) { return new CastInnervateAction(ai); }
