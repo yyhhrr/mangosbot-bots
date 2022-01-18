@@ -257,7 +257,8 @@ void PlayerbotFactory::Randomize(bool incremental)
 
     pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_Reagents");
     sLog.outDetail("Initializing reagents...");
-    InitReagents();
+    InitReagents(); 
+    InitTotems();
     if (pmo) pmo->finish();
 
     pmo = sPerformanceMonitor.start(PERF_MON_RNDBOT, "PlayerbotFactory_EqSets");
@@ -315,6 +316,7 @@ void PlayerbotFactory::Refresh()
     InitFood();
     InitPotions();
     InitReagents();
+    InitTotems();
 #ifndef MANGOSBOT_ZERO
     InitGems();
 #endif
@@ -2428,130 +2430,85 @@ void PlayerbotFactory::InitFood()
 
 void PlayerbotFactory::InitReagents()
 {
-    list<uint32> items;
-    uint32 regCount = 1;
-    switch (bot->getClass())
-    {
-    case CLASS_MAGE:
-        regCount = 2;
-        if (bot->getLevel() > 11)
-            items = { 17056 };
-        if (bot->getLevel() > 19)
-            items = { 17056, 17031 };
-        if (bot->getLevel() > 35)
-            items = { 17056, 17031, 17032 };
-        if (bot->getLevel() > 55)
-            items = { 17056, 17031, 17032, 17020 };
-        break;
-    case CLASS_DRUID:
-        regCount = 2;
-        if (bot->getLevel() > 19)
-            items = { 17034 };
-        if (bot->getLevel() > 29)
-            items = { 17035 };
-        if (bot->getLevel() > 39)
-            items = { 17036 };
-        if (bot->getLevel() > 49)
-            items = { 17037, 17021 };
-        if (bot->getLevel() > 59)
-            items = { 17038, 17026 };
-        if (bot->getLevel() > 69)
-            items = { 22147, 22148 };
-        break;
-    case CLASS_PALADIN:
-        regCount = 3;
-        if (bot->getLevel() > 50)
-            items = { 21177 };
-        break;
-    case CLASS_SHAMAN:
-        regCount = 1;
-        if (bot->getLevel() > 22)
-            items = { 17057 };
-        if (bot->getLevel() > 28)
-            items = { 17057, 17058 };
-        if (bot->getLevel() > 29)
-            items = { 17057, 17058, 17030 };
-        break;
-    case CLASS_WARLOCK:
-        regCount = 10;
-        if (bot->getLevel() > 9)
-            items = { 6265 };
-        break;
-    case CLASS_PRIEST:
-        regCount = 3;
-        if (bot->getLevel() > 48)
-            items = { 17028 };
-        if (bot->getLevel() > 55)
-            items = { 17028, 17029 };
-        break;
-    case CLASS_ROGUE:
-        regCount = 1;
-        if (bot->getLevel() > 21)
-            items = { 5140 };
-        if (bot->getLevel() > 33)
-            items = { 5140, 5530 };
-        break;
-    }
-
-    for (list<uint32>::iterator i = items.begin(); i != items.end(); ++i)
-    {
-        ItemPrototype const* proto = sObjectMgr.GetItemPrototype(*i);
-        if (!proto)
-        {
-            sLog.outError("No reagent (ItemId %d) found for bot %d (Class:%d)", i, bot->GetGUIDLow(), bot->getClass());
-            continue;
-        }
-
-        uint32 maxCount = proto->GetMaxStackSize();
-
-        QueryItemCountVisitor visitor(*i);
-        IterateItems(&visitor);
-        if (visitor.GetCount() > maxCount) continue;
-
-        uint32 randCount = urand(maxCount / 2, maxCount * regCount);
-
-        Item* newItem = bot->StoreNewItemInInventorySlot(*i, randCount);
-        if (newItem)
-            newItem->AddToUpdateQueueOf(bot);
-
-        sLog.outDetail("Bot %d got reagent %s x%d", bot->GetGUIDLow(), proto->Name1, randCount);
-    }
-
-
     for (PlayerSpellMap::iterator itr = bot->GetSpellMap().begin(); itr != bot->GetSpellMap().end(); ++itr)
     {
         uint32 spellId = itr->first;
 
-        if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || IsPassiveSpell(spellId))
+        if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled)
             continue;
 
         const SpellEntry* pSpellInfo = sServerFacade.LookupSpellInfo(spellId);
         if (!pSpellInfo)
             continue;
 
-        if (pSpellInfo->Effect[0] == SPELL_EFFECT_LEARN_SPELL)
+        if (pSpellInfo->SpellFamilyName < SPELLFAMILY_MAGE || pSpellInfo->SpellFamilyName == SPELLFAMILY_PET)
             continue;
 
-        for (const auto& totem : pSpellInfo->Totem)
-        {
-            if (totem && !bot->HasItemCount(totem, 1))
+        uint32 nextRank = sSpellMgr.GetNextSpellInChain(spellId);
+        if (bot->HasSpell(nextRank))
+            continue;
+
+            for (uint32 i = 0; i < MAX_SPELL_REAGENTS; i++)
             {
-                ItemPrototype const* proto = sObjectMgr.GetItemPrototype(totem);
-                if (!proto)
-                {
-                    sLog.outError("No totem (ItemId %d) found for bot %d (Class:%d)", totem, bot->GetGUIDLow(), bot->getClass());
+                uint32 itemid = pSpellInfo->Reagent[i];
+                uint32 itemcount = pSpellInfo->ReagentCount[i];
+                ItemPrototype const* proto = sObjectMgr.GetItemPrototype(itemid);
+                if (!proto)             
                     continue;
+                
+                if (!bot->HasItemCount(itemid, proto->Stackable))
+                {
+                    uint32 noSpaceForCount = 0;
+                    ItemPosCountVec dest;
+                    bot->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemid, proto->Stackable - bot->GetItemCount(itemid), &noSpaceForCount);
+                    Item* reagent = bot->StoreNewItem(dest, itemid, true, Item::GenerateItemRandomPropertyId(itemid));
+                    if (reagent)
+
+                    bot->SendNewItem(reagent, proto->Stackable - bot->GetItemCount(itemid), true, false);
+
+                    sLog.outDetail("Bot %d got reagent %s x%d", bot->GetGUIDLow(), proto->Name1, proto->Stackable - bot->GetItemCount(itemid));
                 }
-
-                Item* newItem = bot->StoreNewItemInInventorySlot(totem, 1);
-                if (newItem)
-                    newItem->AddToUpdateQueueOf(bot);
-
-                sLog.outDetail("Bot %d got totem %s x%d", bot->GetGUIDLow(), proto->Name1, 1);
-            }
-        }
+            }   
     }
 }
+
+void PlayerbotFactory::InitTotems()
+{
+        for (PlayerSpellMap::iterator itr = bot->GetSpellMap().begin(); itr != bot->GetSpellMap().end(); ++itr)
+        {
+        uint32 spellId = itr->first;
+
+             if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.disabled || IsPassiveSpell(spellId))
+                continue;
+
+            const SpellEntry* pSpellInfo = sServerFacade.LookupSpellInfo(spellId);
+             if (!pSpellInfo)
+                continue;
+
+            if (pSpellInfo->Effect[0] == SPELL_EFFECT_LEARN_SPELL)
+                continue;
+
+            for (const auto& totem : pSpellInfo->Totem)
+            {
+                if (totem && !bot->HasItemCount(totem, 1))
+                {
+                ItemPrototype const* proto = sObjectMgr.GetItemPrototype(totem);
+                    if (!proto)
+                    {
+                    sLog.outError("No totem (ItemId %d) found for bot %d (Class:%d)", totem, bot->GetGUIDLow(), bot->getClass());
+                    continue;
+                    }
+
+                    Item* newItem = bot->StoreNewItemInInventorySlot(totem, 1);
+                    if (newItem)
+                        newItem->AddToUpdateQueueOf(bot);
+
+                    sLog.outDetail("Bot %d got totem %s x%d", bot->GetGUIDLow(), proto->Name1, 1);
+                }
+            }
+        }
+}
+
 
 void PlayerbotFactory::CancelAuras()
 {
