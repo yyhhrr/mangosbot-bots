@@ -175,4 +175,4 @@ enum PriorizedConsumables
    CONSUM_ID_DEADLY_POISON_VIII = 43232,
    CONSUM_ID_DEADLY_POISON_IX = 43233,
 };
-#define MAX_CONSUM_ID 28
+#define MAX_CONSUM_ID 55
