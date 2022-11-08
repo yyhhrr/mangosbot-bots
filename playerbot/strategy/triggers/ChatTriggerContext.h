@@ -30,7 +30,11 @@ namespace ai
             creators["u"] = &ChatTriggerContext::use;
             creators["use"] = &ChatTriggerContext::use;
             creators["c"] = &ChatTriggerContext::item_count;
+            creators["items"] = &ChatTriggerContext::item_count;
+            creators["inventory"] = &ChatTriggerContext::item_count;
+            creators["inv"] = &ChatTriggerContext::item_count;
             creators["e"] = &ChatTriggerContext::equip;
+            creators["equip"] = &ChatTriggerContext::equip;
             creators["ue"] = &ChatTriggerContext::uneqip;
             creators["s"] = &ChatTriggerContext::sell;
             creators["b"] = &ChatTriggerContext::buy;
@@ -41,7 +45,8 @@ namespace ai
             creators["spells"] = &ChatTriggerContext::spells;
             creators["co"] = &ChatTriggerContext::co;
             creators["nc"] = &ChatTriggerContext::nc;
-            creators["dead"] = &ChatTriggerContext::dead;
+            creators["de"] = &ChatTriggerContext::dead;
+            creators["react"] = &ChatTriggerContext::react;
             creators["trainer"] = &ChatTriggerContext::trainer;
             creators["attack"] = &ChatTriggerContext::attack;
             creators["chat"] = &ChatTriggerContext::chat;
@@ -53,14 +58,17 @@ namespace ai
             creators["buff"] = &ChatTriggerContext::buff;
             creators["help"] = &ChatTriggerContext::help;
             creators["gb"] = &ChatTriggerContext::gb;
+            creators["gbank"] = &ChatTriggerContext::gb;
             creators["bank"] = &ChatTriggerContext::bank;
             creators["follow"] = &ChatTriggerContext::follow;
             creators["stay"] = &ChatTriggerContext::stay;
+            creators["wait for attack time"] = &ChatTriggerContext::wait_for_attack_time;
             creators["flee"] = &ChatTriggerContext::flee;
             creators["grind"] = &ChatTriggerContext::grind;
             creators["tank attack"] = &ChatTriggerContext::tank_attack;
             creators["talk"] = &ChatTriggerContext::talk;
             creators["cast"] = &ChatTriggerContext::cast;
+            creators["castnc"] = &ChatTriggerContext::castnc;
             creators["invite"] = &ChatTriggerContext::invite;
             creators["spell"] = &ChatTriggerContext::spell;
             creators["rti"] = &ChatTriggerContext::rti;
@@ -74,31 +82,50 @@ namespace ai
             creators["max dps"] = &ChatTriggerContext::max_dps;
             creators["attackers"] = &ChatTriggerContext::attackers;
             creators["formation"] = &ChatTriggerContext::formation;
+            creators["stance"] = &ChatTriggerContext::stance;
             creators["sendmail"] = &ChatTriggerContext::sendmail;
             creators["mail"] = &ChatTriggerContext::mail;
             creators["outfit"] = &ChatTriggerContext::outfit;
             creators["go"] = &ChatTriggerContext::go;
             creators["ready"] = &ChatTriggerContext::ready_check;
             creators["debug"] = &ChatTriggerContext::debug;
+            creators["cdebug"] = &ChatTriggerContext::cdebug;
             creators["cs"] = &ChatTriggerContext::cs;
             creators["wts"] = &ChatTriggerContext::wts;
             creators["hire"] = &ChatTriggerContext::hire;
             creators["craft"] = &ChatTriggerContext::craft;
             creators["flag"] = &ChatTriggerContext::craft;
+            creators["range"] = &ChatTriggerContext::range;
+            creators["ra"] = &ChatTriggerContext::ra;
+            creators["give leader"] = &ChatTriggerContext::give_leader;
+            creators["cheat"] = &ChatTriggerContext::cheat;
+            creators["rtsc"] = &ChatTriggerContext::rtsc;
+            creators["ah"] = &ChatTriggerContext::ah;
+            creators["ah bid"] = &ChatTriggerContext::ah_bid;
+            creators["ginvite"] = &ChatTriggerContext::ginvite;
+            creators["guild promote"] = &ChatTriggerContext::guild_promote;
+            creators["guild demote"] = &ChatTriggerContext::guild_demote;
+            creators["guild remove"] = &ChatTriggerContext::guild_remove;
+            creators["guild leave"] = &ChatTriggerContext::guild_leave;
+            creators["guild leader"] = &ChatTriggerContext::guild_leader;
         }
 
     private:
+        static Trigger* ra(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "ra"); }
+        static Trigger* range(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "range"); }
         static Trigger* flag(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "flag"); }
         static Trigger* craft(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "craft"); }
         static Trigger* hire(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "hire"); }
         static Trigger* wts(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "wts"); }
         static Trigger* cs(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "cs"); }
         static Trigger* debug(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "debug"); }
+        static Trigger* cdebug(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "cdebug"); }
         static Trigger* go(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "go"); }
         static Trigger* outfit(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "outfit"); }
         static Trigger* mail(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "mail"); }
         static Trigger* sendmail(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "sendmail"); }
         static Trigger* formation(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "formation"); }
+        static Trigger* stance(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "stance"); }
         static Trigger* attackers(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "attackers"); }
         static Trigger* max_dps(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "max dps"); }
         static Trigger* save_mana(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "save mana"); }
@@ -111,11 +138,13 @@ namespace ai
         static Trigger* rti(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "rti"); }
         static Trigger* invite(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "invite"); }
         static Trigger* cast(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "cast"); }
+        static Trigger* castnc(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "castnc"); }
         static Trigger* talk(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "talk"); }
         static Trigger* flee(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "flee"); }
         static Trigger* grind(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "grind"); }
         static Trigger* tank_attack(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "tank attack"); }
         static Trigger* stay(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "stay"); }
+        static Trigger* wait_for_attack_time(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "wait for attack time"); }
         static Trigger* follow(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "follow"); }
         static Trigger* gb(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "gb"); }
         static Trigger* bank(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "bank"); }
@@ -130,7 +159,8 @@ namespace ai
         static Trigger* trainer(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "trainer"); }
         static Trigger* co(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "co"); }
         static Trigger* nc(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "nc"); }
-        static Trigger* dead(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "dead"); }
+        static Trigger* dead(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "de"); }
+        static Trigger* react(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "react"); }
         static Trigger* spells(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "spells"); }
         static Trigger* talents(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "talents"); }
         static Trigger* equip(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "e"); }
@@ -162,5 +192,16 @@ namespace ai
         static Trigger* reset_ai(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "reset ai"); }
         static Trigger* spell(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "spell"); }
         static Trigger* ready_check(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "ready check"); }
+        static Trigger* give_leader(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "give leader"); }
+        static Trigger* cheat(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "cheat"); }
+        static Trigger* rtsc(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "rtsc"); }
+        static Trigger* ginvite(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "ginvite"); }
+        static Trigger* ah(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "ah"); }
+        static Trigger* ah_bid(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "ah bid"); }
+        static Trigger* guild_promote(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "guild promote"); }
+        static Trigger* guild_demote(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "guild demote"); }
+        static Trigger* guild_remove(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "guild remove"); }
+        static Trigger* guild_leave(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "guild leave"); }
+        static Trigger* guild_leader(PlayerbotAI* ai) { return new ChatCommandTrigger(ai, "guild leader"); }
     };
 };

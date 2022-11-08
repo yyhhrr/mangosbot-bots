@@ -59,7 +59,7 @@ CategoryList::CategoryList()
     Add(new TradeSkill(SKILL_FIRST_AID, false));
     Add(new TradeSkill(SKILL_COOKING, false));
 
-#ifdef MANGOSBOT_ONE
+#ifndef MANGOSBOT_ZERO
     Add(new TradeSkill(SKILL_JEWELCRAFTING, true));
     Add(new TradeSkill(SKILL_JEWELCRAFTING, false));
 #endif
@@ -87,6 +87,9 @@ ItemBag::ItemBag()
 
 void ItemBag::Init(bool silent)
 {
+    // test skip ahbot loading at start
+    // return;
+
     if (silent)
     {
         Load();
@@ -96,13 +99,15 @@ void ItemBag::Init(bool silent)
     sLog.outString("Loading/Scanning %s...", GetName().c_str());
 
     Load();
-
+	uint32 ahcounter = 0;
     for (int i = 0; i < CategoryList::instance.size(); i++)
     {
         Category* category = CategoryList::instance[i];
         Shuffle(content[category]);
-        sLog.outString("loaded %zu %s items", content[category].size(), category->GetDisplayName().c_str());
+        sLog.outDetail("loaded %zu %s items", content[category].size(), category->GetDisplayName().c_str());
+		ahcounter += content[category].size();
     }
+	sLog.outString("Loaded %u items", ahcounter);
 }
 
 int32 ItemBag::GetCount(Category* category, uint32 item)
@@ -127,6 +132,12 @@ bool ItemBag::Add(ItemPrototype const* proto)
         return false;
 
     if (proto->RequiredLevel > sAhBotConfig.maxRequiredLevel || proto->ItemLevel > sAhBotConfig.maxItemLevel)
+        return false;
+
+    if (proto->Duration > 0)
+        return false;
+
+    if (proto->Area)
         return false;
 
     if (proto->Duration & 0x80000000)

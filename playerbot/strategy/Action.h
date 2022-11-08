@@ -3,6 +3,14 @@
 #include "Value.h"
 #include "AiObject.h"
 
+class Unit;
+
+namespace ai
+{
+    class NextAction;
+    template<class T> class Value;
+}
+
 namespace ai
 {
     class NextAction
@@ -39,7 +47,7 @@ namespace ai
 
     class ActionBasket;
 
-    enum ActionThreatType
+    enum class ActionThreatType : uint8
     {
         ACTION_THREAT_NONE = 0,
         ACTION_THREAT_SINGLE= 1,
@@ -53,13 +61,13 @@ namespace ai
         virtual ~Action(void) {}
 
     public:
-        virtual bool Execute(Event event) { return true; }
+        virtual bool Execute(Event& event) { return true; }
         virtual bool isPossible() { return true; }
         virtual bool isUseful() { return true; }
         virtual NextAction** getPrerequisites() { return NULL; }
         virtual NextAction** getAlternatives() { return NULL; }
         virtual NextAction** getContinuers() { return NULL; }
-        virtual ActionThreatType getThreatType() { return ACTION_THREAT_NONE; }
+        virtual ActionThreatType getThreatType() { return ActionThreatType::ACTION_THREAT_NONE; }
         void Update() {}
         void Reset() {}
         virtual Unit* GetTarget();
@@ -67,8 +75,19 @@ namespace ai
         virtual string GetTargetName() { return "self target"; }
         void MakeVerbose() { verbose = true; }
 
+        void setRelevance(float relevance1) { relevance = relevance1; };
+        virtual float getRelevance() { return relevance; }
+
+        bool IsReaction() const { return reaction; }
+        void SetReaction(bool inReaction) { reaction = inReaction; }
+        
+    protected:
+        void SetDuration(uint32 delay);
+
     protected:
         bool verbose;
+        float relevance = 0;
+        bool reaction = false;
 	};
 
     class ActionNode
@@ -112,7 +131,7 @@ namespace ai
 	class ActionBasket
 	{
 	public:
-        ActionBasket(ActionNode* action, float relevance, bool skipPrerequisites, Event event) :
+        ActionBasket(ActionNode* action, float relevance, bool skipPrerequisites, const Event& event) :
           action(action), relevance(relevance), skipPrerequisites(skipPrerequisites), event(event) {
             created = time(0);
         }
@@ -140,3 +159,18 @@ namespace ai
 
 #define AI_VALUE(type, name) context->GetValue<type>(name)->Get()
 #define AI_VALUE2(type, name, param) context->GetValue<type>(name, param)->Get()
+
+#define AI_VALUE_LAZY(type, name) context->GetValue<type>(name)->LazyGet()
+#define AI_VALUE2_LAZY(type, name, param) context->GetValue<type>(name, param)->LazyGet()
+
+#define SET_AI_VALUE(type, name, value) context->GetValue<type>(name)->Set(value)
+#define SET_AI_VALUE2(type, name, param, value) context->GetValue<type>(name, param)->Set(value)
+#define RESET_AI_VALUE(type, name) context->GetValue<type>(name)->Reset()
+#define RESET_AI_VALUE2(type, name, param) context->GetValue<type>(name, param)->Reset()
+
+#define PAI_VALUE(type, name) player->GetPlayerbotAI()->GetAiObjectContext()->GetValue<type>(name)->Get()
+#define PAI_VALUE2(type, name, param) player->GetPlayerbotAI()->GetAiObjectContext()->GetValue<type>(name, param)->Get()
+#define GAI_VALUE(type, name) sSharedValueContext.getGlobalValue<type>(name)->Get()
+#define GAI_VALUE2(type, name, param) sSharedValueContext.getGlobalValue<type>(name, param)->Get()
+
+#define MEM_AI_VALUE(type, name) dynamic_cast<MemoryCalculatedValue<type>*>(context->GetUntypedValue(name))

@@ -37,6 +37,32 @@ namespace ai {
 		CastMoonkinFormAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "moonkin form") {} 
 	};
 
+    class CastAquaticFormAction : public CastBuffSpellAction {
+    public:
+        CastAquaticFormAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "aquatic form") {}
+    };
+
+    class CastTravelFormAction : public CastBuffSpellAction {
+    public:
+        CastTravelFormAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "travel form") {}
+        virtual bool isUseful() {
+            bool firstmount = bot->GetLevel() >=
+#ifdef MANGOSBOT_ZERO
+                40
+#else
+#ifdef MANGOSBOT_ONE
+                30
+#else
+                20
+#endif
+#endif
+                ;
+
+            // useful if no mount or with wsg flag
+            return !bot->IsMounted() || !firstmount;
+        }
+    };
+
 	class CastCasterFormAction : public CastBuffSpellAction { 
 	public: 
 		CastCasterFormAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "caster form") {} 
@@ -47,7 +73,7 @@ namespace ai {
 		}
 		virtual bool isPossible() { return true; }
 		
-		virtual bool Execute(Event event);
+		virtual bool Execute(Event& event);
 	};
 
 }

@@ -1,6 +1,7 @@
 #include "../../botpch.h"
 #include "../playerbot.h"
 #include <stdarg.h>
+#include <iomanip>
 
 #include "Engine.h"
 #include "../PlayerbotAIConfig.h"
@@ -15,7 +16,7 @@ Engine::Engine(PlayerbotAI* ai, AiObjectContext *factory) : PlayerbotAIAware(ai)
     testMode = false;
 }
 
-bool ActionExecutionListeners::Before(Action* action, Event event)
+bool ActionExecutionListeners::Before(Action* action, const Event& event)
 {
     bool result = true;
     for (list<ActionExecutionListener*>::iterator i = listeners.begin(); i!=listeners.end(); i++)
@@ -25,7 +26,7 @@ bool ActionExecutionListeners::Before(Action* action, Event event)
     return result;
 }
 
-void ActionExecutionListeners::After(Action* action, bool executed, Event event)
+void ActionExecutionListeners::After(Action* action, bool executed, const Event& event)
 {
     for (list<ActionExecutionListener*>::iterator i = listeners.begin(); i!=listeners.end(); i++)
     {
@@ -33,7 +34,7 @@ void ActionExecutionListeners::After(Action* action, bool executed, Event event)
     }
 }
 
-bool ActionExecutionListeners::OverrideResult(Action* action, bool executed, Event event)
+bool ActionExecutionListeners::OverrideResult(Action* action, bool executed, const Event& event)
 {
     bool result = executed;
     for (list<ActionExecutionListener*>::iterator i = listeners.begin(); i!=listeners.end(); i++)
@@ -43,7 +44,7 @@ bool ActionExecutionListeners::OverrideResult(Action* action, bool executed, Eve
     return result;
 }
 
-bool ActionExecutionListeners::AllowExecution(Action* action, Event event)
+bool ActionExecutionListeners::AllowExecution(Action* action, const Event& event)
 {
     bool result = true;
     for (list<ActionExecutionListener*>::iterator i = listeners.begin(); i!=listeners.end(); i++)
@@ -117,7 +118,7 @@ void Engine::Init()
 }
 
 
-bool Engine::DoNextAction(Unit* unit, int depth)
+bool Engine::DoNextAction(Unit* unit, int depth, bool minimal)
 {
     LogAction("--- AI Tick ---");
     if (sPlayerbotAIConfig.logValuesPerTick)
@@ -128,22 +129,42 @@ bool Engine::DoNextAction(Unit* unit, int depth)
 
     time_t currentTime = time(0);
     aiObjectContext->Update();
-    ProcessTriggers();
+    ProcessTriggers(minimal);
 
     int iterations = 0;
-    int iterationsPerTick = queue.Size() * sPlayerbotAIConfig.iterationsPerTick;
+    int iterationsPerTick = queue.Size() * (minimal ? (uint32)(sPlayerbotAIConfig.iterationsPerTick / 2) : sPlayerbotAIConfig.iterationsPerTick);
     do {
         basket = queue.Peek();
         if (basket) {
             float relevance = basket->getRelevance(); // just for reference
             bool skipPrerequisites = basket->isSkipPrerequisites();
             Event event = basket->getEvent();
+            if (minimal && (relevance < 100))
+                continue;
             // NOTE: queue.Pop() deletes basket
             ActionNode* actionNode = queue.Pop();
             Action* action = InitializeAction(actionNode);
 
+            if(action)
+                action->setRelevance(relevance);
+
             if (!action)
             {
+                if (ai->HasStrategy("debug action", BotState::BOT_STATE_NON_COMBAT))
+                {
+                    ostringstream out;
+                    out << "try: ";
+                    out << actionNode->getName();
+                    out << " unknown (";
+
+                    out << std::fixed << std::setprecision(3);
+                    out << relevance << ")";
+
+                    if (!event.getSource().empty())
+                        out << " [" << event.getSource() << "]";
+
+                    ai->TellMasterNoFacing(out);
+                }
                 LogAction("A:%s - UNKNOWN", actionNode->getName().c_str());
             }
             else if (action->isUseful())
@@ -152,6 +173,7 @@ bool Engine::DoNextAction(Unit* unit, int depth)
                 {
                     Multiplier* multiplier = *i;
                     relevance *= multiplier->GetValue(action);
+                    action->setRelevance(relevance);
                     if (!relevance)
                     {
                         LogAction("Multiplier %s made action %s useless", multiplier->getName().c_str(), action->getName().c_str());
@@ -171,7 +193,7 @@ bool Engine::DoNextAction(Unit* unit, int depth)
                         }
                     }
 
-                    PerformanceMonitorOperation *pmo = sPerformanceMonitor.start(PERF_MON_ACTION, action->getName());
+                    PerformanceMonitorOperation *pmo = sPerformanceMonitor.start(PERF_MON_ACTION, action->getName(), &aiObjectContext->performanceStack);
                     actionExecuted = ListenAndExecute(action, event);
                     if (pmo) pmo->finish();
 
@@ -191,12 +213,42 @@ bool Engine::DoNextAction(Unit* unit, int depth)
                 }
                 else
                 {
+                    if (ai->HasStrategy("debug action", BotState::BOT_STATE_NON_COMBAT))
+                    {
+                        ostringstream out;
+                        out << "try: ";
+                        out << action->getName();
+                        out << " impossible (";
+
+                        out << std::fixed << std::setprecision(3);
+                        out << action->getRelevance() << ")";
+
+                        if (!event.getSource().empty())
+                            out << " [" << event.getSource() << "]";
+
+                        ai->TellMasterNoFacing(out);
+                    }
                     LogAction("A:%s - IMPOSSIBLE", action->getName().c_str());
                     MultiplyAndPush(actionNode->getAlternatives(), relevance + 0.03, false, event, "alt");
                 }
             }
             else
             {
+                if (ai->HasStrategy("debug action", BotState::BOT_STATE_NON_COMBAT))
+                {
+                    ostringstream out;
+                    out << "try: ";
+                    out << action->getName();
+                    out << " useless (";
+
+                    out << std::fixed << std::setprecision(3);
+                    out << action->getRelevance() << ")";
+
+                    if (!event.getSource().empty())
+                        out << " [" << event.getSource() << "]";
+
+                    ai->TellMasterNoFacing(out);
+                }
                 lastRelevance = relevance;
                 LogAction("A:%s - USELESS", action->getName().c_str());
             }
@@ -210,8 +262,17 @@ bool Engine::DoNextAction(Unit* unit, int depth)
         lastRelevance = 0.0f;
         PushDefaultActions();
         if (queue.Peek() && depth < 2)
-            return DoNextAction(unit, depth + 1);
+            return DoNextAction(unit, depth + 1, minimal);
     }
+
+    // MEMORY FIX TEST
+ /*   do {
+        basket = queue.Peek();
+        if (basket) {
+            // NOTE: queue.Pop() deletes basket
+            delete queue.Pop();
+        }
+    } while (basket);*/
 
     if (time(0) - currentTime > 1) {
         LogAction("too long execution");
@@ -239,7 +300,7 @@ ActionNode* Engine::CreateActionNode(string name)
         /*C*/ NULL);
 }
 
-bool Engine::MultiplyAndPush(NextAction** actions, float forceRelevance, bool skipPrerequisites, Event event, const char* pushType)
+bool Engine::MultiplyAndPush(NextAction** actions, float forceRelevance, bool skipPrerequisites, const Event& event, const char* pushType)
 {
     bool pushed = false;
     if (actions)
@@ -279,7 +340,7 @@ bool Engine::MultiplyAndPush(NextAction** actions, float forceRelevance, bool sk
     return pushed;
 }
 
-ActionResult Engine::ExecuteAction(string name)
+ActionResult Engine::ExecuteAction(string name, Event event, string qualifier)
 {
 	bool result = false;
 
@@ -292,6 +353,16 @@ ActionResult Engine::ExecuteAction(string name)
     {
         delete actionNode;
         return ACTION_RESULT_UNKNOWN;
+    }
+
+
+
+    if (!qualifier.empty())
+    {
+        Qualified* q = dynamic_cast<Qualified*>(action);
+
+        if (q)
+            q->Qualify(qualifier);
     }
 
     if (!action->isPossible())
@@ -307,9 +378,8 @@ ActionResult Engine::ExecuteAction(string name)
     }
 
     action->MakeVerbose();
-    Event emptyEvent;
-    result = ListenAndExecute(action, emptyEvent);
-    MultiplyAndPush(action->getContinuers(), 0.0f, false, emptyEvent, "default");
+    result = ListenAndExecute(action, event);
+    MultiplyAndPush(action->getContinuers(), 0.0f, false, event, "default");
     delete actionNode;
 	return result ? ACTION_RESULT_OK : ACTION_RESULT_FAILED;
 }
@@ -328,7 +398,8 @@ void Engine::addStrategy(string name)
         LogAction("S:+%s", strategy->getName().c_str());
         strategies[strategy->getName()] = strategy;
     }
-    Init();
+    if(!initMode)
+        Init();
 }
 
 void Engine::addStrategies(string first, ...)
@@ -379,7 +450,7 @@ bool Engine::HasStrategy(string name)
     return strategies.find(name) != strategies.end();
 }
 
-void Engine::ProcessTriggers()
+void Engine::ProcessTriggers(bool minimal)
 {
     map<Trigger*, Event> fires;
     for (list<TriggerNode*>::iterator i = triggers.begin(); i != triggers.end(); i++)
@@ -400,7 +471,10 @@ void Engine::ProcessTriggers()
 
         if (testMode || trigger->needCheck())
         {
-            PerformanceMonitorOperation *pmo = sPerformanceMonitor.start(PERF_MON_TRIGGER, trigger->getName());
+            if (minimal && node->getFirstRelevance() < 100)
+                continue;
+
+            PerformanceMonitorOperation* pmo = sPerformanceMonitor.start(PERF_MON_TRIGGER, trigger->getName(), &aiObjectContext->performanceStack);
             Event event = trigger->Check();
             if (pmo) pmo->finish();
             if (!event)
@@ -439,9 +513,8 @@ void Engine::PushDefaultActions()
 }
 
 string Engine::ListStrategies()
-{
-    string s = "Strategies: ";
-
+{   
+    string s;
     if (strategies.empty())
         return s;
 
@@ -463,7 +536,7 @@ list<string> Engine::GetStrategies()
     return result;
 }
 
-void Engine::PushAgain(ActionNode* actionNode, float relevance, Event event)
+void Engine::PushAgain(ActionNode* actionNode, float relevance, const Event& event)
 {
     NextAction** nextAction = new NextAction*[2];
     nextAction[0] = new NextAction(actionNode->getName(), relevance);
@@ -491,16 +564,49 @@ Action* Engine::InitializeAction(ActionNode* actionNode)
         action = aiObjectContext->GetAction(actionNode->getName());
         actionNode->setAction(action);
     }
+
+    if (action != nullptr)
+    {
+        action->SetReaction(false);
+    }
+
     return action;
 }
 
-bool Engine::ListenAndExecute(Action* action, Event event)
+bool Engine::ListenAndExecute(Action* action, Event& event)
 {
     bool actionExecuted = false;
-
     if (actionExecutionListeners.Before(action, event))
     {
         actionExecuted = actionExecutionListeners.AllowExecution(action, event) ? action->Execute(event) : true;
+    }
+
+    if (ai->HasStrategy("debug", BotState::BOT_STATE_NON_COMBAT))
+    {
+        ostringstream out;
+        out << "do: ";
+        out << action->getName();
+        if (actionExecuted)
+            out << " 1 (";
+        else
+            out << " 0 (";
+
+        out << std::fixed << std::setprecision(2);
+        out << action->getRelevance() << ")";
+
+        if(!event.getSource().empty())
+            out << " [" << event.getSource() << "]";
+
+        if (actionExecuted)
+        {
+            const uint32 actionDuration = ai->GetAIInternalUpdateDelay();
+            if (actionDuration > 0)
+            {
+                out << " (duration: " << ((float)actionDuration / IN_MILLISECONDS) << "s)";
+            }
+        }
+
+        ai->TellMasterNoFacing(out);
     }
 
     actionExecuted = actionExecutionListeners.OverrideResult(action, actionExecuted, event);
@@ -542,7 +648,7 @@ void Engine::LogAction(const char* format, ...)
     }
 }
 
-void Engine::ChangeStrategy(string names)
+void Engine::ChangeStrategy(string names, string engineType)
 {
     vector<string> splitted = split(names, ',');
     for (vector<string>::iterator i = splitted.begin(); i != splitted.end(); i++)
@@ -550,18 +656,29 @@ void Engine::ChangeStrategy(string names)
         const char* name = i->c_str();
         switch (name[0])
         {
-        case '+':
-            addStrategy(name+1);
-            break;
-        case '-':
-            removeStrategy(name+1);
-            break;
-        case '~':
-            toggleStrategy(name+1);
-            break;
-        case '?':
-            ai->TellMaster(ListStrategies());
-            break;
+            case '+':
+            {
+                addStrategy(name+1);
+                break;
+            }
+            case '-':
+            {
+                removeStrategy(name+1);
+                break;
+            }
+            case '~':
+            {
+                toggleStrategy(name+1);
+                break;
+            }
+            case '?':
+            {
+                string engineStrategies = engineType;
+                engineStrategies.append(" Strategies: ");
+                engineStrategies.append(ListStrategies());
+                ai->TellMaster(engineStrategies);
+                break;
+            }
         }
     }
 }

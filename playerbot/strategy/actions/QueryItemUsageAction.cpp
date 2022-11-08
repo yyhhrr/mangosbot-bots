@@ -4,14 +4,15 @@
 #include "../../../ahbot/AhBot.h"
 #include "../values/ItemUsageValue.h"
 #include "../../RandomPlayerbotMgr.h"
+#include "../../RandomItemMgr.h"
 
 
 using namespace ai;
 
 
-bool QueryItemUsageAction::Execute(Event event)
+bool QueryItemUsageAction::Execute(Event& event)
 {
-    if (!GetMaster())
+    if (!GetMaster() && !sPlayerbotAIConfig.randomBotSayWithoutMaster)
         return false;
 
     WorldPacket& data = event.getPacket();
@@ -24,8 +25,8 @@ bool QueryItemUsageAction::Execute(Event event)
         if (guid != bot->GetObjectGuid())
             return false;
 
-        uint32 received, created, isShowChatMessage, notUsed, itemId,
-            suffixFactor, itemRandomPropertyId, count, invCount;
+        uint32 received, created, isShowChatMessage, notUsed, itemId,suffixFactor, itemRandomPropertyId, count;
+        //uint32 invCount;
         uint8 bagSlot;
 
         data >> received;                               // 0=looted, 1=from npc
@@ -44,7 +45,43 @@ bool QueryItemUsageAction::Execute(Event event)
         if (!item)
             return false;
 
-        ai->TellMaster(QueryItem(item, count, GetCount(item)));
+        ai->TellMaster(QueryItem(item, count, GetCount(item)), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+
+        if (sPlayerbotAIConfig.hasLog("bot_events.csv"))
+        {
+            if (event.getSource() == "item push result")
+            {
+
+                QuestStatusMap& questMap = bot->getQuestStatusMap();
+                for (QuestStatusMap::const_iterator i = questMap.begin(); i != questMap.end(); i++)
+                {
+                    const Quest* questTemplate = sObjectMgr.GetQuestTemplate(i->first);
+                    if (!questTemplate)
+                        continue;
+
+                    uint32 questId = questTemplate->GetQuestId();
+                    QuestStatus status = bot->GetQuestStatus(questId);
+                    if (status == QUEST_STATUS_INCOMPLETE || (status == QUEST_STATUS_COMPLETE && !bot->GetQuestRewardStatus(questId)))
+                    {
+                        QuestStatusData const& questStatus = i->second;
+                        for (int i = 0; i < QUEST_OBJECTIVES_COUNT; i++)
+                        {
+                            if (questTemplate->ReqItemId[i] != itemId)
+                                continue;
+
+                            int required = questTemplate->ReqItemCount[i];
+                            int available = questStatus.m_itemcount[i];
+
+                            if (!required)
+                                continue;
+
+                            sPlayerbotAIConfig.logEvent(ai, "QueryItemUsageAction", questTemplate->GetTitle(), to_string((float)available / (float)required));
+                        }
+                    }
+                }
+            }
+        }
+
         return true;
     }
 
@@ -55,7 +92,7 @@ bool QueryItemUsageAction::Execute(Event event)
         ItemPrototype const *item = sItemStorage.LookupEntry<ItemPrototype>(*i);
         if (!item) continue;
 
-        ai->TellMaster(QueryItem(item, 0, GetCount(item)));
+        ai->TellMaster(QueryItem(item, 0, GetCount(item)), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
     }
     return true;
 }
@@ -77,10 +114,21 @@ uint32 QueryItemUsageAction::GetCount(ItemPrototype const *item)
 string QueryItemUsageAction::QueryItem(ItemPrototype const *item, uint32 count, uint32 total)
 {
     ostringstream out;
+#ifdef CMANGOS
     string usage = QueryItemUsage(item);
+#endif
+#ifdef MANGOS
+    bool usage = QueryItemUsage(item);
+#endif
     string quest = QueryQuestItem(item->ItemId);
     string price = QueryItemPrice(item);
+    string power = QueryItemPower(item->ItemId);
+#ifdef CMANGOS
     if (usage.empty())
+#endif
+#ifdef MANGOS
+    if (!usage)
+#endif
         usage = (quest.empty() ? "Useless" : "Quest");
 
     out << chat->formatItem(item, count, total) << ": " << usage;
@@ -88,10 +136,16 @@ string QueryItemUsageAction::QueryItem(ItemPrototype const *item, uint32 count, 
         out << ", " << quest;
     if (!price.empty())
         out << ", " << price;
+    if (!power.empty())
+        out << ", " << power;
     return out.str();
 }
-
+#ifdef CMANGOS
 string QueryItemUsageAction::QueryItemUsage(ItemPrototype const *item)
+#endif
+#ifdef MANGOS
+bool QueryItemUsageAction::QueryItemUsage(ItemPrototype const *item)
+#endif
 {
     ostringstream out; out << item->ItemId;
     ItemUsage usage = AI_VALUE2(ItemUsage, "item usage", out.str());
@@ -101,6 +155,12 @@ string QueryItemUsageAction::QueryItemUsage(ItemPrototype const *item)
         return "Equip";
     case ITEM_USAGE_REPLACE:
         return "Equip (replace)";
+    case ITEM_USAGE_BAD_EQUIP:
+        return "Equip (temporary)";
+    case ITEM_USAGE_BROKEN_EQUIP:
+        return "Broken Equip";
+    case ITEM_USAGE_QUEST:
+        return "Quest (other)";
     case ITEM_USAGE_SKILL:
         return "Tradeskill";
     case ITEM_USAGE_USE:
@@ -109,6 +169,12 @@ string QueryItemUsageAction::QueryItemUsage(ItemPrototype const *item)
 		return "Guild task";
 	case ITEM_USAGE_DISENCHANT:
 		return "Disenchant";
+    case ITEM_USAGE_VENDOR:
+        return "Vendor";
+    case ITEM_USAGE_AH:
+        return "Auctionhouse";
+    case ITEM_USAGE_AMMO:
+        return "Ammunition";
 	}
 
     return "";
@@ -130,9 +196,11 @@ string QueryItemUsageAction::QueryItemPrice(ItemPrototype const *item)
         for (list<Item*>::iterator i = items.begin(); i != items.end(); ++i)
         {
             Item* sell = *i;
-            sellPrice = sell->GetCount() * auctionbot.GetSellPrice(sell->GetProto()) * sRandomPlayerbotMgr.GetSellMultiplier(bot);
-            msg << "Sell: " << chat->formatMoney(sellPrice);
+            sellPrice += sell->GetCount() * auctionbot.GetSellPrice(sell->GetProto()) * sRandomPlayerbotMgr.GetSellMultiplier(bot);
         }
+
+        if(sellPrice)
+            msg << "Sell: " << chat->formatMoney(sellPrice);
     }
 
     ostringstream out; out << item->ItemId;
@@ -193,3 +261,23 @@ string QueryItemUsageAction::QueryQuestItem(uint32 itemId, const Quest *questTem
     return "";
 }
 
+string QueryItemUsageAction::QueryItemPower(uint32 itemId)
+{
+    uint32 power = sRandomItemMgr.GetLiveStatWeight(bot, itemId);
+
+    ItemPrototype const* proto = ObjectMgr::GetItemPrototype(itemId);
+
+    if (power)
+        if (proto)
+        {
+            ostringstream out;
+            char color[32];
+            sprintf(color, "%x", ItemQualityColors[proto->Quality]);
+            out << "power: |h|c" << color << "|h" << to_string(power) << "|h|cffffffff";
+            return out.str().c_str();
+        }
+        else
+            return "power: " + to_string(power);
+
+    return "";
+}

@@ -2,25 +2,29 @@
 
 #include "../Action.h"
 #include "MovementActions.h"
-#include "../values/LastMovementValue.h"
 
 namespace ai
 {
     class RpgAction : public MovementAction {
     public:
-        RpgAction(PlayerbotAI* ai) : MovementAction(ai, "rpg") {}
+        RpgAction(PlayerbotAI* ai, string name = "rpg") : MovementAction(ai, name) {}
 
-        virtual bool Execute(Event event);
+        virtual bool Execute(Event& event);
         virtual bool isUseful();
 
-    private:
-        typedef void (RpgAction::*RpgElement) (Unit*);
+    protected:
+        virtual bool SetNextRpgAction();
 
-        void stay(Unit* unit);
-        void cancel(Unit* unit);
-        void emote(Unit* unit);
-        void work(Unit* unit);
-        void taxi(Unit* unit);
+        typedef void (RpgAction::* RpgElement) (ObjectGuid guid);
+        virtual bool AddIgnore(ObjectGuid guid);
+        virtual bool RemIgnore(ObjectGuid guid);
+        virtual bool HasIgnore(ObjectGuid guid);   
     };
 
+    class CRpgAction : public RpgAction {
+    public:
+        CRpgAction(PlayerbotAI* ai) : RpgAction(ai, "crpg") {}
+
+        virtual bool isUseful() { RESET_AI_VALUE(GuidPosition,"rpg target"); return true; };
+    };
 }

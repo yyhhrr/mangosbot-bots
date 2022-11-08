@@ -2,28 +2,46 @@
 #include "../../playerbot.h"
 #include "TrainerAction.h"
 #include "../../ServerFacade.h"
+#include "../values/BudgetValues.h"
 
 using namespace ai;
 
 void TrainerAction::Learn(uint32 cost, TrainerSpell const* tSpell, ostringstream& msg)
 {
-    if (bot->GetMoney() < cost)
+    if (sPlayerbotAIConfig.autoTrainSpells != "free" &&  !ai->HasCheat(BotCheatMask::gold))
     {
-        msg << " - too expensive";
-        return;
-    }
+        if (AI_VALUE2(uint32, "free money for", (uint32)NeedMoneyFor::spells) < cost)
+        {
+            msg << " - too expensive";
+            return;
+        }
 
-    bot->ModifyMoney(-int32(cost));
+        bot->ModifyMoney(-int32(cost));
+    }
 
     SpellEntry const* proto = sServerFacade.LookupSpellInfo(tSpell->spell);
     if (!proto)
         return;
 
 #ifdef CMANGOS
-    Spell* spell = new Spell(bot, proto, false);
-    SpellCastTargets targets;
-    targets.setUnitTarget(bot);
-    spell->SpellStart(&targets);
+    if (tSpell->learnedSpell)
+    {
+        // old code
+        // bot->learnSpell(tSpell->learnedSpell, false);
+        bool learned = false;
+        for (int j = 0; j < 3; ++j)
+        {
+            if (proto->Effect[j] == SPELL_EFFECT_LEARN_SPELL)
+            {
+                uint32 learnedSpell = proto->EffectTriggerSpell[j];
+                bot->learnSpell(learnedSpell, false);
+                learned = true;
+            }
+        }
+        if (!learned) bot->learnSpell(tSpell->learnedSpell, false);
+    }
+    else
+        ai->CastSpell(tSpell->spell, bot);
 #endif
 
 #ifdef MANGOS
@@ -40,6 +58,8 @@ void TrainerAction::Learn(uint32 cost, TrainerSpell const* tSpell, ostringstream
     if (!learned) bot->learnSpell(tSpell->spell, false);
 #endif
 
+    sPlayerbotAIConfig.logEvent(ai, "TrainerAction", proto->SpellName[0], to_string(proto->Id));
+
     msg << " - learned";
 }
 
@@ -52,11 +72,13 @@ void TrainerAction::Iterate(Creature* creature, TrainerSpellAction action, Spell
     float fDiscountMod =  bot->GetReputationPriceDiscount(creature);
     uint32 totalCost = 0;
 
-    TrainerSpellData const* trainer_spells = cSpells;
-    if (!trainer_spells)
-        trainer_spells = tSpells;
+    TrainerSpellMap trainer_spells;
+    if (cSpells)
+        trainer_spells.insert(cSpells->spellList.begin(), cSpells->spellList.end());
+    if (tSpells)
+        trainer_spells.insert(tSpells->spellList.begin(), tSpells->spellList.end());
 
-    for (TrainerSpellMap::const_iterator itr =  trainer_spells->spellList.begin(); itr !=  trainer_spells->spellList.end(); ++itr)
+    for (TrainerSpellMap::const_iterator itr =  trainer_spells.begin(); itr !=  trainer_spells.end(); ++itr)
     {
         TrainerSpell const* tSpell = &itr->second;
 
@@ -87,25 +109,41 @@ void TrainerAction::Iterate(Creature* creature, TrainerSpellAction action, Spell
         if (action)
             (this->*action)(cost, tSpell, out);
 
-        ai->TellMaster(out);
+        ai->TellMaster(out, PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
     }
 
     TellFooter(totalCost);
 }
 
-
-bool TrainerAction::Execute(Event event)
+bool TrainerAction::Execute(Event& event)
 {
     string text = event.getParam();
 
     Player* master = GetMaster();
-    if (!master)
+    Creature* creature;
+
+    if (event.getSource() == "rpg action")
+    {
+        ObjectGuid guid = event.getObject();
+        creature = ai->GetCreature(guid);
+    }
+    else
+    {
+        if (master)
+            creature = ai->GetCreature(master->GetSelectionGuid());
+        else
+            return false;
+    }
+
+#ifdef MANGOS
+    if (!creature || !creature->IsTrainer())
+#endif
+#ifdef CMANGOS
+    if (!creature || !creature->isTrainer())
+#endif
         return false;
 
-    Creature *creature = ai->GetCreature(master->GetSelectionGuid());
-    if (!creature)
-        return false;
-
+            
     if (!creature->IsTrainerOf(bot, false))
     {
         ai->TellError("This trainer cannot teach me");
@@ -126,7 +164,7 @@ bool TrainerAction::Execute(Event event)
     if (spell)
         spells.insert(spell);
 
-    if (text.find("learn") != string::npos)
+    if (text.find("learn") != string::npos || sRandomPlayerbotMgr.IsRandomBot(bot) || (sPlayerbotAIConfig.autoTrainSpells != "no" && (creature->GetCreatureInfo()->TrainerType != TRAINER_TYPE_TRADESKILLS || !ai->HasActivePlayerMaster()))) //Todo rewrite to only exclude start primary profession skills and make config dependent.
         Iterate(creature, &TrainerAction::Learn, spells);
     else
         Iterate(creature, NULL, spells);
@@ -137,7 +175,7 @@ bool TrainerAction::Execute(Event event)
 void TrainerAction::TellHeader(Creature* creature)
 {
     ostringstream out; out << "--- Can learn from " << creature->GetName() << " ---";
-    ai->TellMaster(out);
+    ai->TellMaster(out, PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
 }
 
 void TrainerAction::TellFooter(uint32 totalCost)
@@ -145,6 +183,6 @@ void TrainerAction::TellFooter(uint32 totalCost)
     if (totalCost)
     {
         ostringstream out; out << "Total cost: " << chat->formatMoney(totalCost);
-        ai->TellMaster(out);
+        ai->TellMaster(out, PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
     }
 }

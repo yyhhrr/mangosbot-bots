@@ -2,6 +2,7 @@
 #include "../../playerbot.h"
 #include "PartyMemberValue.h"
 #include "../../PlayerbotAIConfig.h"
+#include "../../ServerFacade.h"
 
 using namespace ai;
 using namespace std;
@@ -26,22 +27,40 @@ Unit* PartyMemberValue::FindPartyMember(list<Player*>* party, FindPlayerPredicat
     return NULL;
 }
 
-Unit* PartyMemberValue::FindPartyMember(FindPlayerPredicate &predicate)
+Unit* PartyMemberValue::FindPartyMember(FindPlayerPredicate &predicate, bool ignoreOutOfGroup)
 {
     Player* master = GetMaster();
-    list<ObjectGuid> nearestPlayers = AI_VALUE(list<ObjectGuid>, "nearest friendly players");
+    list<ObjectGuid> nearestPlayers;
+    if(ai->AllowActivity(OUT_OF_PARTY_ACTIVITY))
+        nearestPlayers = AI_VALUE(list<ObjectGuid>, "nearest friendly players");      
+
+    list<ObjectGuid> nearestGroupPlayers;
 
     Group* group = bot->GetGroup();
     if (group)
     {
         for (GroupReference *ref = group->GetFirstMember(); ref; ref = ref->next())
         {
-            if( ref->getSource() == bot)
-                continue;
+            if (!ref->getSource() || bot->GetMapId() != ref->getSource()->GetMapId()) continue;
 
-            nearestPlayers.push_back(ref->getSource()->GetObjectGuid());
+            if (ref->getSource() != bot)
+            {
+                if (ref->getSubGroup() != bot->GetSubGroup())
+                {
+                    nearestGroupPlayers.push_back(ref->getSource()->GetObjectGuid());
+                }
+                else
+                {
+                    nearestGroupPlayers.push_front(ref->getSource()->GetObjectGuid());
+                }
+            }
         }
     }
+    
+    if (!ignoreOutOfGroup && !nearestPlayers.empty() && nearestPlayers.size() < 100)
+        nearestGroupPlayers.insert(nearestGroupPlayers.end(), nearestPlayers.begin(), nearestPlayers.end());
+
+    nearestPlayers = nearestGroupPlayers;
 
     list<Player*> healers, tanks, others, masters;
     if (master) masters.push_back(master);
@@ -78,8 +97,7 @@ Unit* PartyMemberValue::FindPartyMember(FindPlayerPredicate &predicate)
 bool PartyMemberValue::Check(Unit* player)
 {
     return player && player != bot && player->GetMapId() == bot->GetMapId() &&
-        bot->GetDistance(player) < sPlayerbotAIConfig.spellDistance &&
-        bot->IsWithinLOS(player->GetPositionX(), player->GetPositionY(), player->GetPositionZ());
+        bot->IsWithinDistInMap(player, sPlayerbotAIConfig.sightDistance, false);
 }
 
 bool PartyMemberValue::IsTargetOfSpellCast(Player* target, SpellEntryPredicate &predicate)

@@ -41,6 +41,7 @@
 #include "LastSpellCastValue.h"
 #include "ChatValue.h"
 #include "HasTotemValue.h"
+#include "HaveAnyTotemValue.h"
 #include "LeastHpTargetValue.h"
 #include "AoeHealValues.h"
 #include "AoeValues.h"
@@ -54,8 +55,10 @@
 #include "CollisionValue.h"
 #include "CraftValue.h"
 #include "LastSpellCastTimeValue.h"
+#include "CombatStartTimeValue.h"
 #include "ManaSaveLevelValue.h"
 #include "LfgValues.h"
+#include "PvpValues.h"
 #include "EnemyHealerTargetValue.h"
 #include "Formations.h"
 #include "ItemUsageValue.h"
@@ -64,10 +67,25 @@
 #include "NearestNonBotPlayersValue.h"
 #include "NewPlayerNearbyValue.h"
 #include "OutfitListValue.h"
+#include "PartyMemberWithoutItemValue.h"
 #include "PossibleRpgTargetsValue.h"
 #include "RandomBotUpdateValue.h"
+#include "RangeValues.h"
 #include "SkipSpellsListValue.h"
 #include "SnareTargetValue.h"
+#include "Stances.h"
+#include "QuestValues.h"
+#include "BudgetValues.h"
+#include "MaintenanceValues.h"
+#include "GroupValues.h"
+#include "GuildValues.h"
+#include "TradeValues.h"
+#include "RpgValues.h"
+#include "RTSCValues.h"
+#include "VendorValues.h"
+#include "TrainerValues.h"
+#include "CombatTargetsValue.h"
+#include "WaitForAttackTimeValue.h"
 
 namespace ai
 {
@@ -81,15 +99,23 @@ namespace ai
             creators["collision"] = &ValueContext::collision;
             creators["skip spells list"] = &ValueContext::skip_spells_list_value;
             creators["nearest game objects"] = &ValueContext::nearest_game_objects;
+            creators["nearest game objects no los"] = &ValueContext::nearest_game_objects_no_los;
+            creators["closest game objects"] = &ValueContext::closest_game_objects;
             creators["nearest npcs"] = &ValueContext::nearest_npcs;
+            creators["nearest vehicles"] = &ValueContext::nearest_vehicles;
             creators["nearest friendly players"] = &ValueContext::nearest_friendly_players;
+            creators["closest friendly players"] = &ValueContext::closest_friendly_players;
+            creators["nearest enemy players"] = &ValueContext::nearest_enemy_players;
             creators["possible targets"] = &ValueContext::possible_targets;
+            creators["possible targets no los"] = &ValueContext::possible_targets_no_los;
+            creators["possible adds"] = &ValueContext::possible_adds;
             creators["all targets"] = &ValueContext::all_targets;
             creators["possible rpg targets"] = &ValueContext::possible_rpg_targets;
             creators["nearest adds"] = &ValueContext::nearest_adds;
             creators["nearest corpses"] = &ValueContext::nearest_corpses;
             creators["log level"] = &ValueContext::log_level;
             creators["party member without aura"] = &ValueContext::party_member_without_aura;
+            creators["party member without my aura"] = &ValueContext::party_member_without_my_aura;
             creators["attacker without aura"] = &ValueContext::attacker_without_aura;
             creators["party member to heal"] = &ValueContext::party_member_to_heal;
             creators["party member to resurrect"] = &ValueContext::party_member_to_resurrect;
@@ -99,6 +125,7 @@ namespace ai
             creators["line target"] = &ValueContext::line_target;
             creators["tank target"] = &ValueContext::tank_target;
             creators["dps target"] = &ValueContext::dps_target;
+            creators["dps aoe target"] = &ValueContext::dps_aoe_target;
             creators["least hp target"] = &ValueContext::least_hp_target;
             creators["enemy player target"] = &ValueContext::enemy_player_target;
             creators["cc target"] = &ValueContext::cc_target;
@@ -107,8 +134,10 @@ namespace ai
             creators["old target"] = &ValueContext::old_target;
             creators["grind target"] = &ValueContext::grind_target;
             creators["rti target"] = &ValueContext::rti_target;
+            creators["rti cc target"] = &ValueContext::rti_cc_target;
             creators["duel target"] = &ValueContext::duel_target;
             creators["party member to dispel"] = &ValueContext::party_member_to_dispel;
+            creators["party member to protect"] = &ValueContext::party_member_to_protect;
             creators["health"] = &ValueContext::health;
             creators["rage"] = &ValueContext::rage;
             creators["energy"] = &ValueContext::energy;
@@ -127,6 +156,8 @@ namespace ai
             creators["loot target"] = &ValueContext::loot_target;
             creators["available loot"] = &ValueContext::available_loot;
             creators["has available loot"] = &ValueContext::has_available_loot;
+            creators["stack space for item"] = &ValueContext::stack_space_for_item;
+            creators["should loot object"] = &ValueContext::should_loot_object;
             creators["always loot list"] = &ValueContext::always_loot_list;
             creators["loot strategy"] = &ValueContext::loot_strategy;
             creators["last movement"] = &ValueContext::last_movement;
@@ -141,31 +172,45 @@ namespace ai
 
             creators["item count"] = &ValueContext::item_count;
             creators["inventory items"] = &ValueContext::inventory_item;
+            creators["inventory item ids"] = &ValueContext::inventory_item_ids;
+            creators["trinkets on use"] = &ValueContext::trinkets_on_use;
 
             creators["spell id"] = &ValueContext::spell_id;
+            creators["vehicle spell id"] = &ValueContext::vehicle_spell_id;
             creators["item for spell"] = &ValueContext::item_for_spell;
             creators["spell cast useful"] = &ValueContext::spell_cast_useful;
             creators["last spell cast"] = &ValueContext::last_spell_cast;
             creators["last spell cast time"] = &ValueContext::last_spell_cast_time;
             creators["chat"] = &ValueContext::chat;
             creators["has totem"] = &ValueContext::has_totem;
+            creators["have any totem"] = &ValueContext::have_any_totem;
 
             creators["aoe heal"] = &ValueContext::aoe_heal;
 
+            creators["rti cc"] = &ValueContext::rti_cc;
             creators["rti"] = &ValueContext::rti;
             creators["position"] = &ValueContext::position;
+            creators["current position"] = &ValueContext::current_position;
+            creators["master position"] = &ValueContext::master_position;
+            creators["custom position"] = &ValueContext::custom_position;
             creators["threat"] = &ValueContext::threat;
 
             creators["balance"] = &ValueContext::balance;
             creators["attackers"] = &ValueContext::attackers;
+            creators["combat targets"] = &ValueContext::combat_targets;
             creators["invalid target"] = &ValueContext::invalid_target;
             creators["mana save level"] = &ValueContext::mana_save_level;
             creators["combat"] = &ValueContext::combat;
             creators["lfg proposal"] = &ValueContext::lfg_proposal;
             creators["bag space"] = &ValueContext::bag_space;
+            creators["durability"] = &ValueContext::durability;
+            creators["max repair cost"] = &ValueContext::max_repair_cost;
+            creators["repair cost"] = &ValueContext::repair_cost;
+            creators["train cost"] = &ValueContext::train_cost;
             creators["enemy healer target"] = &ValueContext::enemy_healer_target;
             creators["snare target"] = &ValueContext::snare_target;
             creators["formation"] = &ValueContext::formation;
+            creators["stance"] = &ValueContext::stance;
             creators["item usage"] = &ValueContext::item_usage;
             creators["speed"] = &ValueContext::speed;
             creators["last said"] = &ValueContext::last_said;
@@ -180,11 +225,104 @@ namespace ai
             creators["new player nearby"] = &ValueContext::new_player_nearby;
             creators["already seen players"] = &ValueContext::already_seen_players;
             creators["rpg target"] = &ValueContext::rpg_target;
+            creators["ignore rpg target"] = &ValueContext::ignore_rpg_target;
+            creators["next rpg action"] = &ValueContext::next_rpg_action;
+            creators["travel target"] = &ValueContext::travel_target;
             creators["talk target"] = &ValueContext::talk_target;
+            creators["pull target"] = &ValueContext::pull_target;
             creators["group"] = &ValueContext::group;
+            creators["range"] = &ValueContext::range;
+            creators["inside target"] = &ValueContext::inside_target;
+            creators["party member without item"] = &ValueContext::party_member_without_item;
+            creators["party member without food"] = &ValueContext::party_member_without_food;
+            creators["party member without water"] = &ValueContext::party_member_without_water;
+            creators["death count"] = &ValueContext::death_count;
+
+            creators["bg type"] = &ValueContext::bg_type;
+            creators["rpg bg type"] = &ValueContext::rpg_bg_type; 
+            creators["arena type"] = &ValueContext::arena_type;
+            creators["bg role"] = &ValueContext::bg_role;
+            creators["bg master"] = &ValueContext::bg_master;
+            creators["enemy flag carrier"] = &ValueContext::enemy_fc;
+            creators["team flag carrier"] = &ValueContext::team_fc;
+
+            creators["home bind"] = &ValueContext::home_bind;
+            creators["last long move"] = &ValueContext::last_long_move;
+
+            creators["bot roles"] = &ValueContext::bot_roles;
+
+            
+            creators["free quest log slots"] = &ValueContext::free_quest_log_slots;
+            creators["dialog status"] = &ValueContext::dialog_status;
+            creators["dialog status quest"] = &ValueContext::dialog_status_quest;
+            creators["can accept quest npc"] = &ValueContext::can_accept_quest_npc;
+            creators["can accept quest low level npc"] = &ValueContext::can_accept_quest_low_level_npc;
+            creators["can turn in quest npc"] = &ValueContext::can_turn_in_quest_npc;
+            creators["can repeat quest npc"] = &ValueContext::can_repeat_quest_npc;
+            
+            creators["money needed for"] = &ValueContext::money_needed_for;
+            creators["total money needed for"] = &ValueContext::total_money_needed_for;
+            creators["free money for"] = &ValueContext::free_money_for;            
+            creators["should get money"] = &ValueContext::should_get_money;
+            
+            creators["can move around"] = &ValueContext::can_move_around;
+            creators["should home bind"] = &ValueContext::should_home_bind;
+            creators["should repair"] = &ValueContext::should_repair;
+            creators["can repair"] = &ValueContext::can_repair;
+            creators["should sell"] = &ValueContext::should_sell;
+            creators["can sell"] = &ValueContext::can_sell;
+            creators["can buy"] = &ValueContext::can_buy;
+            creators["can ah sell"] = &ValueContext::can_ah_sell;
+            creators["can ah buy"] = &ValueContext::can_ah_buy;
+            creators["can get mail"] = &ValueContext::can_get_mail;
+            creators["can fight equal"] = &ValueContext::can_fight_equal;
+            creators["can fight elite"] = &ValueContext::can_fight_elite;
+            creators["can fight boss"] = &ValueContext::can_fight_boss;
+
+            creators["vendor has useful item"] = &ValueContext::vendor_has_useful_item;
+
+            creators["group members"] = &ValueContext::group_members;
+            creators["following party"] = &ValueContext::following_party;
+            creators["near leader"] = &ValueContext::near_leader;
+            creators["and"] = &ValueContext::and_value;
+            creators["group count"] = &ValueContext::group_count;
+            creators["group and"] = &ValueContext::group_and;
+            creators["group or"] = &ValueContext::group_or;
+            creators["group ready"] = &ValueContext::group_ready;
+
+            creators["petition signs"] = &ValueContext::petition_signs;
+
+            creators["experience"] = &ValueContext::experience;
+
+            creators["entry loot usage"] = &ValueContext::entry_loot_usage;
+            creators["has upgrade"] = &ValueContext::has_upgrade;
+            creators["items useful to give"] = &ValueContext::items_useful_to_give;
+
+            creators["see spell location"] = &ValueContext::see_spell_location;
+            creators["RTSC selected"] = &ValueContext::RTSC_selected;
+            creators["RTSC next spell action"] = &ValueContext::RTSC_next_spell_action;
+            creators["RTSC saved location"] = &ValueContext::RTSC_saved_location;
+
+            creators["trainable class spells"] = &ValueContext::trainable_class_spells;
+
+            creators["has area debuff"] = &ValueContext::has_area_debuff;
+            creators["combat start time"] = &ValueContext::combat_start_time;
+            creators["wait for attack time"] = &ValueContext::wait_for_attack_time;
         }
 
     private:
+        static UntypedValue* team_fc(PlayerbotAI* ai) { return new FlagCarrierValue(ai, true, true); }
+        static UntypedValue* enemy_fc(PlayerbotAI* ai) { return new FlagCarrierValue(ai, false, true); }
+        static UntypedValue* bg_master(PlayerbotAI* ai) { return new BgMasterValue(ai); }
+        static UntypedValue* bg_role(PlayerbotAI* ai) { return new BgRoleValue(ai); }
+        static UntypedValue* arena_type(PlayerbotAI* ai) { return new ArenaTypeValue(ai); }
+        static UntypedValue* bg_type(PlayerbotAI* ai) { return new BgTypeValue(ai); }
+        static UntypedValue* rpg_bg_type(PlayerbotAI* ai) { return new RpgBgTypeValue(ai); }
+        static UntypedValue* party_member_without_water(PlayerbotAI* ai) { return new PartyMemberWithoutWaterValue(ai); }
+        static UntypedValue* party_member_without_food(PlayerbotAI* ai) { return new PartyMemberWithoutFoodValue(ai); }
+        static UntypedValue* party_member_without_item(PlayerbotAI* ai) { return new PartyMemberWithoutItemValue(ai); }
+        static UntypedValue* inside_target(PlayerbotAI* ai) { return new InsideTargetValue(ai); }
+        static UntypedValue* range(PlayerbotAI* ai) { return new RangeValue(ai); }
         static UntypedValue* active_spell(PlayerbotAI* ai) { return new ActiveSpellValue(ai); }
         static UntypedValue* group(PlayerbotAI* ai) { return new IsInGroupValue(ai); }
         static UntypedValue* craft(PlayerbotAI* ai) { return new CraftValue(ai); }
@@ -193,13 +331,19 @@ namespace ai
         static UntypedValue* new_player_nearby(PlayerbotAI* ai) { return new NewPlayerNearbyValue(ai); }
         static UntypedValue* item_usage(PlayerbotAI* ai) { return new ItemUsageValue(ai); }
         static UntypedValue* formation(PlayerbotAI* ai) { return new FormationValue(ai); }
+        static UntypedValue* stance(PlayerbotAI* ai) { return new StanceValue(ai); }
         static UntypedValue* mana_save_level(PlayerbotAI* ai) { return new ManaSaveLevelValue(ai); }
         static UntypedValue* invalid_target(PlayerbotAI* ai) { return new InvalidTargetValue(ai); }
         static UntypedValue* balance(PlayerbotAI* ai) { return new BalancePercentValue(ai); }
         static UntypedValue* attackers(PlayerbotAI* ai) { return new AttackersValue(ai); }
+        static UntypedValue* combat_targets(PlayerbotAI* ai) { return new CombatTargetsValue(ai); }
 
         static UntypedValue* position(PlayerbotAI* ai) { return new PositionValue(ai); }
+        static UntypedValue* current_position(PlayerbotAI* ai) { return new CurrentPositionValue(ai); }
+        static UntypedValue* master_position(PlayerbotAI* ai) { return new MasterPositionValue(ai); }
+        static UntypedValue* custom_position(PlayerbotAI* ai) { return new CustomPositionValue(ai); }
         static UntypedValue* rti(PlayerbotAI* ai) { return new RtiValue(ai); }
+        static UntypedValue* rti_cc(PlayerbotAI* ai) { return new RtiCcValue(ai); }
 
         static UntypedValue* aoe_heal(PlayerbotAI* ai) { return new AoeHealValue(ai); }
 
@@ -209,7 +353,10 @@ namespace ai
         static UntypedValue* spell_cast_useful(PlayerbotAI* ai) { return new SpellCastUsefulValue(ai); }
         static UntypedValue* item_for_spell(PlayerbotAI* ai) { return new ItemForSpellValue(ai); }
         static UntypedValue* spell_id(PlayerbotAI* ai) { return new SpellIdValue(ai); }
+        static UntypedValue* vehicle_spell_id(PlayerbotAI* ai) { return new VehicleSpellIdValue(ai); }
         static UntypedValue* inventory_item(PlayerbotAI* ai) { return new InventoryItemValue(ai); }
+        static UntypedValue* inventory_item_ids(PlayerbotAI* ai) { return new InventoryItemIdValue(ai); }
+        static UntypedValue* trinkets_on_use(PlayerbotAI* ai) { return new EquipedUsableTrinketValue(ai); }
         static UntypedValue* item_count(PlayerbotAI* ai) { return new ItemCountValue(ai); }
         static UntypedValue* behind(PlayerbotAI* ai) { return new IsBehindValue(ai); }
         static UntypedValue* facing(PlayerbotAI* ai) { return new IsFacingValue(ai); }
@@ -223,6 +370,8 @@ namespace ai
         static UntypedValue* available_loot(PlayerbotAI* ai) { return new AvailableLootValue(ai); }
         static UntypedValue* loot_target(PlayerbotAI* ai) { return new LootTargetValue(ai); }
         static UntypedValue* has_available_loot(PlayerbotAI* ai) { return new HasAvailableLootValue(ai); }
+        static UntypedValue* stack_space_for_item(PlayerbotAI* ai) { return new StackSpaceForItem(ai); }
+        static UntypedValue* should_loot_object(PlayerbotAI* ai) { return new ShouldLootObject(ai); }
         static UntypedValue* always_loot_list(PlayerbotAI* ai) { return new AlwaysLootListValue(ai); }
         static UntypedValue* loot_strategy(PlayerbotAI* ai) { return new LootStrategyValue(ai); }
 
@@ -240,19 +389,28 @@ namespace ai
         static UntypedValue* pet_dead(PlayerbotAI* ai) { return new PetIsDeadValue(ai); }
         static UntypedValue* has_mana(PlayerbotAI* ai) { return new HasManaValue(ai); }
         static UntypedValue* nearest_game_objects(PlayerbotAI* ai) { return new NearestGameObjects(ai); }
+        static UntypedValue* nearest_game_objects_no_los(PlayerbotAI* ai) { return new NearestGameObjects(ai, sPlayerbotAIConfig.sightDistance, true); }
+        static UntypedValue* closest_game_objects(PlayerbotAI* ai) { return new NearestGameObjects(ai, INTERACTION_DISTANCE); }
         static UntypedValue* log_level(PlayerbotAI* ai) { return new LogLevelValue(ai); }
         static UntypedValue* nearest_npcs(PlayerbotAI* ai) { return new NearestNpcsValue(ai); }
+        static UntypedValue* nearest_vehicles(PlayerbotAI* ai) { return new NearestVehiclesValue(ai); }
         static UntypedValue* nearest_friendly_players(PlayerbotAI* ai) { return new NearestFriendlyPlayersValue(ai); }
+        static UntypedValue* closest_friendly_players(PlayerbotAI* ai) { return new NearestFriendlyPlayersValue(ai, INTERACTION_DISTANCE); }
+        static UntypedValue* nearest_enemy_players(PlayerbotAI* ai) { return new NearestEnemyPlayersValue(ai); }
         static UntypedValue* nearest_corpses(PlayerbotAI* ai) { return new NearestCorpsesValue(ai); }
         static UntypedValue* possible_rpg_targets(PlayerbotAI* ai) { return new PossibleRpgTargetsValue(ai); }
         static UntypedValue* possible_targets(PlayerbotAI* ai) { return new PossibleTargetsValue(ai); }
+        static UntypedValue* possible_targets_no_los(PlayerbotAI* ai) { return new PossibleTargetsValue(ai, "possible targets", sPlayerbotAIConfig.sightDistance, true); }
+        static UntypedValue* possible_adds(PlayerbotAI* ai) { return new PossibleAddsValue(ai); }
         static UntypedValue* all_targets(PlayerbotAI* ai) { return new AllTargetsValue(ai); }
-        static UntypedValue* nearest_adds(PlayerbotAI* ai) { return new NearestAdsValue(ai); }
+        static UntypedValue* nearest_adds(PlayerbotAI* ai) { return new NearestAddsValue(ai); }
         static UntypedValue* party_member_without_aura(PlayerbotAI* ai) { return new PartyMemberWithoutAuraValue(ai); }
+        static UntypedValue* party_member_without_my_aura(PlayerbotAI* ai) { return new PartyMemberWithoutMyAuraValue(ai); }
         static UntypedValue* attacker_without_aura(PlayerbotAI* ai) { return new AttackerWithoutAuraTargetValue(ai); }
         static UntypedValue* party_member_to_heal(PlayerbotAI* ai) { return new PartyMemberToHeal(ai); }
         static UntypedValue* party_member_to_resurrect(PlayerbotAI* ai) { return new PartyMemberToResurrect(ai); }
         static UntypedValue* party_member_to_dispel(PlayerbotAI* ai) { return new PartyMemberToDispel(ai); }
+        static UntypedValue* party_member_to_protect(PlayerbotAI* ai) { return new PartyMemberToProtect(ai); }
         static UntypedValue* current_target(PlayerbotAI* ai) { return new CurrentTargetValue(ai); }
         static UntypedValue* old_target(PlayerbotAI* ai) { return new CurrentTargetValue(ai); }
         static UntypedValue* self_target(PlayerbotAI* ai) { return new SelfTargetValue(ai); }
@@ -260,6 +418,7 @@ namespace ai
         static UntypedValue* line_target(PlayerbotAI* ai) { return new LineTargetValue(ai); }
         static UntypedValue* tank_target(PlayerbotAI* ai) { return new TankTargetValue(ai); }
         static UntypedValue* dps_target(PlayerbotAI* ai) { return new DpsTargetValue(ai); }
+        static UntypedValue* dps_aoe_target(PlayerbotAI* ai) { return new DpsAoeTargetValue(ai); }
         static UntypedValue* least_hp_target(PlayerbotAI* ai) { return new LeastHpTargetValue(ai); }
         static UntypedValue* enemy_player_target(PlayerbotAI* ai) { return new EnemyPlayerValue(ai); }
         static UntypedValue* cc_target(PlayerbotAI* ai) { return new CcTargetValue(ai); }
@@ -267,12 +426,18 @@ namespace ai
         static UntypedValue* pet_target(PlayerbotAI* ai) { return new PetTargetValue(ai); }
         static UntypedValue* grind_target(PlayerbotAI* ai) { return new GrindTargetValue(ai); }
         static UntypedValue* rti_target(PlayerbotAI* ai) { return new RtiTargetValue(ai); }
+        static UntypedValue* rti_cc_target(PlayerbotAI* ai) { return new RtiCcTargetValue(ai); }
         static UntypedValue* duel_target(PlayerbotAI* ai) { return new DuelTargetValue(ai); }
         static UntypedValue* has_totem(PlayerbotAI* ai) { return new HasTotemValue(ai); }
+        static UntypedValue* have_any_totem(PlayerbotAI* ai) { return new HaveAnyTotemValue(ai); }
         static UntypedValue* threat(PlayerbotAI* ai) { return new ThreatValue(ai); }
         static UntypedValue* combat(PlayerbotAI* ai) { return new IsInCombatValue(ai); }
         static UntypedValue* lfg_proposal(PlayerbotAI* ai) { return new LfgProposalValue(ai); }
         static UntypedValue* bag_space(PlayerbotAI* ai) { return new BagSpaceValue(ai); }
+        static UntypedValue* durability(PlayerbotAI* ai) { return new DurabilityValue(ai); }
+        static UntypedValue* max_repair_cost(PlayerbotAI* ai) { return new MaxGearRepairCostValue(ai); }
+        static UntypedValue* repair_cost(PlayerbotAI* ai) { return new RepairCostValue(ai); }
+        static UntypedValue* train_cost(PlayerbotAI* ai) { return new TrainCostValue(ai); }
         static UntypedValue* enemy_healer_target(PlayerbotAI* ai) { return new EnemyHealerTargetValue(ai); }
         static UntypedValue* snare_target(PlayerbotAI* ai) { return new SnareTargetValue(ai); }
         static UntypedValue* speed(PlayerbotAI* ai) { return new SpeedValue(ai); }
@@ -285,6 +450,73 @@ namespace ai
         static UntypedValue* nearest_non_bot_players(PlayerbotAI* ai) { return new NearestNonBotPlayersValue(ai); }
         static UntypedValue* skip_spells_list_value(PlayerbotAI* ai) { return new SkipSpellsListValue(ai); }
         static UntypedValue* rpg_target(PlayerbotAI* ai) { return new RpgTargetValue(ai); }
+        static UntypedValue* ignore_rpg_target(PlayerbotAI* ai) { return new IgnoreRpgTargetValue(ai); }
+        static UntypedValue* next_rpg_action(PlayerbotAI* ai) { return new NextRpgActionValue(ai); }
+        static UntypedValue* travel_target(PlayerbotAI* ai) { return new TravelTargetValue(ai); }
         static UntypedValue* talk_target(PlayerbotAI* ai) { return new TalkTargetValue(ai); }
+        static UntypedValue* pull_target(PlayerbotAI* ai) { return new PullTargetValue(ai); }
+        static UntypedValue* death_count(PlayerbotAI* ai) { return new DeathCountValue(ai); }
+
+        static UntypedValue* last_long_move(PlayerbotAI* ai) { return new LastLongMoveValue(ai); }
+        static UntypedValue* home_bind(PlayerbotAI* ai) { return new HomeBindValue(ai); }
+
+        static UntypedValue* bot_roles(PlayerbotAI* ai) { return new BotRolesValue(ai); }
+
+        static UntypedValue* free_quest_log_slots(PlayerbotAI* ai) { return new FreeQuestLogSlotValue(ai); }
+        static UntypedValue* dialog_status(PlayerbotAI* ai) { return new DialogStatusValue(ai); }
+        static UntypedValue* dialog_status_quest(PlayerbotAI* ai) { return new DialogStatusQuestValue(ai); }
+        static UntypedValue* can_accept_quest_npc(PlayerbotAI* ai) { return new CanAcceptQuestValue(ai); }
+        static UntypedValue* can_accept_quest_low_level_npc(PlayerbotAI* ai) { return new CanAcceptQuestLowLevelValue(ai); }
+        static UntypedValue* can_turn_in_quest_npc(PlayerbotAI* ai) { return new CanTurnInQuestValue(ai); }
+        static UntypedValue* can_repeat_quest_npc(PlayerbotAI* ai) { return new CanRepeatQuestValue(ai); }
+
+        static UntypedValue* money_needed_for(PlayerbotAI* ai) { return new MoneyNeededForValue(ai); }
+        static UntypedValue* total_money_needed_for(PlayerbotAI* ai) { return new TotalMoneyNeededForValue(ai); }
+        static UntypedValue* free_money_for(PlayerbotAI* ai) { return new FreeMoneyForValue(ai); }
+        static UntypedValue* should_get_money(PlayerbotAI* ai) { return new ShouldGetMoneyValue(ai); }
+
+        static UntypedValue* can_move_around(PlayerbotAI* ai) { return new CanMoveAroundValue(ai); }
+        static UntypedValue* should_home_bind(PlayerbotAI* ai) { return new ShouldHomeBindValue(ai); }
+        static UntypedValue* should_repair(PlayerbotAI* ai) { return new ShouldRepairValue(ai); }
+        static UntypedValue* can_repair(PlayerbotAI* ai) { return new CanRepairValue(ai); }
+        static UntypedValue* should_sell(PlayerbotAI* ai) { return new ShouldSellValue(ai); }
+        static UntypedValue* can_sell(PlayerbotAI* ai) { return new CanSellValue(ai); }
+        static UntypedValue* can_buy(PlayerbotAI* ai) { return new CanBuyValue(ai); }
+        static UntypedValue* can_ah_sell(PlayerbotAI* ai) { return new CanAHSellValue(ai); }
+        static UntypedValue* can_ah_buy(PlayerbotAI* ai) { return new CanAHBuyValue(ai); }
+        static UntypedValue* can_get_mail(PlayerbotAI* ai) { return new CanGetMailValue(ai); }
+        static UntypedValue* can_fight_equal(PlayerbotAI* ai) { return new CanFightEqualValue(ai); }
+        static UntypedValue* can_fight_elite(PlayerbotAI* ai) { return new CanFightEliteValue(ai); }
+        static UntypedValue* can_fight_boss(PlayerbotAI* ai) { return new CanFightBossValue(ai); }
+
+        static UntypedValue* vendor_has_useful_item(PlayerbotAI* ai) { return new VendorHasUsefulItemValue(ai); }
+
+        static UntypedValue* group_members(PlayerbotAI* ai) { return new GroupMembersValue(ai); }
+        static UntypedValue* following_party(PlayerbotAI* ai) { return new IsFollowingPartyValue(ai); }
+        static UntypedValue* near_leader(PlayerbotAI* ai) { return new IsNearLeaderValue(ai); }
+        static UntypedValue* and_value(PlayerbotAI* ai) { return new BoolANDValue(ai); }
+        static UntypedValue* group_count(PlayerbotAI* ai) { return new GroupBoolCountValue(ai); }
+        static UntypedValue* group_and(PlayerbotAI* ai) { return new GroupBoolANDValue(ai); }
+        static UntypedValue* group_or(PlayerbotAI* ai) { return new GroupBoolORValue(ai); }
+        static UntypedValue* group_ready(PlayerbotAI* ai) { return new GroupReadyValue(ai); }
+
+        static UntypedValue* petition_signs(PlayerbotAI* ai) { return new PetitionSignsValue(ai); }        
+
+        static UntypedValue* experience(PlayerbotAI* ai) { return new ExperienceValue(ai); }
+
+        static UntypedValue* entry_loot_usage(PlayerbotAI* ai) { return new EntryLootUsageValue(ai); }
+        static UntypedValue* has_upgrade(PlayerbotAI* ai) { return new HasUpgradeValue(ai); }
+        static UntypedValue* items_useful_to_give(PlayerbotAI* ai) { return new ItemsUsefulToGiveValue(ai); }
+
+        static UntypedValue* see_spell_location(PlayerbotAI* ai) { return new SeeSpellLocationValue(ai); }
+        static UntypedValue* RTSC_selected(PlayerbotAI* ai) { return new RTSCSelectedValue(ai); }
+        static UntypedValue* RTSC_next_spell_action(PlayerbotAI* ai) { return new RTSCNextSpellActionValue(ai); }
+        static UntypedValue* RTSC_saved_location(PlayerbotAI* ai) { return new RTSCSavedLocationValue(ai); }
+
+        static UntypedValue* trainable_class_spells(PlayerbotAI* ai) { return new TrainableClassSpells(ai); }
+
+        static UntypedValue* has_area_debuff(PlayerbotAI* ai) { return new HasAreaDebuffValue(ai); }
+        static UntypedValue* combat_start_time(PlayerbotAI* ai) { return new CombatStartTimeValue(ai); }
+        static UntypedValue* wait_for_attack_time(PlayerbotAI* ai) { return new WaitForAttackTimeValue(ai); }
     };
 };

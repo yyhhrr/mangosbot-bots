@@ -64,7 +64,7 @@ uint8 RageValue::Calculate()
     Unit* target = GetTarget();
     if (!target)
         return 0;
-    return (static_cast<float> (target->GetPower(POWER_RAGE)));
+    return (target->GetPower(POWER_RAGE) / 10.0f);
 }
 
 uint8 EnergyValue::Calculate()
@@ -117,7 +117,26 @@ bool IsInCombatValue::Calculate()
     if (!target)
         return false;
 
-    return sServerFacade.IsInCombat(target);
+    if (sServerFacade.IsInCombat(target)) return true;
+
+    if (target == bot)
+    {
+        Group* group = bot->GetGroup();
+        if (group)
+        {
+            Group::MemberSlotList const& groupSlot = group->GetMemberSlots();
+            for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++)
+            {
+                Player *member = sObjectMgr.GetPlayer(itr->guid);
+                if (!member || member == bot) continue;
+
+                if (sServerFacade.IsInCombat(member) &&
+                    sServerFacade.IsDistanceLessOrEqualThan(sServerFacade.GetDistance2d(member, bot), sPlayerbotAIConfig.reactDistance)) return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 uint8 BagSpaceValue::Calculate()
@@ -140,12 +159,42 @@ uint8 BagSpaceValue::Calculate()
             {
                 total += pBag->GetBagSize();
                 totalfree += pBag->GetFreeSlots();
+                totalused += pBag->GetBagSize() - pBag->GetFreeSlots();
             }
         }
 
     }
 
     return (static_cast<float> (totalused) / total) * 100;
+}
+
+uint8 DurabilityValue::Calculate()
+{
+    uint32 totalMax = 0, total = 0;
+
+    for (int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; ++i)
+    {
+        uint16 pos = ((INVENTORY_SLOT_BAG_0 << 8) | i);
+        Item* item = bot->GetItemByPos(pos);
+
+        if (!item)
+            continue;
+
+        uint32 maxDurability = item->GetUInt32Value(ITEM_FIELD_MAXDURABILITY);
+        if (!maxDurability)
+            continue;
+
+        totalMax += maxDurability;
+
+        uint32 curDurability = item->GetUInt32Value(ITEM_FIELD_DURABILITY);
+
+        total += curDurability;
+    }
+
+    if (total == 0)
+        return 0;
+
+    return (static_cast<float> (total) / totalMax) * 100;
 }
 
 uint8 SpeedValue::Calculate()

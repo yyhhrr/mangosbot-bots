@@ -11,12 +11,15 @@ namespace ai
         RandomBotUpdateAction(PlayerbotAI* ai) : Action(ai, "random bot update")
         {}
 
-        virtual bool Execute(Event event)
+        virtual bool Execute(Event& event)
         {
             if (!sRandomPlayerbotMgr.IsRandomBot(bot))
                 return false;
 
-            if (bot->GetGroup())
+            if (bot->GetGroup() && ai->GetGroupMaster() && (!ai->GetGroupMaster()->GetPlayerbotAI() || ai->GetGroupMaster()->GetPlayerbotAI()->IsRealPlayer()))
+                return true;
+
+            if (ai->HasPlayerNearby(sPlayerbotAIConfig.grindDistance))
                 return true;
 
             return sRandomPlayerbotMgr.ProcessBot(bot);

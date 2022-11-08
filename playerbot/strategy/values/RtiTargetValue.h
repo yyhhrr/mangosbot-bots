@@ -10,7 +10,7 @@ namespace ai
     class RtiTargetValue : public TargetValue
     {
     public:
-        RtiTargetValue(PlayerbotAI* ai) : TargetValue(ai)
+        RtiTargetValue(PlayerbotAI* ai, string type = "rti", string name = "rti target") : type(type), TargetValue(ai,name)
         {}
 
     public:
@@ -34,22 +34,35 @@ namespace ai
             if(!group)
                 return NULL;
 
-            string rti = AI_VALUE(string, "rti");
+            string rti = AI_VALUE(string, type);
             int index = GetRtiIndex(rti);
 
             if (index == -1)
                 return NULL;
 
-            uint64 guid = group->GetTargetIcon(index);
+            ObjectGuid guid = group->GetTargetIcon(index);
             if (!guid)
                 return NULL;
 
+            list<ObjectGuid> attackers = context->GetValue<list<ObjectGuid> >("attackers")->Get();
+            if (find(attackers.begin(), attackers.end(), guid) == attackers.end()) return NULL;
+
             Unit* unit = ai->GetUnit(ObjectGuid(guid));
             if (!unit || sServerFacade.UnitIsDead(unit) ||
-                    sServerFacade.IsDistanceGreaterThan(sServerFacade.GetDistance2d(bot, unit), sPlayerbotAIConfig.reactDistance))
+                !sServerFacade.IsWithinLOSInMap(bot, unit) ||
+                sServerFacade.IsDistanceGreaterThan(sServerFacade.GetDistance2d(bot, unit), sPlayerbotAIConfig.sightDistance))
                 return NULL;
 
             return unit;
         }
+
+    private:
+        string type;
+    };
+
+    class RtiCcTargetValue : public RtiTargetValue
+    {
+    public:
+        RtiCcTargetValue(PlayerbotAI* ai, string name = "rti cc target") : RtiTargetValue(ai, "rti cc", name) {}
     };
 }

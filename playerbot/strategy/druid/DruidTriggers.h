@@ -2,22 +2,57 @@
 #include "../triggers/GenericTriggers.h"
 
 namespace ai {
-    class MarkOfTheWildOnPartyTrigger : public BuffOnPartyTrigger
-    {
+
+    class MarkOfTheWildOnPartyTrigger : public BuffOnPartyTrigger {
     public:
-        MarkOfTheWildOnPartyTrigger(PlayerbotAI* ai) : BuffOnPartyTrigger(ai, "mark of the wild", 7) {}
+        MarkOfTheWildOnPartyTrigger(PlayerbotAI* ai) : BuffOnPartyTrigger(ai, "mark of the wild", 4) {}
+
+        virtual bool IsActive() { return BuffOnPartyTrigger::IsActive() && !ai->HasAura("mark of the wild", GetTarget()) && !ai->HasAura("gift of the wild", GetTarget()); }
     };
 
-    class MarkOfTheWildTrigger : public BuffTrigger
+    class MarkOfTheWildTrigger : public BuffTrigger {
+    public:
+        MarkOfTheWildTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "mark of the wild", 4) {}
+
+        virtual bool IsActive() { return BuffTrigger::IsActive() && !ai->HasAura("mark of the wild", GetTarget()) && !ai->HasAura("gift of the wild", GetTarget()); }
+    };
+
+    class GiftOfTheWildTrigger : public BuffOnPartyTrigger {
+    public:
+        GiftOfTheWildTrigger(PlayerbotAI* ai) : BuffOnPartyTrigger(ai, "gift of the wild", 3) {}
+
+        virtual bool IsActive() {
+            return bot->GetGroup() && BuffOnPartyTrigger::IsActive() &&
+                !ai->HasAura("gift of the wild", GetTarget()) &&
+#ifdef MANGOS
+                (ai->GetBot()->IsInSameGroupWith((Player*)GetTarget()) || ai->GetBot()->IsInSameRaidWith((Player*)GetTarget())) &&
+#endif
+#ifdef CMANGOS
+                bot->IsInGroup((Player*)GetTarget()) &&
+#endif
+                (ai->GetBuffedCount((Player*)GetTarget(), "gift of the wild") + ai->GetBuffedCount((Player*)GetTarget(), "mark of the wild")) < 4;
+            ;
+        }
+    };
+
+    class ThornsOnPartyTrigger : public BuffOnPartyTrigger
     {
     public:
-        MarkOfTheWildTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "mark of the wild", 5) {}
+        ThornsOnPartyTrigger(PlayerbotAI* ai) : BuffOnPartyTrigger(ai, "thorns", 2) {}
+
+        virtual bool IsActive()
+        {
+            Unit* target = GetTarget();
+            return BuffOnPartyTrigger::IsActive() && (!target->IsPlayer() || !ai->IsRanged((Player*)target));
+        }
     };
 
     class ThornsTrigger : public BuffTrigger
     {
     public:
-        ThornsTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "thorns") {}
+        ThornsTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "thorns", 2) {}
+
+        virtual bool IsActive() { return BuffTrigger::IsActive() && !ai->HasAura("thorns", GetTarget()); }
     };
 
     class OmenOfClarityTrigger : public BuffTrigger
@@ -42,6 +77,8 @@ namespace ai {
     {
     public:
         MoonfireTrigger(PlayerbotAI* ai) : DebuffTrigger(ai, "moonfire") {}
+
+        virtual bool IsActive() { return DebuffTrigger::IsActive() && !GetTarget()->IsRooted(); }
     };
 
     class FaerieFireTrigger : public DebuffTrigger
@@ -80,6 +117,26 @@ namespace ai {
         EntanglingRootsTrigger(PlayerbotAI* ai) : HasCcTargetTrigger(ai, "entangling roots") {}
     };
 
+    class EntanglingRootsKiteTrigger : public DebuffTrigger
+    {
+    public:
+        EntanglingRootsKiteTrigger(PlayerbotAI* ai) : DebuffTrigger(ai, "entangling roots") {}
+
+        virtual bool IsActive() { return DebuffTrigger::IsActive() && AI_VALUE(uint8, "attacker count") < 3 && !GetTarget()->HasMana(); }
+    };
+
+    class EntanglingRootsSnareTrigger : public SnareTargetTrigger
+    {
+    public:
+        EntanglingRootsSnareTrigger(PlayerbotAI* ai) : SnareTargetTrigger(ai, "entangling roots", 5) {}
+    };
+
+    class HibernateTrigger : public HasCcTargetTrigger
+    {
+    public:
+        HibernateTrigger(PlayerbotAI* ai) : HasCcTargetTrigger(ai, "hibernate") {}
+    };
+
     class CurePoisonTrigger : public NeedCureTrigger
     {
     public:
@@ -91,6 +148,9 @@ namespace ai {
     public:
         PartyMemberCurePoisonTrigger(PlayerbotAI* ai) : PartyMemberNeedCureTrigger(ai, "cure poison", DISPEL_POISON) {}
     };
+
+    CURE_TRIGGER(RemoveCurseTrigger, "remove curse", DISPEL_CURSE);
+    CURE_PARTY_TRIGGER(RemoveCurseOnPartyTrigger, "remove curse", DISPEL_CURSE);
 
     class BearFormTrigger : public BuffTrigger
     {
@@ -129,5 +189,11 @@ namespace ai {
     {
     public:
         BashInterruptEnemyHealerSpellTrigger(PlayerbotAI* ai) : InterruptEnemyHealerTrigger(ai, "bash") {}
+    };
+
+    class NaturesSwiftnessTrigger : public BuffTrigger
+    {
+    public:
+        NaturesSwiftnessTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "nature's swiftness") {}
     };
 }

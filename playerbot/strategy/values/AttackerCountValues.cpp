@@ -25,11 +25,28 @@ bool HasAggroValue::Calculate()
     {
         ThreatManager *threatManager = ref->getSource();
         Unit *attacker = threatManager->getOwner();
+#ifdef CMANGOS
+        Unit *victim = attacker->GetVictim();
+#endif
+#ifdef MANGOS
         Unit *victim = attacker->getVictim();
+#endif
         if (victim == bot && target == attacker)
             return true;
         ref = ref->next();
     }
+
+    ref = sServerFacade.GetThreatManager(target).getCurrentVictim();
+    if (ref)
+    {
+        Unit* victim = ref->getTarget();
+        if (victim)
+        {
+            Player* pl = dynamic_cast<Player*>(victim);
+            if (pl && ai->IsTank(pl)) return true;
+        }
+    }
+
     return false;
 }
 
@@ -45,7 +62,7 @@ uint8 AttackerCountValue::Calculate()
         if (!unit || !sServerFacade.IsAlive(unit))
             continue;
 
-        float distance = bot->GetDistance(unit);
+        float distance = sServerFacade.GetDistance2d(bot, unit);
         if (distance <= range)
             count++;
     }
@@ -58,17 +75,22 @@ uint8 BalancePercentValue::Calculate()
     float playerLevel = 0,
         attackerLevel = 0;
 
-    Group* group = bot->GetGroup();
-    if (group)
-    {
-        Group::MemberSlotList const& groupSlot = group->GetMemberSlots();
-        for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++)
-        {
-            Player *player = sObjectMgr.GetPlayer(itr->guid);
-            if( !player || !sServerFacade.IsAlive(player))
-                continue;
+    playerLevel += bot->GetLevel();
 
-            playerLevel += player->getLevel();
+    if (!bot->InBattleGround())
+    {
+        Group* group = bot->GetGroup();
+        if (group)
+        {
+            Group::MemberSlotList const& groupSlot = group->GetMemberSlots();
+            for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++)
+            {
+                Player* player = sObjectMgr.GetPlayer(itr->guid);
+                if (!player || !sServerFacade.IsAlive(player) || !player->IsInWorld() || player->GetMapId() != bot->GetMapId() || sServerFacade.GetDistance2d(bot, player) > 30.0f)
+                    continue;
+
+                playerLevel += player->GetLevel();
+            }
         }
     }
 
@@ -76,28 +98,41 @@ uint8 BalancePercentValue::Calculate()
 
     for (list<ObjectGuid>::iterator i = v.begin(); i!=v.end(); i++)
     {
-        Creature* creature = ai->GetCreature((*i));
-        if (!creature || !sServerFacade.IsAlive(creature))
+        Unit* unit = ai->GetUnit(*i);
+        if (!unit || !sServerFacade.IsAlive(unit))
             continue;
 
-        uint32 level = creature->getLevel();
+        if (unit->IsPlayer())
+            attackerLevel += unit->GetLevel() * 3;
+        else
+        {
+            Creature* creature = ai->GetCreature((*i));
+            if (!creature || !sServerFacade.IsAlive(creature))
+                continue;
 
-        switch (creature->GetCreatureInfo()->Rank) {
-        case CREATURE_ELITE_RARE:
-            level *= 2;
-            break;
-        case CREATURE_ELITE_ELITE:
-            level *= 3;
-            break;
-        case CREATURE_ELITE_RAREELITE:
-            level *= 3;
-            break;
-        case CREATURE_ELITE_WORLDBOSS:
-            level *= 5;
-            break;
+            uint32 level = creature->GetLevel();
+
+            switch (creature->GetCreatureInfo()->Rank) {
+            case CREATURE_ELITE_RARE:
+                level *= 2;
+                break;
+            case CREATURE_ELITE_ELITE:
+                level *= 3;
+                break;
+            case CREATURE_ELITE_RAREELITE:
+                level *= 3;
+                break;
+            case CREATURE_ELITE_WORLDBOSS:
+                level *= 5;
+                break;
+            }
+            attackerLevel += level;
         }
-        attackerLevel += level;
     }
+
+    Unit* enemy = AI_VALUE(Unit*, "enemy player target");
+    if (enemy)
+        attackerLevel += enemy->GetLevel() * 3;
 
     if (!attackerLevel)
         return 100;

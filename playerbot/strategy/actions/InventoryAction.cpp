@@ -23,17 +23,17 @@ void InventoryAction::IterateItems(IterateItemsVisitor* visitor, IterateItemsMas
 void InventoryAction::IterateItemsInBags(IterateItemsVisitor* visitor)
 {
     for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
-        if (Item *pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+        if (Item* pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
             if (!visitor->Visit(pItem))
                 return;
 
     for(int i = KEYRING_SLOT_START; i < KEYRING_SLOT_END; ++i)
-        if (Item *pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+        if (Item* pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
             if (!visitor->Visit(pItem))
                 return;
 
     for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
-        if (Bag *pBag = (Bag*)bot->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+        if (Bag* pBag = (Bag*)bot->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
             for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                 if (Item* pItem = pBag->GetItemByPos(j))
                     if (!visitor->Visit(pItem))
@@ -44,7 +44,7 @@ void InventoryAction::IterateItemsInEquip(IterateItemsVisitor* visitor)
 {
     for (uint8 slot = EQUIPMENT_SLOT_START; slot < EQUIPMENT_SLOT_END; slot++)
     {
-        Item* const pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+        Item* pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
         if(!pItem)
             continue;
 
@@ -57,7 +57,7 @@ void InventoryAction::IterateItemsInBank(IterateItemsVisitor* visitor)
 {
     for (uint8 slot = BANK_SLOT_ITEM_START; slot < BANK_SLOT_ITEM_END; slot++)
     {
-        Item* const pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+        Item* pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
         if(!pItem)
             continue;
 
@@ -190,16 +190,36 @@ list<Item*> InventoryAction::parseItems(string text, IterateItemsMask mask)
     if (count < 1) count = 1;
     else if (count > TRADE_SLOT_TRADED_COUNT) count = TRADE_SLOT_TRADED_COUNT;
 
-    if (text == "food")
+
+    ItemIds ids = chat->parseItems(text);
+    if (!ids.empty())
     {
-        FindFoodVisitor visitor(bot, 11);
+        for (ItemIds::iterator i = ids.begin(); i != ids.end(); i++)
+        {
+            FindItemByIdVisitor visitor(*i);
+            IterateItems(&visitor, mask);
+            found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
+        }
+
+        list<Item*> result;
+        for (set<Item*>::iterator i = found.begin(); i != found.end(); ++i)
+            result.push_back(*i);
+
+        result.sort(compare_items_by_level);
+
+        return result;
+    }
+
+    if (text == "food" || text == "conjured food")
+    {
+        FindFoodVisitor visitor(bot, 11, (text == "conjured food"));
         IterateItems(&visitor, ITERATE_ITEMS_IN_BAGS);
         found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
     }
 
-    if (text == "drink" || text == "water")
+    if (text == "drink" || text == "water" || text == "conjured drink" || text == "conjured water")
     {
-        FindFoodVisitor visitor(bot, 59);
+        FindFoodVisitor visitor(bot, 59, (text == "conjured drink" || text == "conjured water"));
         IterateItems(&visitor, ITERATE_ITEMS_IN_BAGS);
         found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
     }
@@ -228,6 +248,37 @@ list<Item*> InventoryAction::parseItems(string text, IterateItemsMask mask)
     if (text == "pet")
     {
         FindPetVisitor visitor(bot);
+        IterateItems(&visitor, ITERATE_ITEMS_IN_BAGS);
+        found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
+    }
+
+    if (text == "ammo")
+    {
+        Item* const pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_RANGED);
+        if (pItem)
+        {
+            FindAmmoVisitor visitor(bot, pItem->GetProto()->SubClass);
+            IterateItems(&visitor, ITERATE_ITEMS_IN_BAGS);
+            found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
+        }
+    }
+
+    if (text == "recipe")
+    {
+        FindRecipeVisitor visitor(bot);
+        IterateItems(&visitor, ITERATE_ITEMS_IN_BAGS);
+        found.insert(visitor.GetResult().begin(), visitor.GetResult().end());        
+    }
+
+    if (text == "quest")
+    {
+        FindQuestItemVisitor visitor(bot);
+        IterateItems(&visitor, ITERATE_ITEMS_IN_BAGS);
+        found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
+    }
+    if (text.find("usage ") != std::string::npos)
+    {
+        FindItemUsageVisitor visitor(bot, ItemUsage(stoi(text.substr(6))));
         IterateItems(&visitor, ITERATE_ITEMS_IN_BAGS);
         found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
     }
@@ -264,14 +315,6 @@ list<Item*> InventoryAction::parseItems(string text, IterateItemsMask mask)
     if (!outfit.empty())
     {
         FindItemByIdsVisitor visitor(outfit);
-        IterateItems(&visitor, mask);
-        found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
-    }
-
-    ItemIds ids = chat->parseItems(text);
-    for (ItemIds::iterator i = ids.begin(); i != ids.end(); i++)
-    {
-        FindItemByIdVisitor visitor(*i);
         IterateItems(&visitor, mask);
         found.insert(visitor.GetResult().begin(), visitor.GetResult().end());
     }

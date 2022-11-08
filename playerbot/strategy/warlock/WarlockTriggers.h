@@ -17,8 +17,16 @@ namespace ai
         virtual bool IsActive();
     };
 
-    DEBUFF_TRIGGER(CurseOfAgonyTrigger, "curse of agony", "curse of agony");
-    DEBUFF_TRIGGER(CorruptionTrigger, "corruption", "corruption");
+    DEBUFF_TRIGGER(CurseOfAgonyTrigger, "curse of agony");
+    DEBUFF_TRIGGER_A(CorruptionTrigger, "corruption");
+    DEBUFF_TRIGGER(SiphonLifeTrigger, "siphon life");
+    DEBUFF_TRIGGER(UnstableAfflictionTrigger, "unstable affliction");
+
+    INTERRUPT_TRIGGER(DeathCoilInterruptTrigger, "death coil");
+    INTERRUPT_HEALER_TRIGGER(DeathCoilInterruptTHealerTrigger, "death coil");
+    SNARE_TRIGGER(DeathCoilSnareTrigger, "death coil");
+    SNARE_TRIGGER(ShadowfurySnareTrigger, "shadowfury");
+    INTERRUPT_TRIGGER(ShadowfuryInterruptTrigger, "shadowfury");
 
     class CorruptionOnAttackerTrigger : public DebuffOnAttackerTrigger
     {
@@ -32,7 +40,13 @@ namespace ai
         CastCurseOfAgonyOnAttackerTrigger(PlayerbotAI* ai) : DebuffOnAttackerTrigger(ai, "curse of agony") {}
     };
 
-    DEBUFF_TRIGGER(ImmolateTrigger, "immolate", "immolate");
+    class SiphonLifeOnAttackerTrigger : public DebuffOnAttackerTrigger
+    {
+    public:
+        SiphonLifeOnAttackerTrigger(PlayerbotAI* ai) : DebuffOnAttackerTrigger(ai, "siphon life") {}
+    };
+
+    DEBUFF_TRIGGER(ImmolateTrigger, "immolate");
 
     class ShadowTranceTrigger : public HasAuraTrigger
     {
@@ -57,7 +71,7 @@ namespace ai
     public:
         WarlockConjuredItemTrigger(PlayerbotAI* ai, string item) : ItemCountTrigger(ai, item, 1) {}
 
-        virtual bool IsActive() { return ItemCountTrigger::IsActive() && AI_VALUE2(uint8, "item count", "soul shard") > 0; }
+        virtual bool IsActive() { return ItemCountTrigger::IsActive() && AI_VALUE2(uint32, "item count", "soul shard") > 0; }
     };
 
     class HasSpellstoneTrigger : public WarlockConjuredItemTrigger
@@ -82,6 +96,19 @@ namespace ai
     {
     public:
         FearTrigger(PlayerbotAI* ai) : HasCcTargetTrigger(ai, "fear") {}
+    };
+
+    class AmplifyCurseTrigger : public BuffTrigger
+    {
+    public:
+        AmplifyCurseTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "amplify curse") {}
+    };
+
+    class InfernoTrigger : public BuffTrigger
+    {
+    public:
+        InfernoTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "inferno", 10) {}
+        virtual bool IsActive();
     };
 
 }

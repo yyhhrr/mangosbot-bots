@@ -1,5 +1,7 @@
 #pragma once
 #include "../ServerFacade.h"
+#include "../ServerFacade.h"
+#include "values/ItemUsageValue.h"
 
 char * strstri (const char* str1, const char* str2);
 
@@ -309,20 +311,23 @@ namespace ai
     class FindFoodVisitor : public FindUsableItemVisitor
     {
     public:
-        FindFoodVisitor(Player* bot, uint32 spellCategory) : FindUsableItemVisitor(bot)
+        FindFoodVisitor(Player* bot, uint32 spellCategory, bool conjured = false) : FindUsableItemVisitor(bot)
         {
             this->spellCategory = spellCategory;
+            this->conjured = conjured;
         }
 
         virtual bool Accept(const ItemPrototype* proto)
         {
             return proto->Class == ITEM_CLASS_CONSUMABLE &&
                 (proto->SubClass == ITEM_SUBCLASS_CONSUMABLE || proto->SubClass == ITEM_SUBCLASS_FOOD) &&
-                proto->Spells[0].SpellCategory == spellCategory;
+                proto->Spells[0].SpellCategory == spellCategory &&
+                (!conjured || proto->IsConjuredConsumable());
         }
 
     private:
         uint32 spellCategory;
+        bool conjured;
     };
 
     class FindMountVisitor : public FindUsableItemVisitor
@@ -344,6 +349,8 @@ namespace ai
                         return true;
                 }
             }
+
+            return false;
         }
 
     private:
@@ -367,7 +374,15 @@ namespace ai
 
                     for (int i = 0 ; i < 3; i++)
                     {
+#ifdef MANGOSBOT_ZERO
                         if (spellInfo->Effect[i] == SPELL_EFFECT_SUMMON_CRITTER)
+#else
+#ifdef MANGOSBOT_ONE
+						if (spellInfo->Effect[i] == SPELL_EFFECT_97)
+#else
+						if (spellInfo->Effect[i] == SPELL_EFFECT_SUMMON_PET)
+#endif
+#endif
                             return true;
                     }
                 }
@@ -375,5 +390,114 @@ namespace ai
             return false;
         }
 
+    };
+
+    class FindAmmoVisitor : public FindUsableItemVisitor
+    {
+    public:
+        FindAmmoVisitor(Player* bot, uint32 weaponType) : FindUsableItemVisitor(bot)
+        {
+            this->weaponType = weaponType;
+        }
+
+        virtual bool Accept(const ItemPrototype* proto)
+        {
+            if (proto->Class == ITEM_CLASS_PROJECTILE)
+            {
+                uint32 subClass = 0;
+                switch (weaponType)
+                {
+                case ITEM_SUBCLASS_WEAPON_GUN:
+                    subClass = ITEM_SUBCLASS_BULLET;
+                    break;
+                case ITEM_SUBCLASS_WEAPON_BOW:
+                case ITEM_SUBCLASS_WEAPON_CROSSBOW:
+                    subClass = ITEM_SUBCLASS_ARROW;
+                    break;
+                }
+
+                if (!subClass)
+                    return false;
+
+                if (proto->SubClass == subClass)
+                    return true;
+            }
+            return false;
+        }
+    private:
+        uint32 weaponType;
+    };
+
+    class FindQuestItemVisitor : public FindUsableItemVisitor
+    {
+    public:
+        FindQuestItemVisitor(Player* bot) : FindUsableItemVisitor(bot) {}
+
+        virtual bool Accept(const ItemPrototype* proto)
+        {
+            if (proto->Class == ITEM_CLASS_QUEST)
+            {
+                return true;
+            }
+            return false;
+        }
+    };
+
+    class FindRecipeVisitor : public FindUsableItemVisitor
+    {
+    public:
+        FindRecipeVisitor(Player* bot, SkillType skill = SKILL_NONE) : FindUsableItemVisitor(bot), skill(skill) {};
+
+        virtual bool Accept(const ItemPrototype* proto)
+        {
+            if (proto->Class == ITEM_CLASS_RECIPE)
+            {
+                if (skill == SKILL_NONE)
+                    return true;
+
+                switch (proto->SubClass)
+                {
+                case ITEM_SUBCLASS_LEATHERWORKING_PATTERN:
+                    return skill == SKILL_LEATHERWORKING;
+                case ITEM_SUBCLASS_TAILORING_PATTERN:
+                    return skill == SKILL_TAILORING;
+                case ITEM_SUBCLASS_ENGINEERING_SCHEMATIC:
+                    return skill == SKILL_ENGINEERING;
+                case ITEM_SUBCLASS_BLACKSMITHING:
+                    return skill == SKILL_BLACKSMITHING;
+                case ITEM_SUBCLASS_COOKING_RECIPE:
+                    return skill == SKILL_COOKING;
+                case ITEM_SUBCLASS_ALCHEMY_RECIPE:
+                    return skill == SKILL_ALCHEMY;
+                case ITEM_SUBCLASS_FIRST_AID_MANUAL:
+                    return skill == SKILL_FIRST_AID;
+                case ITEM_SUBCLASS_ENCHANTING_FORMULA:
+                    return skill == SKILL_ENCHANTING;
+                case ITEM_SUBCLASS_FISHING_MANUAL:
+                    return skill == SKILL_FISHING;
+                }
+            }
+            return false;
+        }
+    private:
+        SkillType skill;
+    };
+
+    class FindItemUsageVisitor : public FindItemVisitor
+    {
+    public:
+        FindItemUsageVisitor(Player* bot, ItemUsage usage = ITEM_USAGE_NONE) : FindItemVisitor(), bot(bot), usage(usage) { context = bot->GetPlayerbotAI()->GetAiObjectContext();};
+
+        virtual bool Accept(const ItemPrototype* proto)
+        {
+            if (AI_VALUE2_LAZY(ItemUsage, "item usage", proto->ItemId) == usage)
+                return true;
+
+            return false;
+        }
+    private:
+        Player* bot;
+        AiObjectContext* context;
+        ItemUsage usage;
     };
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include "../Value.h"
+#include "TravelNode.h"
+#include "../../TravelMgr.h"
 
 namespace ai
 {
@@ -8,12 +10,7 @@ namespace ai
     public:
         LastMovement()
         {
-            lastMoveToX = 0;
-            lastMoveToY = 0;
-            lastMoveToZ = 0;
-            lastMoveToOri = 0;
-            lastFollow = NULL;
-            lastAreaTrigger = 0;
+            clear();
         }
 
         LastMovement(LastMovement& other)
@@ -22,33 +19,88 @@ namespace ai
             taxiMaster = other.taxiMaster;
             lastFollow = other.lastFollow;
             lastAreaTrigger = other.lastAreaTrigger;
+            lastMoveShort = other.lastMoveShort;
+            lastMoveShortStart = other.lastMoveShortStart;
+            lastPath = other.lastPath;
+            nextTeleport = other.nextTeleport;
+            /*
+            lastMoveToMapId = other.lastMoveToMapId;
             lastMoveToX = other.lastMoveToX;
             lastMoveToY = other.lastMoveToY;
             lastMoveToZ = other.lastMoveToZ;
             lastMoveToOri = other.lastMoveToOri;
+            */
+        }
+
+        void clear()
+        {
+            lastMoveShort = WorldPosition();
+            lastMoveShortStart = WorldPosition();
+            lastPath.clear();
+            /*
+            lastMoveToMapId = 0;
+            lastMoveToX = 0;
+            lastMoveToY = 0;
+            lastMoveToZ = 0;
+            lastMoveToOri = 0;
+            */
+            lastFollow = NULL;
+            lastAreaTrigger = 0;
+            lastFlee = 0;
+            nextTeleport = 0;
         }
 
         void Set(Unit* lastFollow)
         {
-            Set(0.0f, 0.0f, 0.0f, 0.0f);
+            //Set(0, 0.0f, 0.0f, 0.0f, 0.0f);
+            setShort(WorldPosition(),WorldPosition());
+            setPath(TravelPath());
             this->lastFollow = lastFollow;
         }
 
-        void Set(float x, float y, float z, float ori)
+        /*
+        void Set(uint32 mapId, float x, float y, float z, float ori)
         {
+            lastMoveToMapId = mapId;
             lastMoveToX = x;
             lastMoveToY = y;
             lastMoveToZ = z;
             lastMoveToOri = ori;
+            lastMoveShort = WorldPosition(mapId, x, y, z, ori);
             lastFollow = NULL;
         }
+        */
 
+        void setShort(WorldPosition start, WorldPosition end) {
+            lastMoveShortStart = start; lastMoveShort = end; lastFollow = NULL;
+        }
+        void setPath(TravelPath path) { lastPath = path; }
+
+        LastMovement& operator=(const LastMovement& other) { 
+            taxiNodes = other.taxiNodes;
+            taxiMaster = other.taxiMaster;
+            lastFollow = other.lastFollow;
+            lastAreaTrigger = other.lastAreaTrigger;
+            lastMoveShort = other.lastMoveShort;
+            lastMoveShortStart = other.lastMoveShortStart;
+            lastPath = other.lastPath;
+            nextTeleport = other.nextTeleport;
+
+            return *this;
+        };
     public:
         vector<uint32> taxiNodes;
         ObjectGuid taxiMaster;
         Unit* lastFollow;
         uint32 lastAreaTrigger;
-        float lastMoveToX, lastMoveToY, lastMoveToZ, lastMoveToOri;
+        time_t lastFlee;
+        //uint32 lastMoveToMapId;
+        //float lastMoveToX, lastMoveToY, lastMoveToZ, lastMoveToOri;
+        WorldPosition lastMoveShortStart;
+        WorldPosition lastMoveShort;
+        TravelPath lastPath;
+        time_t nextTeleport;
+        std::future<TravelPath> future;
     };
 
     class LastMovementValue : public ManualSetValue<LastMovement&>
@@ -57,7 +109,7 @@ namespace ai
         LastMovementValue(PlayerbotAI* ai) : ManualSetValue<LastMovement&>(ai, data) {}
 
     private:
-        LastMovement data;
+        LastMovement data = LastMovement();
     };
 
     class StayTimeValue : public ManualSetValue<time_t>

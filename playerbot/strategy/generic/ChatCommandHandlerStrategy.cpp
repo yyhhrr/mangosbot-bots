@@ -49,6 +49,14 @@ void ChatCommandHandlerStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
         NextAction::array(0, new NextAction("item count", relevance), NULL)));
 
     triggers.push_back(new TriggerNode(
+        "items",
+        NextAction::array(0, new NextAction("item count", relevance), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "inv",
+        NextAction::array(0, new NextAction("item count", relevance), NULL)));
+
+    triggers.push_back(new TriggerNode(
         "e",
         NextAction::array(0, new NextAction("equip", relevance), NULL)));
 
@@ -93,6 +101,10 @@ void ChatCommandHandlerStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
         NextAction::array(0, new NextAction("stay chat shortcut", relevance), NULL)));
 
     triggers.push_back(new TriggerNode(
+        "wait for attack time",
+        NextAction::array(0, new NextAction("wait for attack time", relevance), NULL)));
+
+    triggers.push_back(new TriggerNode(
         "flee",
         NextAction::array(0, new NextAction("flee chat shortcut", relevance), NULL)));
 
@@ -111,6 +123,10 @@ void ChatCommandHandlerStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
     triggers.push_back(new TriggerNode(
         "cast",
         NextAction::array(0, new NextAction("cast custom spell", relevance), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "castnc",
+        NextAction::array(0, new NextAction("cast custom nc spell", relevance), NULL)));
 
     triggers.push_back(new TriggerNode(
         "revive",
@@ -161,7 +177,8 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* ai) : PassTr
     supported.push_back("spells");
     supported.push_back("co");
     supported.push_back("nc");
-    supported.push_back("dead");
+    supported.push_back("de");
+    supported.push_back("react");
     supported.push_back("trainer");
     supported.push_back("chat");
     supported.push_back("home");
@@ -180,14 +197,29 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* ai) : PassTr
     supported.push_back("who");
     supported.push_back("save mana");
     supported.push_back("formation");
+    supported.push_back("stance");
     supported.push_back("sendmail");
     supported.push_back("mail");
     supported.push_back("outfit");
     supported.push_back("go");
     supported.push_back("debug");
+    supported.push_back("cdebug");
     supported.push_back("cs");
     supported.push_back("wts");
     supported.push_back("hire");
     supported.push_back("craft");
     supported.push_back("flag");
+    supported.push_back("range");
+    supported.push_back("ra");
+    supported.push_back("give leader");
+    supported.push_back("cheat");
+    supported.push_back("ginvite");
+    supported.push_back("guild promote");
+    supported.push_back("guild demote");
+    supported.push_back("guild remove");
+    supported.push_back("guild leave");
+    supported.push_back("guild leader");
+    supported.push_back("rtsc");
+    supported.push_back("ah");
+    supported.push_back("ah bid");
 }

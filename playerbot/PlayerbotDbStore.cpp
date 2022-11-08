@@ -17,27 +17,29 @@ using namespace ai;
 void PlayerbotDbStore::Load(PlayerbotAI *ai)
 {
     uint64 guid = ai->GetBot()->GetObjectGuid().GetRawValue();
-    uint32 account = sObjectMgr.GetPlayerAccountIdByGUID(ObjectGuid(guid));
-    if (sPlayerbotAIConfig.IsInRandomAccountList(account))
-        return;
 
     QueryResult* results = PlayerbotDatabase.PQuery("SELECT `key`,`value` FROM `ai_playerbot_db_store` WHERE `guid` = '%lu'", guid);
     if (results)
     {
-        ai->ClearStrategies(BOT_STATE_COMBAT);
-        ai->ClearStrategies(BOT_STATE_NON_COMBAT);
-        ai->ChangeStrategy("+chat", BOT_STATE_COMBAT);
-        ai->ChangeStrategy("+chat", BOT_STATE_NON_COMBAT);
+        ai->ClearStrategies(BotState::BOT_STATE_COMBAT);
+        ai->ClearStrategies(BotState::BOT_STATE_NON_COMBAT);
+        ai->ChangeStrategy("+chat", BotState::BOT_STATE_COMBAT);
+        ai->ChangeStrategy("+chat", BotState::BOT_STATE_NON_COMBAT);
 
+        list<string> values;
         do
         {
             Field* fields = results->Fetch();
             string key = fields[0].GetString();
             string value = fields[1].GetString();
-            ExternalEventHelper helper(ai->GetAiObjectContext());
-            helper.ParseChatCommand(value, ai->GetMaster());
-            ai->DoNextAction();
+            if (key == "value") values.push_back(value);
+            else if (key == "co") ai->ChangeStrategy(value, BotState::BOT_STATE_COMBAT);
+            else if (key == "nc") ai->ChangeStrategy(value, BotState::BOT_STATE_NON_COMBAT);
+            else if (key == "dead") ai->ChangeStrategy(value, BotState::BOT_STATE_DEAD);
+            else if (key == "react") ai->ChangeStrategy(value, BotState::BOT_STATE_REACTION);
         } while (results->NextRow());
+
+        ai->GetAiObjectContext()->Load(values);
 
         delete results;
     }
@@ -46,62 +48,24 @@ void PlayerbotDbStore::Load(PlayerbotAI *ai)
 void PlayerbotDbStore::Save(PlayerbotAI *ai)
 {
     uint64 guid = ai->GetBot()->GetObjectGuid().GetRawValue();
-    uint32 account = sObjectMgr.GetPlayerAccountIdByGUID(ObjectGuid(guid));
-    if (sPlayerbotAIConfig.IsInRandomAccountList(account))
-        return;
 
     Reset(ai);
 
-    SaveValue(guid, "co", FormatStrategies("co", ai->GetStrategies(BOT_STATE_COMBAT)));
-    SaveValue(guid, "nc", FormatStrategies("nc", ai->GetStrategies(BOT_STATE_NON_COMBAT)));
-    SaveValue(guid, "dead", FormatStrategies("dead", ai->GetStrategies(BOT_STATE_DEAD)));
-
-    Value<Formation*>* formation = ai->GetAiObjectContext()->GetValue<Formation*>("formation");
-    ostringstream outFormation; outFormation << "formation " << formation->Get()->getName();
-    SaveValue(guid, "formation", outFormation.str());
-
-    Value<LootStrategy*>* lootStrategy = ai->GetAiObjectContext()->GetValue<LootStrategy*>("loot strategy");
-    ostringstream outLoot; outLoot << "ll " << lootStrategy->Get()->GetName();
-    SaveValue(guid, "ll", outLoot.str());
-
-    list<string>& outfits = ai->GetAiObjectContext()->GetValue<list<string>&>("outfit list")->Get();
-    for (list<string>::iterator i = outfits.begin(); i != outfits.end(); ++i)
+    list<string> data = ai->GetAiObjectContext()->Save();
+    for (list<string>::iterator i = data.begin(); i != data.end(); ++i)
     {
-        ostringstream outOutfit; outOutfit << "outfit " << *i;
-        SaveValue(guid, "outfit", outOutfit.str());
+        SaveValue(guid, "value", *i);
     }
 
-    set<uint32>& ss = ai->GetAiObjectContext()->GetValue<set<uint32>&>("skip spells list")->Get();
-    ostringstream outSs;
-    outSs << "ss ";
-    bool first = true;
-    for (set<uint32>::iterator i = ss.begin(); i != ss.end(); ++i)
-    {
-        if (first) first = false; else outSs << ",";
-        outSs << *i;
-    }
-    SaveValue(guid, "ss", outSs.str());
-
-    uint32 saveMana = (uint32)round(ai->GetAiObjectContext()->GetValue<double>("mana save level")->Get());
-    ostringstream outSaveMana; outSaveMana << "save mana " << saveMana;
-    SaveValue(guid, "save mana", outSaveMana.str());
-
-    ai::PositionMap& posMap = ai->GetAiObjectContext()->GetValue<ai::PositionMap&>("position")->Get();
-    for (ai::PositionMap::iterator i = posMap.begin(); i != posMap.end(); ++i)
-    {
-        ai::Position pos = i->second;
-        if (pos.isSet())
-        {
-            ostringstream out; out << "position " << i->first << " " << pos.x << "," << pos.y << "," << pos.z;
-            SaveValue(guid, "position", out.str());
-        }
-    }
+    SaveValue(guid, "co", FormatStrategies("co", ai->GetStrategies(BotState::BOT_STATE_COMBAT)));
+    SaveValue(guid, "nc", FormatStrategies("nc", ai->GetStrategies(BotState::BOT_STATE_NON_COMBAT)));
+    SaveValue(guid, "dead", FormatStrategies("dead", ai->GetStrategies(BotState::BOT_STATE_DEAD)));
+    SaveValue(guid, "react", FormatStrategies("react", ai->GetStrategies(BotState::BOT_STATE_REACTION)));
 }
 
 string PlayerbotDbStore::FormatStrategies(string type, list<string> strategies)
 {
     ostringstream out;
-    out << type << " ";
     for(list<string>::iterator i = strategies.begin(); i != strategies.end(); ++i)
         out << "+" << (*i).c_str() << ",";
 
@@ -113,8 +77,6 @@ void PlayerbotDbStore::Reset(PlayerbotAI *ai)
 {
     uint64 guid = ai->GetBot()->GetObjectGuid().GetRawValue();
     uint32 account = sObjectMgr.GetPlayerAccountIdByGUID(ObjectGuid(guid));
-    if (sPlayerbotAIConfig.IsInRandomAccountList(account))
-        return;
 
     PlayerbotDatabase.PExecute("DELETE FROM `ai_playerbot_db_store` WHERE `guid` = '%lu'", guid);
 }

@@ -3,6 +3,7 @@
 #include "../Action.h"
 #include "../../LootObjectStack.h"
 #include "MovementActions.h"
+#include "InventoryAction.h"
 
 namespace ai
 {
@@ -10,14 +11,14 @@ namespace ai
     {
     public:
         LootAction(PlayerbotAI* ai) : MovementAction(ai, "loot") {}
-        virtual bool Execute(Event event);
+        virtual bool Execute(Event& event);
     };
 
     class OpenLootAction : public MovementAction
     {
     public:
         OpenLootAction(PlayerbotAI* ai) : MovementAction(ai, "open loot") {}
-        virtual bool Execute(Event event);
+        virtual bool Execute(Event& event);
 
     private:
         bool DoLoot(LootObject& lootObject);
@@ -27,18 +28,18 @@ namespace ai
         bool CanOpenLock(uint32 skillId, uint32 reqSkillValue);
     };
 
-    class StoreLootAction : public MovementAction
+    class StoreLootAction : public InventoryAction
     {
     public:
-        StoreLootAction(PlayerbotAI* ai) : MovementAction(ai, "store loot") {}
-        virtual bool Execute(Event event);
-        static bool IsLootAllowed(uint32 itemid, PlayerbotAI *ai);
+        StoreLootAction(PlayerbotAI* ai) : InventoryAction(ai, "store loot") {}
+        virtual bool Execute(Event& event);
+        static bool IsLootAllowed(uint32 itemid, PlayerbotAI *ai);  
     };
 
     class ReleaseLootAction : public MovementAction
     {
     public:
         ReleaseLootAction(PlayerbotAI* ai) : MovementAction(ai, "release loot") {}
-        virtual bool Execute(Event event);
+        virtual bool Execute(Event& event);
     };
 }

@@ -49,7 +49,9 @@
 #include "WhoAction.h"
 #include "SaveManaAction.h"
 #include "../values/Formations.h"
+#include "../values/Stances.h"
 #include "CustomStrategyEditAction.h"
+#include "AhAction.h"
 #include "DebugAction.h"
 #include "GoAction.h"
 #include "MailAction.h"
@@ -59,8 +61,14 @@
 #include "CustomStrategyEditAction.h"
 #include "FlagAction.h"
 #include "HireAction.h"
+#include "RangeAction.h"
 #include "SetCraftAction.h"
 #include "WtsAction.h"
+#include "PassLeadershipToMasterAction.h"
+#include "CheatAction.h"
+#include "GuildManagementActions.h"
+#include "RtscAction.h"
+#include "WaitForAttackAction.h"
 
 namespace ai
 {
@@ -69,6 +77,7 @@ namespace ai
     public:
         ChatActionContext()
         {
+            creators["range"] = &ChatActionContext::range;
             creators["stats"] = &ChatActionContext::stats;
             creators["quests"] = &ChatActionContext::quests;
             creators["leave"] = &ChatActionContext::leave;
@@ -76,6 +85,7 @@ namespace ai
             creators["log"] = &ChatActionContext::log;
             creators["los"] = &ChatActionContext::los;
             creators["drop"] = &ChatActionContext::drop;
+            creators["clean quest log"] = &ChatActionContext::clean_quest_log;
             creators["share"] = &ChatActionContext::share;
             creators["query quest"] = &ChatActionContext::query_quest;
             creators["query item usage"] = &ChatActionContext::query_item_usage;
@@ -83,12 +93,14 @@ namespace ai
             creators["ss"] = &ChatActionContext::ss;
             creators["add all loot"] = &ChatActionContext::add_all_loot;
             creators["release"] = &ChatActionContext::release;
+            creators["repop"] = &ChatActionContext::repop;
             creators["teleport"] = &ChatActionContext::teleport;
             creators["taxi"] = &ChatActionContext::taxi;
             creators["repair"] = &ChatActionContext::repair;
             creators["use"] = &ChatActionContext::use;
             creators["item count"] = &ChatActionContext::item_count;
             creators["equip"] = &ChatActionContext::equip;
+            creators["equip upgrades"] = &ChatActionContext::equip_upgrades;
             creators["unequip"] = &ChatActionContext::unequip;
             creators["sell"] = &ChatActionContext::sell;
             creators["buy"] = &ChatActionContext::buy;
@@ -98,13 +110,15 @@ namespace ai
             creators["spells"] = &ChatActionContext::spells;
             creators["co"] = &ChatActionContext::co;
             creators["nc"] = &ChatActionContext::nc;
-            creators["dead"] = &ChatActionContext::dead;
+            creators["de"] = &ChatActionContext::dead;
+            creators["react"] = &ChatActionContext::react;
             creators["trainer"] = &ChatActionContext::trainer;
             creators["attack my target"] = &ChatActionContext::attack_my_target;
             creators["chat"] = &ChatActionContext::chat;
             creators["home"] = &ChatActionContext::home;
             creators["destroy"] = &ChatActionContext::destroy;
             creators["reset ai"] = &ChatActionContext::reset_ai;
+            creators["reset ai soft"] = &ChatActionContext::reset_ai_soft;
             creators["buff"] = &ChatActionContext::buff;
             creators["help"] = &ChatActionContext::help;
             creators["gb"] = &ChatActionContext::gb;
@@ -117,6 +131,7 @@ namespace ai
             creators["tank attack chat shortcut"] = &ChatActionContext::tank_attack_chat_shortcut;
             creators["gossip hello"] = &ChatActionContext::gossip_hello;
             creators["cast custom spell"] = &ChatActionContext::cast_custom_spell;
+            creators["cast custom nc spell"] = &ChatActionContext::cast_custom_nc_spell;
             creators["invite"] = &ChatActionContext::invite;
             creators["spell"] = &ChatActionContext::spell;
             creators["rti"] = &ChatActionContext::rti;
@@ -129,18 +144,34 @@ namespace ai
             creators["max dps chat shortcut"] = &ChatActionContext::max_dps_chat_shortcut;
             creators["tell attackers"] = &ChatActionContext::tell_attackers;
             creators["formation"] = &ChatActionContext::formation;
+            creators["stance"] = &ChatActionContext::stance;
             creators["sendmail"] = &ChatActionContext::sendmail;
             creators["mail"] = &ChatActionContext::mail;
             creators["go"] = &ChatActionContext::go;
             creators["debug"] = &ChatActionContext::debug;
+            creators["cdebug"] = &ChatActionContext::debug;
             creators["cs"] = &ChatActionContext::cs;
             creators["wts"] = &ChatActionContext::wts;
             creators["hire"] = &ChatActionContext::hire;
             creators["craft"] = &ChatActionContext::craft;
             creators["flag"] = &ChatActionContext::flag;
+            creators["give leader"] = &ChatActionContext::give_leader;
+            creators["cheat"] = &ChatActionContext::cheat;
+            creators["rtsc"] = &ChatActionContext::rtsc;
+            creators["ah"] = &ChatActionContext::ah;
+            creators["ah bid"] = &ChatActionContext::ah_bid;
+            creators["wait for attack time"] = &ChatActionContext::wait_for_attack_time;
+
+            creators["ginvite"] = &ChatActionContext::ginvite;
+            creators["guild promote"] = &ChatActionContext::guild_promote;
+            creators["guild demote"] = &ChatActionContext::guild_demote;
+            creators["guild remove"] = &ChatActionContext::guild_remove;
+            creators["guild leave"] = &ChatActionContext::guild_leave;
+            creators["guild leader"] = &ChatActionContext::guild_leader;
         }
 
     private:
+        static Action* range(PlayerbotAI* ai) { return new RangeAction(ai); }
         static Action* flag(PlayerbotAI* ai) { return new FlagAction(ai); }
         static Action* craft(PlayerbotAI* ai) { return new SetCraftAction(ai); }
         static Action* hire(PlayerbotAI* ai) { return new HireAction(ai); }
@@ -151,6 +182,7 @@ namespace ai
         static Action* go(PlayerbotAI* ai) { return new GoAction(ai); }
         static Action* sendmail(PlayerbotAI* ai) { return new SendMailAction(ai); }
         static Action* formation(PlayerbotAI* ai) { return new SetFormationAction(ai); }
+        static Action* stance(PlayerbotAI* ai) { return new SetStanceAction(ai); }
         static Action* tell_attackers(PlayerbotAI* ai) { return new TellAttackersAction(ai); }
         static Action* max_dps_chat_shortcut(PlayerbotAI* ai) { return new MaxDpsChatShortcutAction(ai); }
         static Action* save_mana(PlayerbotAI* ai) { return new SaveManaAction(ai); }
@@ -163,6 +195,7 @@ namespace ai
         static Action* invite(PlayerbotAI* ai) { return new InviteToGroupAction(ai); }
         static Action* spell(PlayerbotAI* ai) { return new TellSpellAction(ai); }
         static Action* cast_custom_spell(PlayerbotAI* ai) { return new CastCustomSpellAction(ai); }
+        static Action* cast_custom_nc_spell(PlayerbotAI* ai) { return new CastCustomNcSpellAction(ai); }        
         static Action* tank_attack_chat_shortcut(PlayerbotAI* ai) { return new TankAttackChatShortcutAction(ai); }
         static Action* grind_chat_shortcut(PlayerbotAI* ai) { return new GrindChatShortcutAction(ai); }
         static Action* flee_chat_shortcut(PlayerbotAI* ai) { return new FleeChatShortcutAction(ai); }
@@ -181,10 +214,12 @@ namespace ai
         static Action* co(PlayerbotAI* ai) { return new ChangeCombatStrategyAction(ai); }
         static Action* nc(PlayerbotAI* ai) { return new ChangeNonCombatStrategyAction(ai); }
         static Action* dead(PlayerbotAI* ai) { return new ChangeDeadStrategyAction(ai); }
+        static Action* react(PlayerbotAI* ai) { return new ChangeReactionStrategyAction(ai); }
         static Action* spells(PlayerbotAI* ai) { return new ListSpellsAction(ai); }
         static Action* talents(PlayerbotAI* ai) { return new ChangeTalentsAction(ai); }
 
         static Action* equip(PlayerbotAI* ai) { return new EquipAction(ai); }
+        static Action* equip_upgrades(PlayerbotAI* ai) { return new EquipUpgradesAction(ai); }
         static Action* unequip(PlayerbotAI* ai) { return new UnequipAction(ai); }
         static Action* sell(PlayerbotAI* ai) { return new SellAction(ai); }
         static Action* buy(PlayerbotAI* ai) { return new BuyAction(ai); }
@@ -197,9 +232,11 @@ namespace ai
         static Action* taxi(PlayerbotAI* ai) { return new TaxiAction(ai); }
         static Action* teleport(PlayerbotAI* ai) { return new TeleportAction(ai); }
         static Action* release(PlayerbotAI* ai) { return new ReleaseSpiritAction(ai); }
+        static Action* repop(PlayerbotAI* ai) { return new RepopAction(ai); }
         static Action* query_item_usage(PlayerbotAI* ai) { return new QueryItemUsageAction(ai); }
         static Action* query_quest(PlayerbotAI* ai) { return new QueryQuestAction(ai); }
         static Action* drop(PlayerbotAI* ai) { return new DropQuestAction(ai); }
+        static Action* clean_quest_log(PlayerbotAI* ai) { return new CleanQuestLogAction(ai); }
         static Action* share(PlayerbotAI* ai) { return new ShareQuestAction(ai); }
         static Action* stats(PlayerbotAI* ai) { return new StatsAction(ai); }
         static Action* quests(PlayerbotAI* ai) { return new ListQuestsAction(ai); }
@@ -210,8 +247,22 @@ namespace ai
         static Action* ll(PlayerbotAI* ai) { return new LootStrategyAction(ai); }
         static Action* ss(PlayerbotAI* ai) { return new SkipSpellsListAction(ai); }
         static Action* add_all_loot(PlayerbotAI* ai) { return new AddAllLootAction(ai); }
-        static Action* reset_ai(PlayerbotAI* ai) { return new ResetAiAction(ai); }
+        static Action* reset_ai(PlayerbotAI* ai) { return new ResetAiAction(ai, true); }
+        static Action* reset_ai_soft(PlayerbotAI* ai) { return new ResetAiAction(ai, false); }
         static Action* gossip_hello(PlayerbotAI* ai) { return new GossipHelloAction(ai); }
+        static Action* give_leader(PlayerbotAI* ai) { return new GiveLeaderAction(ai); }
+        static Action* cheat(PlayerbotAI* ai) { return new CheatAction(ai); }
+        static Action* rtsc(PlayerbotAI* ai) { return new RTSCAction(ai); }
+        static Action* ah(PlayerbotAI* ai) { return new AhAction(ai); }
+        static Action* ah_bid(PlayerbotAI* ai) { return new AhBidAction(ai); }
+        static Action* wait_for_attack_time(PlayerbotAI* ai) { return new WaitForAttackSetTimeAction(ai); }
+
+        static Action* ginvite(PlayerbotAI* ai) { return new GuildInviteAction(ai); }
+        static Action* guild_promote(PlayerbotAI* ai) { return new GuildPromoteAction(ai); }
+        static Action* guild_demote(PlayerbotAI* ai) { return new GuildDemoteAction(ai); }
+        static Action* guild_remove(PlayerbotAI* ai) { return new GuildRemoveAction(ai); }
+        static Action* guild_leave(PlayerbotAI* ai) { return new GuildLeaveAction(ai); }
+        static Action* guild_leader(PlayerbotAI* ai) { return new GuildLeaderAction(ai); }
     };
 
 

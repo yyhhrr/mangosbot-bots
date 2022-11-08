@@ -6,26 +6,40 @@
 
 using namespace ai;
 
-bool SetHomeAction::Execute(Event event)
+bool SetHomeAction::Execute(Event& event)
 {
-    Player* master = ai->GetMaster();
-    if (!master)
-        return false;
+    Player* master = GetMaster();
 
-    ObjectGuid selection = master->GetSelectionGuid();
+    ObjectGuid selection = bot->GetSelectionGuid();
+    bool isRpgAction = AI_VALUE(GuidPosition, "rpg target") == selection;
+
+    if (!isRpgAction)
+        if (master)
+            selection = master->GetSelectionGuid();
+        else
+            return false;
+
     if (selection)
     {
-        Unit* unit = master->GetMap()->GetUnit(selection);
+        Unit* unit = ai->GetUnit(selection);
         if (unit && unit->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_INNKEEPER))
         {
-            float angle = GetFollowAngle();
-            float x = unit->GetPositionX() + sPlayerbotAIConfig.followDistance * cos(angle);
-            float y = unit->GetPositionY() + sPlayerbotAIConfig.followDistance * sin(angle);
-            float z = unit->GetPositionZ();
-            WorldLocation loc(unit->GetMapId(), x, y, z);
-            bot->SetHomebindToLocation(loc, unit->GetAreaId());
-            ai->TellMaster("This inn is my new home");
-            return true;
+            if (isRpgAction)
+            {
+                Creature* creature = ai->GetCreature(selection);                   
+                bot->GetSession()->SendBindPoint(creature);
+                ai->TellMaster("This inn is my new home", PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+                RESET_AI_VALUE(WorldPosition, "home bind");
+                return true;
+            }
+            else
+            {
+                Creature* creature = ai->GetCreature(selection);
+                bot->GetSession()->SendBindPoint(creature);
+                ai->TellMaster("This inn is my new home", PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+                RESET_AI_VALUE(WorldPosition, "home bind");
+                return true;
+            }
         }
     }
 
@@ -37,7 +51,8 @@ bool SetHomeAction::Execute(Event event)
             continue;
 
         bot->GetSession()->SendBindPoint(unit);
-        ai->TellMaster("This inn is my new home");
+        ai->TellMaster("This inn is my new home", PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+        RESET_AI_VALUE(WorldPosition, "home bind");
         return true;
     }
 

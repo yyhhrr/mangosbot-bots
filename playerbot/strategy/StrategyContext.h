@@ -17,7 +17,7 @@
 #include "generic/UseFoodStrategy.h"
 #include "generic/ConserveManaStrategy.h"
 #include "generic/EmoteStrategy.h"
-#include "generic/TankAoeStrategy.h"
+#include "generic/TankAssistStrategy.h"
 #include "generic/DpsAssistStrategy.h"
 #include "generic/PassiveStrategy.h"
 #include "generic/GrindingStrategy.h"
@@ -27,8 +27,20 @@
 #include "generic/ThreatStrategy.h"
 #include "generic/TellTargetStrategy.h"
 #include "generic/AttackEnemyPlayersStrategy.h"
+#include "generic/MarkRtiStrategy.h"
+#include "generic/MeleeCombatStrategy.h"
+#include "generic/PullStrategy.h"
+#include "generic/RangedCombatStrategy.h"
 #include "generic/ReturnStrategy.h"
 #include "generic/RpgStrategy.h"
+#include "generic/TravelStrategy.h"
+#include "generic/RTSCStrategy.h"
+#include "generic/DebugStrategy.h"
+#include "generic/BattlegroundStrategy.h"
+#include "generic/LfgStrategy.h"
+#include "generic/MaintenanceStrategy.h"
+#include "generic/GroupStrategy.h"
+#include "generic/GuildStrategy.h"
 
 namespace ai
 {
@@ -50,6 +62,7 @@ namespace ai
             creators["dead"] = &StrategyContext::dead;
             creators["flee"] = &StrategyContext::flee;
             creators["duel"] = &StrategyContext::duel;
+            creators["start duel"] = &StrategyContext::start_duel;
             creators["kite"] = &StrategyContext::kite;
             creators["potions"] = &StrategyContext::potions;
             creators["cast time"] = &StrategyContext::cast_time;
@@ -62,16 +75,70 @@ namespace ai
             creators["reveal"] = &StrategyContext::reveal;
             creators["collision"] = &StrategyContext::collision;
             creators["rpg"] = &StrategyContext::rpg;
+            creators["rpg quest"] = &StrategyContext::rpg_quest;
+            creators["rpg vendor"] = &StrategyContext::rpg_vendor;
+            creators["rpg explore"] = &StrategyContext::rpg_explore;
+            creators["rpg maintenance"] = &StrategyContext::rpg_maintenance;
+            creators["rpg guild"] = &StrategyContext::rpg_guild;
+            creators["rpg bg"] = &StrategyContext::rpg_bg;
+            creators["rpg player"] = &StrategyContext::rpg_player;
+            creators["rpg craft"] = &StrategyContext::rpg_craft;
+			creators["travel"] = &StrategyContext::travel;
+            creators["explore"] = &StrategyContext::explore;
+            creators["map"] = &StrategyContext::map;
+            creators["map full"] = &StrategyContext::map_full;
             creators["sit"] = &StrategyContext::sit;
+            creators["mark rti"] = &StrategyContext::mark_rti;
+            creators["ads"] = &StrategyContext::possible_ads;
+            creators["close"] = &StrategyContext::close;
+            creators["ranged"] = &StrategyContext::ranged;
+            creators["behind"] = &StrategyContext::behind;
+            creators["bg"] = &StrategyContext::bg;
+            creators["battleground"] = &StrategyContext::battleground;
+            creators["warsong"] = &StrategyContext::warsong;
+            creators["alterac"] = &StrategyContext::alterac;
+            creators["arathi"] = &StrategyContext::arathi;
+            creators["eye"] = &StrategyContext::eye;
+            creators["isle"] = &StrategyContext::isle;
+            creators["arena"] = &StrategyContext::arena;
+            creators["mount"] = &StrategyContext::mount;
+            creators["attack tagged"] = &StrategyContext::attack_tagged;
+            creators["debug"] = &StrategyContext::debug;
+            creators["debug action"] = &StrategyContext::debug_action;
+            creators["debug move"] = &StrategyContext::debug_move;
+            creators["debug rpg"] = &StrategyContext::debug_rpg;
+            creators["debug spell"] = &StrategyContext::debug_spell;
+            creators["debug travel"] = &StrategyContext::debug_travel;
+            creators["rtsc"] = &StrategyContext::rtsc;
+            creators["maintenance"] = &StrategyContext::maintenance;
+            creators["group"] = &StrategyContext::group;
+            creators["guild"] = &StrategyContext::guild;
+            creators["grind"] = &StrategyContext::grind;
+            creators["avoid aoe"] = &StrategyContext::avoid_aoe;
+            creators["wait for attack"] = &StrategyContext::wait_for_attack;
         }
 
     private:
+        static Strategy* mount(PlayerbotAI* ai) { return new MountStrategy(ai); }
+        static Strategy* arena(PlayerbotAI* ai) { return new ArenaStrategy(ai); }
+        static Strategy* bg(PlayerbotAI* ai) { return new BGStrategy(ai); }
+        static Strategy* battleground(PlayerbotAI* ai) { return new BattlegroundStrategy(ai); }
+        static Strategy* warsong(PlayerbotAI* ai) { return new WarsongStrategy(ai); }
+        static Strategy* alterac(PlayerbotAI* ai) { return new AlteracStrategy(ai); }
+        static Strategy* arathi(PlayerbotAI* ai) { return new ArathiStrategy(ai); }
+        static Strategy* eye(PlayerbotAI* ai) { return new EyeStrategy(ai); }
+        static Strategy* isle(PlayerbotAI* ai) { return new IsleStrategy(ai); }
+        static Strategy* behind(PlayerbotAI* ai) { return new SetBehindCombatStrategy(ai); }
+        static Strategy* ranged(PlayerbotAI* ai) { return new RangedCombatStrategy(ai); }
+        static Strategy* close(PlayerbotAI* ai) { return new MeleeCombatStrategy(ai); }
+        static Strategy* mark_rti(PlayerbotAI* ai) { return new MarkRtiStrategy(ai); }
         static Strategy* tell_target(PlayerbotAI* ai) { return new TellTargetStrategy(ai); }
         static Strategy* threat(PlayerbotAI* ai) { return new ThreatStrategy(ai); }
         static Strategy* cast_time(PlayerbotAI* ai) { return new CastTimeStrategy(ai); }
         static Strategy* potions(PlayerbotAI* ai) { return new UsePotionsStrategy(ai); }
         static Strategy* kite(PlayerbotAI* ai) { return new KiteStrategy(ai); }
         static Strategy* duel(PlayerbotAI* ai) { return new DuelStrategy(ai); }
+        static Strategy* start_duel(PlayerbotAI* ai) { return new StartDuelStrategy(ai); }
         static Strategy* flee(PlayerbotAI* ai) { return new FleeStrategy(ai); }
         static Strategy* dead(PlayerbotAI* ai) { return new DeadStrategy(ai); }
         static Strategy* racials(PlayerbotAI* ai) { return new RacialsStrategy(ai); }
@@ -91,7 +158,34 @@ namespace ai
         static Strategy* reveal(PlayerbotAI* ai) { return new RevealStrategy(ai); }
         static Strategy* collision(PlayerbotAI* ai) { return new CollisionStrategy(ai); }
         static Strategy* rpg(PlayerbotAI* ai) { return new RpgStrategy(ai); }
+        static Strategy* rpg_quest(PlayerbotAI* ai) { return new RpgQuestStrategy(ai); }
+        static Strategy* rpg_vendor(PlayerbotAI* ai) { return new RpgVendorStrategy(ai); }
+        static Strategy* rpg_explore(PlayerbotAI* ai) { return new RpgExploreStrategy(ai); }
+        static Strategy* rpg_maintenance(PlayerbotAI* ai) { return new RpgMaintenanceStrategy(ai); }
+        static Strategy* rpg_guild(PlayerbotAI* ai) { return new RpgGuildStrategy(ai); }
+        static Strategy* rpg_bg(PlayerbotAI* ai) { return new RpgBgStrategy(ai); }
+        static Strategy* rpg_player(PlayerbotAI* ai) { return new RpgPlayerStrategy(ai); }
+        static Strategy* rpg_craft(PlayerbotAI* ai) { return new RpgCraftStrategy(ai); }
+		static Strategy* travel(PlayerbotAI* ai) { return new TravelStrategy(ai); }
+        static Strategy* explore(PlayerbotAI* ai) { return new ExploreStrategy(ai); }
+        static Strategy* map(PlayerbotAI* ai) { return new MapStrategy(ai); }
+        static Strategy* map_full(PlayerbotAI* ai) { return new MapFullStrategy(ai); }
         static Strategy* sit(PlayerbotAI* ai) { return new SitStrategy(ai); }
+        static Strategy* possible_ads(PlayerbotAI* ai) { return new PossibleAdsStrategy(ai); }
+        static Strategy* attack_tagged(PlayerbotAI* ai) { return new AttackTaggedStrategy(ai); }
+        static Strategy* debug(PlayerbotAI* ai) { return new DebugStrategy(ai); }
+        static Strategy* debug_action(PlayerbotAI* ai) { return new DebugActionStrategy(ai); }
+        static Strategy* debug_move(PlayerbotAI* ai) { return new DebugMoveStrategy(ai); }
+        static Strategy* debug_rpg(PlayerbotAI* ai) { return new DebugRpgStrategy(ai); }
+        static Strategy* debug_spell(PlayerbotAI* ai) { return new DebugSpellStrategy(ai); }
+        static Strategy* debug_travel(PlayerbotAI* ai) { return new DebugTravelStrategy(ai); }
+        static Strategy* rtsc(PlayerbotAI* ai) { return new RTSCStrategy(ai); }
+        static Strategy* maintenance(PlayerbotAI* ai) { return new MaintenanceStrategy(ai); }
+        static Strategy* group(PlayerbotAI* ai) { return new GroupStrategy(ai); }
+        static Strategy* guild (PlayerbotAI* ai) { return new GuildStrategy(ai); }
+        static Strategy* grind(PlayerbotAI* ai) { return new GrindingStrategy(ai); }
+        static Strategy* avoid_aoe(PlayerbotAI* ai) { return new AvoidAoeStrategy(ai); }
+        static Strategy* wait_for_attack(PlayerbotAI* ai) { return new WaitForAttackStrategy(ai); }
     };
 
     class MovementStrategyContext : public NamedObjectContext<Strategy>
@@ -120,14 +214,14 @@ namespace ai
         AssistStrategyContext() : NamedObjectContext<Strategy>(false, true)
         {
             creators["dps assist"] = &AssistStrategyContext::dps_assist;
-            creators["tank aoe"] = &AssistStrategyContext::tank_aoe;
-            creators["grind"] = &AssistStrategyContext::grind;
+            creators["dps aoe"] = &AssistStrategyContext::dps_aoe;
+            creators["tank assist"] = &AssistStrategyContext::tank_assist;
         }
 
     private:
         static Strategy* dps_assist(PlayerbotAI* ai) { return new DpsAssistStrategy(ai); }
-        static Strategy* tank_aoe(PlayerbotAI* ai) { return new TankAoeStrategy(ai); }
-        static Strategy* grind(PlayerbotAI* ai) { return new GrindingStrategy(ai); }
+        static Strategy* dps_aoe(PlayerbotAI* ai) { return new DpsAoeStrategy(ai); }
+        static Strategy* tank_assist(PlayerbotAI* ai) { return new TankAssistStrategy(ai); }
     };
 
     class QuestStrategyContext : public NamedObjectContext<Strategy>

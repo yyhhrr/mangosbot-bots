@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../Strategy.h"
-#include "../generic/RangedCombatStrategy.h"
+#include "../generic/CombatStrategy.h"
 
 namespace ai
 {
-    class GenericMageStrategy : public RangedCombatStrategy
+    class GenericMageStrategy : public CombatStrategy
     {
     public:
         GenericMageStrategy(PlayerbotAI* ai);
@@ -18,10 +18,30 @@ namespace ai
     class MageCureStrategy : public Strategy
     {
     public:
-        MageCureStrategy(PlayerbotAI* ai) : Strategy(ai) {}
+        MageCureStrategy(PlayerbotAI* ai);
 
     public:
         virtual void InitTriggers(std::list<TriggerNode*> &triggers);
         virtual string getName() { return "cure"; }
+    };
+
+    class MageBoostStrategy : public Strategy
+    {
+    public:
+        MageBoostStrategy(PlayerbotAI* ai) : Strategy(ai) {}
+
+    public:
+        virtual void InitTriggers(std::list<TriggerNode*> &triggers);
+        virtual string getName() { return "boost"; }
+    };
+
+    class MageCcStrategy : public Strategy
+    {
+    public:
+        MageCcStrategy(PlayerbotAI* ai) : Strategy(ai) {}
+
+    public:
+        virtual void InitTriggers(std::list<TriggerNode*> &triggers);
+        virtual string getName() { return "cc"; }
     };
 }

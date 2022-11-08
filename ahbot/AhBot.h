@@ -44,7 +44,7 @@ namespace ahbot
 
         double GetCategoryMultiplier(string category)
         {
-            return categoryMultipliers[category];
+            return categoryMultipliers[category] ? categoryMultipliers[category] : 1;
         }
 
         int32 GetSellPrice(const ItemPrototype* proto);
@@ -77,6 +77,8 @@ namespace ahbot
         uint32 GetSellTime(uint32 itemId, uint32 auctionHouse, Category*& category);
         void CheckSendMail(uint32 bidder, uint32 price, AuctionEntry *entry);
         void Dump();
+        void CleanupPropositions();
+        void DeleteMail(list<uint32> buffer);
 
     public:
         static uint32 auctionIds[MAX_AUCTIONS];
@@ -88,6 +90,7 @@ namespace ahbot
         time_t nextAICheckTime;
         map<string, double> categoryMultipliers;
         map<string, uint32> categoryMaxAuctionCount;
+        map<string, uint32> categoryMaxItemAuctionCount;
         map<string, uint64> categoryMultiplierExpireTimes;
         map<uint32, vector<uint32> > bidders;
         set<uint32> allBidders;

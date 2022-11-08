@@ -24,10 +24,6 @@ void HealDruidStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
     GenericDruidStrategy::InitTriggers(triggers);
 
     triggers.push_back(new TriggerNode(
-        "enemy out of spell",
-        NextAction::array(0, new NextAction("reach spell", ACTION_NORMAL + 9), NULL)));
-
-    triggers.push_back(new TriggerNode(
         "tree form",
         NextAction::array(0, new NextAction("tree form", ACTION_HIGH + 1), NULL)));
 
@@ -52,6 +48,6 @@ void HealDruidStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
         NextAction::array(0, new NextAction("tranquility", ACTION_MEDIUM_HEAL + 3), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "entangling roots",
-        NextAction::array(0, new NextAction("entangling roots on cc", ACTION_HIGH + 1), NULL)));
+        "party member to heal out of spell range",
+        NextAction::array(0, new NextAction("reach party member to heal", ACTION_EMERGENCY + 1), NULL)));
 }

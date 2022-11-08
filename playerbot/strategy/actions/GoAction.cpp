@@ -5,13 +5,16 @@
 #include "../../ServerFacade.h"
 #include "../values/Formations.h"
 #include "../values/PositionValue.h"
+#include "TravelMgr.h"
+#include "MotionGenerators/PathFinder.h"
+#include "ChooseTravelTargetAction.h"
 
 using namespace ai;
 
-vector<string> split(const string &s, char delim);
-char *strstri(const char *haystack, const char *needle);
+vector<string> split(const string& s, char delim);
+char* strstri(const char* haystack, const char* needle);
 
-bool GoAction::Execute(Event event)
+bool GoAction::Execute(Event& event)
 {
     Player* master = GetMaster();
     if (!master)
@@ -27,6 +30,40 @@ bool GoAction::Execute(Event event)
         out << "I am at " << x << "," << y;
         ai->TellMaster(out.str());
         return true;
+    }
+    
+    if (param.find("travel") != string::npos && param.size()> 7)
+    {
+        WorldPosition pos = WorldPosition(bot);
+        WorldPosition* botPos = &pos;
+
+        string destination = param.substr(7);
+
+        TravelTarget* target = context->GetValue<TravelTarget*>("travel target")->Get();
+
+        TravelDestination* dest = ChooseTravelTargetAction::FindDestination(bot, destination);
+        if(dest)
+        {
+            vector <WorldPosition*> points = dest->nextPoint(botPos, true);
+
+            if (points.empty())
+                return false;
+
+            target->setTarget(dest, points.front());
+            target->setForced(true);
+
+            ostringstream out; out << "Traveling to " << dest->getTitle();
+            ai->TellMasterNoFacing(out.str());
+
+            return true;
+        }
+        else
+        {
+            ai->TellMasterNoFacing("Clearing travel target");
+            target->setTarget(sTravelMgr.nullTravelDestination, sTravelMgr.nullWorldPosition);
+            target->setForced(false);
+            return true;
+        }
     }
 
     list<ObjectGuid> gos = ChatHelper::parseGameobjects(param);
@@ -67,6 +104,64 @@ bool GoAction::Execute(Event event)
         }
     }
 
+    if (param.find(";") != string::npos)
+    {
+        vector<string> coords = split(param, ';');
+        float x = atof(coords[0].c_str());
+        float y = atof(coords[1].c_str());
+        float z;
+        if (coords.size() > 2)
+            z = atof(coords[2].c_str());
+        else
+            z = bot->GetPositionZ();
+
+        if (ai->HasStrategy("debug move", BotState::BOT_STATE_NON_COMBAT))
+        {
+            
+            PathFinder path(bot);
+
+            path.calculate(x, y, z, false);
+
+            Vector3 end = path.getEndPosition();
+            Vector3 aend = path.getActualEndPosition();
+
+            PointsArray& points = path.getPath();
+            PathType type = path.getPathType();
+
+            ostringstream out;
+
+            out << x << ";" << y << ";" << z << " =";
+
+            out << "path is: ";
+
+            out << type;
+
+            out << " of length ";
+
+            out << points.size();
+
+            out << " with offset ";
+
+            out << (end - aend).length();
+
+
+            for (auto i : points)
+            {
+                CreateWp(bot, i.x, i.y, i.z, 0.0, 11144);
+            }
+
+            ai->TellMaster(out);            
+        }
+
+        if (bot->IsWithinLOS(x, y, z, true))
+            return MoveNear(bot->GetMapId(), x, y, z, 0);
+        else
+            return MoveTo(bot->GetMapId(), x, y, z, false, false);    
+
+        return true;
+    }
+
+
     if (param.find(",") != string::npos)
     {
         vector<string> coords = split(param, ',');
@@ -80,14 +175,14 @@ bool GoAction::Execute(Event event)
 
         if (sServerFacade.IsDistanceGreaterThan(sServerFacade.GetDistance2d(bot, x, y), sPlayerbotAIConfig.reactDistance))
         {
-            ai->TellMaster("It is too far away");
+            ai->TellMaster(BOT_TEXT("error_far"));
             return false;
         }
 
         const TerrainInfo* terrain = map->GetTerrain();
         if (terrain->IsUnderWater(x, y, z) || terrain->IsInWater(x, y, z))
         {
-            ai->TellError("It is under water");
+            ai->TellError(BOT_TEXT("error_water"));
             return false;
         }
 
@@ -98,7 +193,7 @@ bool GoAction::Execute(Event event)
 #endif
         if (ground <= INVALID_HEIGHT)
         {
-            ai->TellError("I can't go there");
+            ai->TellError(BOT_TEXT("error_cant_go"));
             return false;
         }
 
@@ -109,12 +204,12 @@ bool GoAction::Execute(Event event)
         return MoveNear(bot->GetMapId(), x, y, z + 0.5f, sPlayerbotAIConfig.followDistance);
     }
 
-    ai::Position pos = context->GetValue<ai::PositionMap&>("position")->Get()[param];
+    ai::PositionEntry pos = context->GetValue<ai::PositionMap&>("position")->Get()[param];
     if (pos.isSet())
     {
         if (sServerFacade.IsDistanceGreaterThan(sServerFacade.GetDistance2d(bot, pos.x, pos.y), sPlayerbotAIConfig.reactDistance))
         {
-            ai->TellError("It is too far away");
+            ai->TellError(BOT_TEXT("error_far"));
             return false;
         }
 

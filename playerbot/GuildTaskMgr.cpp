@@ -52,9 +52,9 @@ void GuildTaskMgr::Update(Player* player, Player* guildMaster)
         return;
 
 	Guild *guild = sGuildMgr.GetGuildById(guildMaster->GetGuildId());
-    DenyReason reason = PLAYERBOT_DENY_NONE;
+    DenyReason reason = DenyReason::PLAYERBOT_DENY_NONE;
     PlayerbotSecurityLevel secLevel = guildMaster->GetPlayerbotAI()->GetSecurity()->LevelFor(player, &reason);
-    if (secLevel == PLAYERBOT_SECURITY_DENY_ALL || (secLevel == PLAYERBOT_SECURITY_TALK && reason != PLAYERBOT_DENY_FAR))
+    if (secLevel == PlayerbotSecurityLevel::PLAYERBOT_SECURITY_DENY_ALL || (secLevel == PlayerbotSecurityLevel::PLAYERBOT_SECURITY_TALK && reason != DenyReason::PLAYERBOT_DENY_FAR))
     {
         sLog.outDebug("%s / %s: skipping guild task update - not enough security level, reason = %u",
 			guild->GetName().c_str(), player->GetName(), reason);
@@ -118,7 +118,7 @@ void GuildTaskMgr::Update(Player* player, Player* guildMaster)
     {
         sLog.outDebug("%s / %s: sending thanks",
 				guild->GetName().c_str(), player->GetName());
-        if (SendThanks(owner, guildId))
+        if (SendThanks(owner, guildId, GetTaskValue(owner, guildId, "payment")))
         {
             SetTaskValue(owner, guildId, "thanks", 1, 2 * sPlayerbotAIConfig.maxGuildTaskChangeTime);
             SetTaskValue(owner, guildId, "payment", 0, 0);
@@ -164,10 +164,10 @@ uint32 GuildTaskMgr::CreateTask(uint32 owner, uint32 guildId)
 bool GuildTaskMgr::CreateItemTask(uint32 owner, uint32 guildId)
 {
     Player* player = sObjectMgr.GetPlayer(ObjectGuid(HIGHGUID_PLAYER, owner));
-    if (!player || player->getLevel() < 5)
+    if (!player || player->GetLevel() < 5)
         return false;
 
-    uint32 itemId = sRandomItemMgr.GetRandomItem(player->getLevel() - 5, RANDOM_ITEM_GUILD_TASK);
+    uint32 itemId = sRandomItemMgr.GetRandomItem(player->GetLevel() - 5, RANDOM_ITEM_GUILD_TASK);
     if (!itemId)
     {
         sLog.outError( "%s / %s: no items avaible for item task",
@@ -203,7 +203,7 @@ bool GuildTaskMgr::CreateKillTask(uint32 owner, uint32 guildId)
         if (co->Rank != rank)
             continue;
 
-        if (co->MaxLevel > player->getLevel() + 4 || co->MinLevel < player->getLevel() - 3)
+        if (co->MaxLevel > player->GetLevel() + 4 || co->MinLevel < player->GetLevel() - 3)
             continue;
 
         if (strstr(co->Name, "UNUSED"))
@@ -386,7 +386,7 @@ bool GuildTaskMgr::SendKillAdvertisement(uint32 creatureId, uint32 owner, uint32
     return true;
 }
 
-bool GuildTaskMgr::SendThanks(uint32 owner, uint32 guildId)
+bool GuildTaskMgr::SendThanks(uint32 owner, uint32 guildId, uint32 payment)
 {
     Guild *guild = sGuildMgr.GetGuildById(guildId);
     if (!guild)
@@ -418,7 +418,7 @@ bool GuildTaskMgr::SendThanks(uint32 owner, uint32 guildId)
         body << leader->GetName() << "\n";
 
         MailDraft("Thank You", body.str()).
-                SetMoney(GetTaskValue(owner, guildId, "payment")).
+                SetMoney(payment).
                 SendMailTo(MailReceiver(ObjectGuid(HIGHGUID_PLAYER, owner)), MailSender(leader));
 
         Player* player = sObjectMgr.GetPlayer(ObjectGuid(HIGHGUID_PLAYER, owner));
@@ -773,6 +773,11 @@ bool GuildTaskMgr::HandleConsoleCommand(ChatHandler* handler, char const* args)
 
 bool GuildTaskMgr::CheckItemTask(uint32 itemId, uint32 obtained, Player* ownerPlayer, Player* bot, bool byMail)
 {
+    if (!sPlayerbotAIConfig.guildTaskEnabled)
+    {
+        return false;
+    }
+
     if (!bot) return false;
     uint32 guildId = bot->GetGuildId();
     if (!guildId)
@@ -858,6 +863,8 @@ bool GuildTaskMgr::Reward(uint32 owner, uint32 guildId)
     body << GetHelloText(owner);
 
     RandomItemType rewardType;
+    uint32 itemId = 0;
+    uint32 itemCount = 1;
     if (itemTask)
     {
         ItemPrototype const* proto = sObjectMgr.GetItemPrototype(itemTask);
@@ -870,6 +877,7 @@ bool GuildTaskMgr::Reward(uint32 owner, uint32 guildId)
         body << guild->GetName() << "\n";
         body << leader->GetName() << "\n";
         rewardType = proto->Quality > ITEM_QUALITY_NORMAL ? RANDOM_ITEM_GUILD_TASK_REWARD_EQUIP_BLUE : RANDOM_ITEM_GUILD_TASK_REWARD_EQUIP_GREEN;
+        itemId = sRandomItemMgr.GetRandomItem(player->GetLevel() - 5, rewardType);
     }
     else if (killTask)
     {
@@ -882,21 +890,33 @@ bool GuildTaskMgr::Reward(uint32 owner, uint32 guildId)
         body << "Many thanks,\n";
         body << guild->GetName() << "\n";
         body << leader->GetName() << "\n";
-        rewardType = RANDOM_ITEM_GUILD_TASK_REWARD_TRADE;
+        rewardType = proto->Rank == CREATURE_ELITE_RARE ? RANDOM_ITEM_GUILD_TASK_REWARD_TRADE : RANDOM_ITEM_GUILD_TASK_REWARD_TRADE_RARE;
+        itemId = sRandomItemMgr.GetRandomItem(player->GetLevel(), rewardType);
+        if (itemId)
+        {
+            ItemPrototype const* itemProto = sObjectMgr.GetItemPrototype(itemId);
+            if (proto)
+            {
+                if (itemProto->Quality == ITEM_QUALITY_NORMAL) itemCount = itemProto->GetMaxStackSize();
+                if (proto->Rank != CREATURE_ELITE_RARE && itemProto->Quality > ITEM_QUALITY_NORMAL) itemCount = urand(1, itemProto->GetMaxStackSize());
+            }
+        }
     }
 
     uint32 payment = GetTaskValue(owner, guildId, "payment");
     if (payment)
-        SendThanks(owner, guildId);
+        SendThanks(owner, guildId, payment);
 
     MailDraft draft("Thank You", body.str());
 
-    uint32 itemId = sRandomItemMgr.GetRandomItem(player->getLevel(), rewardType);
     if (itemId)
     {
-        Item* item = Item::CreateItem(itemId, 1, leader);
-        item->SaveToDB();
-        draft.AddItem(item);
+        Item* item = Item::CreateItem(itemId, itemCount);
+        if (item)
+        {
+            item->SaveToDB();
+            draft.AddItem(item);
+        }
     }
 
     draft.SendMailTo(MailReceiver(ObjectGuid(HIGHGUID_PLAYER, owner)), MailSender(leader));
@@ -982,7 +1002,7 @@ void GuildTaskMgr::CheckKillTaskInternal(Player* player, Unit* victim)
 
 void GuildTaskMgr::CleanupAdverts()
 {
-    uint32 deliverTime = time(0) - sPlayerbotAIConfig.maxGuildTaskChangeTime;
+    uint32 deliverTime = time(0) - sPlayerbotAIConfig.minGuildTaskChangeTime;
     QueryResult *result = CharacterDatabase.PQuery("select id, receiver from mail where subject like 'Guild Task%%' and deliver_time <= '%u'", deliverTime);
     if (!result)
         return;
@@ -1123,4 +1143,6 @@ bool GuildTaskMgr::CheckTaskTransfer(string text, Player* ownerPlayer, Player* b
         } while (results->NextRow());
         delete results;
     }
+
+    return true;
 }

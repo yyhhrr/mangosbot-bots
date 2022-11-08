@@ -49,13 +49,15 @@ namespace ai
 	public:
         FormationValue(PlayerbotAI* ai);
         ~FormationValue() { if (value) { delete value; value = NULL; } }
+        virtual string Save();
+        virtual bool Load(string value);
     };
 
     class SetFormationAction : public Action
     {
     public:
         SetFormationAction(PlayerbotAI* ai) : Action(ai, "set formation") {}
-        virtual bool Execute(Event event);
+        virtual bool Execute(Event& event);
     };
 };
 

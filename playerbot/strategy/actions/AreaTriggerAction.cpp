@@ -6,9 +6,13 @@
 
 using namespace ai;
 
-bool ReachAreaTriggerAction::Execute(Event event)
+bool ReachAreaTriggerAction::Execute(Event& event)
 {
     uint32 triggerId;
+
+    if (ai->IsRealPlayer()) //Do not trigger own area trigger.
+        return false;
+
     WorldPacket p(event.getPacket());
     p.rpos(0);
     p >> triggerId;
@@ -28,19 +32,18 @@ bool ReachAreaTriggerAction::Execute(Event event)
         return true;
     }
 
-    if (bot->GetMapId() != atEntry->mapid || bot->GetDistance(atEntry->x, atEntry->y, atEntry->z) > sPlayerbotAIConfig.sightDistance)
+    if (bot->GetMapId() != atEntry->mapid || sqrt(bot->GetDistance(atEntry->x, atEntry->y, atEntry->z)) > sPlayerbotAIConfig.sightDistance)
     {
         ai->TellError("I won't follow: too far away");
         return true;
     }
 
     MotionMaster &mm = *bot->GetMotionMaster();
-    mm.Clear();
-	mm.MovePoint(atEntry->mapid, atEntry->x, atEntry->y, atEntry->z);
-    float distance = bot->GetDistance(atEntry->x, atEntry->y, atEntry->z);
-    float delay = 1000.0f * distance / bot->GetSpeed(MOVE_RUN) + sPlayerbotAIConfig.reactDelay;
+	mm.MovePoint(atEntry->mapid, atEntry->x, atEntry->y, atEntry->z, FORCED_MOVEMENT_RUN);
+    const float distance = sqrt(bot->GetDistance(atEntry->x, atEntry->y, atEntry->z));
+    const float duration = 1000.0f * distance / bot->GetSpeed(MOVE_RUN) + sPlayerbotAIConfig.reactDelay;
     ai->TellError("Wait for me");
-    ai->SetNextCheckDelay(delay);
+    SetDuration(duration);
     context->GetValue<LastMovement&>("last area trigger")->Get().lastAreaTrigger = triggerId;
 
     return true;
@@ -48,7 +51,7 @@ bool ReachAreaTriggerAction::Execute(Event event)
 
 
 
-bool AreaTriggerAction::Execute(Event event)
+bool AreaTriggerAction::Execute(Event& event)
 {
     LastMovement& movement = context->GetValue<LastMovement&>("last area trigger")->Get();
 
@@ -67,7 +70,5 @@ bool AreaTriggerAction::Execute(Event event)
     p << triggerId;
     p.rpos(0);
     bot->GetSession()->HandleAreaTriggerOpcode(p);
-
-    ai->TellMaster("Hello");
     return true;
 }

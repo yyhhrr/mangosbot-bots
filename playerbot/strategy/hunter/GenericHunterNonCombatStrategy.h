@@ -14,4 +14,14 @@ namespace ai
         virtual void InitTriggers(std::list<TriggerNode*> &triggers);
     };
 
+    class HunterPetStrategy : public NonCombatStrategy
+    {
+    public:
+        HunterPetStrategy(PlayerbotAI* ai) : NonCombatStrategy(ai) {}
+        virtual string getName() { return "pet"; }
+
+    public:
+        virtual void InitTriggers(std::list<TriggerNode*> &triggers);
+    };
+
 }

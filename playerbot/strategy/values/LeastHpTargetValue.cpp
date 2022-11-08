@@ -1,15 +1,16 @@
 #include "botpch.h"
 #include "../../playerbot.h"
 #include "LeastHpTargetValue.h"
+#include "AttackersValue.h"
 #include "TargetValue.h"
 
 using namespace ai;
 using namespace std;
 
-class FindLeastHpTargetStrategy : public FindTargetStrategy
+class FindLeastHpTargetStrategy : public FindNonCcTargetStrategy
 {
 public:
-    FindLeastHpTargetStrategy(PlayerbotAI* ai) : FindTargetStrategy(ai)
+    FindLeastHpTargetStrategy(PlayerbotAI* ai) : FindNonCcTargetStrategy(ai)
     {
         minHealth = 0;
     }
@@ -17,13 +18,8 @@ public:
 public:
     virtual void CheckAttacker(Unit* attacker, ThreatManager* threatManager)
     {
-        Group* group = ai->GetBot()->GetGroup();
-        if (group)
-        {
-            uint64 guid = group->GetTargetIcon(4);
-            if (guid && attacker->GetObjectGuid() == ObjectGuid(guid))
-                return;
-        }
+        Player* bot = ai->GetBot();
+        if (IsCcTarget(attacker)) return;
 
         if (!result || result->GetHealth() > attacker->GetHealth())
             result = attacker;

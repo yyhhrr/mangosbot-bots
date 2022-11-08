@@ -2,92 +2,82 @@
 
 #include "../Action.h"
 #include "AttackAction.h"
+#include "../../ServerFacade.h"
+#include "../../playerbot.h"
+#include "../../TravelMgr.h"
+#include "../../LootObjectStack.h"
+#include "ChooseRpgTargetAction.h"
 
 namespace ai
 {
+    class DpsAoeAction : public AttackAction
+    {
+    public:
+        DpsAoeAction(PlayerbotAI* ai) : AttackAction(ai, "dps aoe") {}
+        string GetTargetName() override { return "dps aoe target"; }
+    };
+
     class DpsAssistAction : public AttackAction
     {
     public:
         DpsAssistAction(PlayerbotAI* ai) : AttackAction(ai, "dps assist") {}
-
-        virtual string GetTargetName() { return "dps target"; }
+        string GetTargetName() override { return "dps target"; } 
+        bool isUseful() override;
     };
 
     class TankAssistAction : public AttackAction
     {
     public:
         TankAssistAction(PlayerbotAI* ai) : AttackAction(ai, "tank assist") {}
-        virtual string GetTargetName() { return "tank target"; }
+        string GetTargetName() override { return "tank target"; }
     };
 
     class AttackAnythingAction : public AttackAction
     {
+    private:   
     public:
         AttackAnythingAction(PlayerbotAI* ai) : AttackAction(ai, "attack anything") {}
-        virtual string GetTargetName() { return "grind target"; }
-        virtual bool Execute(Event event)
-        {
-            return AttackAction::Execute(event);
-        }
-        virtual bool isUseful() {
-            return GetTarget() &&
-            /*    (!AI_VALUE(list<ObjectGuid>, "nearest non bot players").empty() &&
-                    AI_VALUE2(uint8, "health", "self target") > sPlayerbotAIConfig.mediumHealth &&
-                    (!AI_VALUE2(uint8, "mana", "self target") || AI_VALUE2(uint8, "mana", "self target") > sPlayerbotAIConfig.mediumMana)
-                ) || AI_VALUE2(bool, "combat", "self target")
-*/
-                  ((!AI_VALUE(list<ObjectGuid>, "nearest non bot players").empty() &&
-                    (AI_VALUE2(uint8, "health", "self target") > sPlayerbotAIConfig.mediumHealth &&
-                    (!AI_VALUE2(uint8, "mana", "self target") || AI_VALUE2(uint8, "mana", "self target") > sPlayerbotAIConfig.mediumMana))) || AI_VALUE2(bool, "combat", "self target"))
-                ;
-        }
-        virtual bool isPossible()
-        {
-            return AttackAction::isPossible() && GetTarget();
-        }
+        string GetTargetName() override { return "grind target"; }
+
+        bool isUseful() override;
+        bool isPossible() override;
+        bool Execute(Event& event) override;
     };
 
     class AttackLeastHpTargetAction : public AttackAction
     {
     public:
         AttackLeastHpTargetAction(PlayerbotAI* ai) : AttackAction(ai, "attack least hp target") {}
-        virtual string GetTargetName() { return "least hp target"; }
+        string GetTargetName() override { return "least hp target"; }
     };
 
     class AttackEnemyPlayerAction : public AttackAction
     {
     public:
         AttackEnemyPlayerAction(PlayerbotAI* ai) : AttackAction(ai, "attack enemy player") {}
-        virtual string GetTargetName() { return "enemy player target"; }
+        string GetTargetName() override { return "enemy player target"; }
+        bool isUseful() override;
     };
 
     class AttackRtiTargetAction : public AttackAction
     {
     public:
         AttackRtiTargetAction(PlayerbotAI* ai) : AttackAction(ai, "attack rti target") {}
-        virtual string GetTargetName() { return "rti target"; }
+        string GetTargetName() override { return "rti target"; }
     };
 
-    class DropTargetAction : public Action
+    class AttackEnemyFlagCarrierAction : public AttackAction
     {
     public:
-        DropTargetAction(PlayerbotAI* ai) : Action(ai, "drop target") {}
-
-        virtual bool Execute(Event event)
-        {
-            context->GetValue<Unit*>("current target")->Set(NULL);
-            bot->SetSelectionGuid(ObjectGuid());
-            ai->ChangeEngine(BOT_STATE_NON_COMBAT);
-            ai->InterruptSpell();
-            if (!urand(0, 200))
-            {
-                vector<uint32> sounds;
-                sounds.push_back(TEXTEMOTE_CHEER);
-                sounds.push_back(TEXTEMOTE_CONGRATULATE);
-                ai->PlaySound(sounds[urand(0, sounds.size() - 1)]);
-            }
-			return true;
-        }
+        AttackEnemyFlagCarrierAction(PlayerbotAI* ai) : AttackAction(ai, "attack enemy flag carrier") {}
+        string GetTargetName() override { return "enemy flag carrier"; }
+        bool isUseful() override;
     };
 
+    class SelectNewTargetAction : public Action
+    {
+    public:
+        SelectNewTargetAction(PlayerbotAI* ai) : Action(ai, "select new target") {}
+        bool Execute(Event& event) override;
+    };
 }

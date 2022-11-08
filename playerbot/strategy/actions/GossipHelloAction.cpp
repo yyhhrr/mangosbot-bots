@@ -6,7 +6,7 @@
 
 using namespace ai;
 
-bool GossipHelloAction::Execute(Event event)
+bool GossipHelloAction::Execute(Event& event)
 {
 	ObjectGuid guid;
 
@@ -51,7 +51,7 @@ bool GossipHelloAction::Execute(Event event)
 
         TellGossipMenus();
 	}
-	else if (!bot->PlayerTalkClass)
+	else if (!bot->GetPlayerMenu())
 	{
 	    ai->TellError("I need to talk first");
 	    return false;
@@ -87,18 +87,18 @@ void GossipHelloAction::TellGossipText(uint32 textId)
 
 void GossipHelloAction::TellGossipMenus()
 {
-    if (!bot->PlayerTalkClass)
+    if (!bot->GetPlayerMenu())
         return;
 
     Creature *pCreature = bot->GetNPCIfCanInteractWith(GetMaster()->GetSelectionGuid(), UNIT_NPC_FLAG_NONE);
-    GossipMenu& menu = bot->PlayerTalkClass->GetGossipMenu();
+    GossipMenu& menu = bot->GetPlayerMenu()->GetGossipMenu();
     if (pCreature)
     {
         uint32 textId = bot->GetGossipTextId(menu.GetMenuId(), pCreature);
         TellGossipText(textId);
     }
 
-    for (int i = 0; i < menu.MenuItemCount(); i++)
+    for (unsigned int i = 0; i < menu.MenuItemCount(); i++)
     {
         GossipMenuItem const& item = menu.GetItem(i);
         ostringstream out; out << "[" << (i+1) << "] " << item.m_gMessage;
@@ -109,8 +109,8 @@ void GossipHelloAction::TellGossipMenus()
 
 bool GossipHelloAction::ProcessGossip(int menuToSelect)
 {
-    GossipMenu& menu = bot->PlayerTalkClass->GetGossipMenu();
-    if (menuToSelect != -1 && menuToSelect >= menu.MenuItemCount())
+    GossipMenu& menu = bot->GetPlayerMenu()->GetGossipMenu();
+    if (menuToSelect >= 0 && (unsigned int)menuToSelect >= menu.MenuItemCount())
     {
         ai->TellError("Unknown gossip option");
         return false;
@@ -121,12 +121,12 @@ bool GossipHelloAction::ProcessGossip(int menuToSelect)
     p << GetMaster()->GetSelectionGuid();
 #ifdef MANGOSBOT_ZERO
     p << menuToSelect;
-#endif
-#ifdef MANGOSBOT_ONE
+#else
     p << menu.GetMenuId() << menuToSelect;
 #endif
     p << code;
     bot->GetSession()->HandleGossipSelectOptionOpcode(p);
 
     TellGossipMenus();
+    return true;
 }

@@ -14,7 +14,8 @@ class TellMailProcessor : public MailProcessor
 public:
     virtual bool Before(PlayerbotAI* ai)
     {
-        ai->TellMaster("=== Mailbox ===");
+        ai->TellMaster("=== Mailbox ===", PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+        tells.clear();
         return true;
     }
     virtual bool Process(int index, Mail* mail, PlayerbotAI* ai)
@@ -48,11 +49,22 @@ public:
             }
         }
         out  << ", |cff00ff00" << days << " day(s)";
-        ai->TellMaster(out.str());
+        tells.push_front(out.str());
+        return true;
+    }
+
+    virtual bool After(PlayerbotAI* ai)
+    {
+        for (list<string>::iterator i = tells.begin(); i != tells.end(); ++i)
+            ai->TellMaster(*i, PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+
         return true;
     }
 
     static TellMailProcessor instance;
+
+private:
+    list<string> tells;
 };
 
 class TakeMailProcessor : public MailProcessor
@@ -72,7 +84,7 @@ public:
         {
             ostringstream out;
             out << mail->subject << ", |cffffff00" << ChatHelper::formatMoney(mail->money) << "|cff00ff00 processed";
-            ai->TellMaster(out.str());
+            ai->TellMaster(out.str(), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
 
             WorldPacket packet;
             packet << mailbox;
@@ -95,7 +107,7 @@ public:
                 WorldPacket packet;
                 packet << mailbox;
                 packet << mail->messageID;
-#ifdef MANGOSBOT_ONE
+#ifndef MANGOSBOT_ZERO
                 packet << *i;
 #endif
                 Item* item = bot->GetMItem(*i);
@@ -103,7 +115,7 @@ public:
                 out << mail->subject << ", " << ChatHelper::formatItem(item->GetProto()) << "|cff00ff00 processed";
 
                 bot->GetSession()->HandleMailTakeItem(packet);
-                ai->TellMaster(out.str());
+                ai->TellMaster(out.str(), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
             }
 
             RemoveMail(bot, mail->messageID, mailbox);
@@ -146,7 +158,7 @@ public:
         ostringstream out;
         out << "|cffffffff" << mail->subject << "|cffff0000 deleted";
         RemoveMail(ai->GetBot(), mail->messageID, FindMailbox(ai));
-        ai->TellMaster(out.str());
+        ai->TellMaster(out.str(), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
         return true;
     }
 
@@ -160,14 +172,14 @@ public:
     {
         ostringstream out, body;
         out << "|cffffffff" << mail->subject;
-        ai->TellMaster(out.str());
+        ai->TellMaster(out.str(), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
 #ifdef MANGOSBOT_TWO
 
 #else
         if (mail->itemTextId)
         {
             body << "\n" << sObjectMgr.GetItemText(mail->itemTextId);
-            ai->TellMaster(body.str());
+            ai->TellMaster(body.str(), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
         }
 #endif
         return true;
@@ -180,10 +192,10 @@ TakeMailProcessor TakeMailProcessor::instance;
 DeleteMailProcessor DeleteMailProcessor::instance;
 ReadMailProcessor ReadMailProcessor::instance;
 
-bool MailAction::Execute(Event event)
+bool MailAction::Execute(Event& event)
 {
     Player* master = GetMaster();
-    if (!master)
+    if (!master && event.getSource() != "rpg action")
         return false;
 
     if (!MailProcessor::FindMailbox(ai))
@@ -247,7 +259,7 @@ void MailProcessor::RemoveMail(Player* bot, uint32 id, ObjectGuid mailbox)
     WorldPacket packet;
     packet << mailbox;
     packet << id;
-#ifdef MANGOSBOT_ONE
+#ifndef MANGOSBOT_ZERO
     packet << (uint32)0; //mailTemplateId
 #endif
     bot->GetSession()->HandleMailDelete(packet);

@@ -13,17 +13,15 @@ namespace ai
         DelayAction(PlayerbotAI* ai) : Action(ai, "delay")
         {}
 
-        virtual bool Execute(Event event)
+        virtual bool Execute(Event& event)
         {
-            if (!sRandomPlayerbotMgr.IsRandomBot(bot) || bot->GetGroup() || ai->GetMaster())
-                return false;
-
-            if (sServerFacade.IsInCombat(bot))
-                return true;
-
-            ai->SetNextCheckDelay(sPlayerbotAIConfig.passiveDelay + sPlayerbotAIConfig.globalCoolDown);
+            SetDuration(sPlayerbotAIConfig.passiveDelay + sPlayerbotAIConfig.globalCoolDown);
             return true;
         }
-    };
 
+        virtual bool isUseful()
+        {
+            return !ai->AllowActivity(ALL_ACTIVITY);
+        }
+    };
 }

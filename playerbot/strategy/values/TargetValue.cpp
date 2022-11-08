@@ -3,7 +3,9 @@
 #include "TargetValue.h"
 
 #include "../../ServerFacade.h"
+#include "RtiTargetValue.h"
 #include "Unit.h"
+#include "LastMovementValue.h"
 
 using namespace ai;
 
@@ -21,6 +23,43 @@ Unit* TargetValue::FindTarget(FindTargetStrategy* strategy)
     }
 
     return strategy->GetResult();
+}
+
+bool FindNonCcTargetStrategy::IsCcTarget(Unit* attacker)
+{
+    Group* group = ai->GetBot()->GetGroup();
+    if (group)
+    {
+        Group::MemberSlotList const& groupSlot = group->GetMemberSlots();
+        for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++)
+        {
+            Player *member = sObjectMgr.GetPlayer(itr->guid);
+            if (!member || !sServerFacade.IsAlive(member))
+                continue;
+
+            PlayerbotAI *ai = member->GetPlayerbotAI();
+            if (ai)
+            {
+                if (ai->GetAiObjectContext()->GetValue<Unit*>("rti cc target")->Get() == attacker)
+                    return true;
+
+                string rti = ai->GetAiObjectContext()->GetValue<string>("rti cc")->Get();
+                int index = RtiTargetValue::GetRtiIndex(rti);
+                if (index != -1)
+                {
+                    uint64 guid = group->GetTargetIcon(index);
+                    if (guid && attacker->GetObjectGuid() == ObjectGuid(guid))
+                        return true;
+                }
+            }
+        }
+
+        uint64 guid = group->GetTargetIcon(4);
+        if (guid && attacker->GetObjectGuid() == ObjectGuid(guid))
+            return true;
+    }
+
+    return false;
 }
 
 void FindTargetStrategy::GetPlayerCount(Unit* creature, int* tankCount, int* dpsCount)
@@ -56,3 +95,24 @@ void FindTargetStrategy::GetPlayerCount(Unit* creature, int* tankCount, int* dps
     tankCountCache[creature] = *tankCount;
     dpsCountCache[creature] = *dpsCount;
 }
+
+WorldPosition LastLongMoveValue::Calculate()
+{
+    LastMovement& lastMove = *context->GetValue<LastMovement&>("last movement");
+
+    if (lastMove.lastPath.empty())
+        return WorldPosition();
+
+    return lastMove.lastPath.getBack();
+}
+
+
+WorldPosition HomeBindValue::Calculate()
+{
+    float x, y, z;
+    uint32 mapId;
+    bot->GetHomebindLocation(x, y, z, mapId);
+    return WorldPosition(mapId, x, y, z, 0.0);
+}
+
+

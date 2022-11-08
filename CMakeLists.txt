@@ -110,12 +110,40 @@ file(GLOB Playerbot_Warrior ${CMAKE_CURRENT_SOURCE_DIR}/playerbot/strategy/warri
     source_group("Player Bot\\Strategies\\Warrior" FILES ${Playerbot_Warrior})
     LIST(APPEND LIBRARY_SRCS ${Playerbot_Warrior})
 
+#Deathknight AI
+file(GLOB Playerbot_DeathKnight ${CMAKE_CURRENT_SOURCE_DIR}/playerbot/strategy/deathknight/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/playerbot/strategy/deathknight/*.h)
+    source_group("Player Bot\\Strategies\\DeathKnight" FILES ${Playerbot_DeathKnight})
+    LIST(APPEND LIBRARY_SRCS ${Playerbot_DeathKnight})
+
 # Define ENABLE_PLAYERBOTS if need
 if (BUILD_PLAYERBOT)
   add_definitions(-DENABLE_PLAYERBOTS)
 endif()
 if (PLAYERBOTS)
   add_definitions(-DENABLE_PLAYERBOTS)
+endif()
+if (BUILD_IKE3_BOTS)
+  add_definitions(-DENABLE_PLAYERBOTS)
+endif()
+
+# Define Core
+if ( ${CMAKE_PROJECT_NAME} MATCHES "CMaNGOS")
+  add_definitions(-DCMANGOS)
+else()
+  if ( ${CMAKE_PROJECT_NAME} MATCHES "MaNGOS")
+    add_definitions(-DMANGOS)
+  endif()
+endif()
+
+# Define Expansion
+if ( ${CMAKE_PROJECT_NAME} MATCHES "Classic")
+  add_definitions(-DMANGOSBOT_ZERO)
+endif()
+if ( ${CMAKE_PROJECT_NAME} MATCHES "TBC")
+  add_definitions(-DMANGOSBOT_ONE)
+endif()
+if ( ${CMAKE_PROJECT_NAME} MATCHES "WoTLK")
+  add_definitions(-DMANGOSBOT_TWO)
 endif()
 
 # Define ENABLE_IMMERSIVE if need
@@ -174,8 +202,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/game/Weather
     ${CMAKE_SOURCE_DIR}/src/game/World
     ${CMAKE_SOURCE_DIR}/src/game/WorldHandlers
-    ${CMAKE_SOURCE_DIR}/src/game/movement
-    ${CMAKE_SOURCE_DIR}/src/game/vmap
+    ${CMAKE_SOURCE_DIR}/src/game/Movement
+    ${CMAKE_SOURCE_DIR}/src/game/Vmap
     ${CMAKE_SOURCE_DIR}/src/shared
     ${CMAKE_SOURCE_DIR}/src/shared/Auth
     ${CMAKE_SOURCE_DIR}/src/shared/Config

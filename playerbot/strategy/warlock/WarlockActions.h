@@ -4,6 +4,10 @@
 
 namespace ai
 {
+	SNARE_ACTION(CastDeathCoilSnareAction, "death coil");
+	ENEMY_HEALER_ACTION(CastDeathCoilOnHealerAction, "death coil");
+	SPELL_ACTION(CastDeathCoilAction, "death coil");
+	
 	class CastDemonSkinAction : public CastBuffSpellAction {
 	public:
 		CastDemonSkinAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "demon skin") {}
@@ -30,9 +34,13 @@ namespace ai
 		CastDrainSoulAction(PlayerbotAI* ai) : CastSpellAction(ai, "drain soul") {}
 		virtual bool isUseful()
 		{
-			return AI_VALUE2(uint8, "item count", "soul shard") < 2;
+			return AI_VALUE2(uint32, "item count", "soul shard") < uint32(AI_VALUE(uint8, "bag space") * 0.2);
 		}
 	};
+
+	SPELL_ACTION(CastShadowburnAction, "shadowburn");
+	BUFF_ACTION(CastDarkPactAction, "dark pact");
+	BUFF_ACTION(CastSoulShatterAction, "soul shatter");
 
 	class CastDrainManaAction : public CastSpellAction
 	{
@@ -94,6 +102,25 @@ namespace ai
 		CastSummonImpAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "summon imp") {}
 	};
 
+    class CastSummonSuccubusAction : public CastBuffSpellAction
+    {
+    public:
+        CastSummonSuccubusAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "summon succubus") {}
+    };
+
+	class CastSummonFelhunterAction : public CastBuffSpellAction
+	{
+	public:
+		CastSummonFelhunterAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "summon felhunter") {}
+	};
+
+	class CastSummonInfernoAction : public CastSpellAction
+	{
+	public:
+		CastSummonInfernoAction(PlayerbotAI* ai) : CastSpellAction(ai, "inferno") {}
+		virtual bool isPossible() { return true; }
+	};
+
 	class CastCreateHealthstoneAction : public CastBuffSpellAction
 	{
 	public:
@@ -112,12 +139,10 @@ namespace ai
 		CastCreateSpellstoneAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "create spellstone") {}
 	};
 
-    class CastBanishAction : public CastBuffSpellAction
+    class CastBanishAction : public CastCrowdControlSpellAction
     {
     public:
-        CastBanishAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "banish on cc") {}
-        virtual Value<Unit*>* GetTargetValue() { return context->GetValue<Unit*>("cc target", "banish"); }
-        virtual bool Execute(Event event) { return ai->CastSpell("banish", GetTarget()); }
+        CastBanishAction(PlayerbotAI* ai) : CastCrowdControlSpellAction(ai, "banish") {}
     };
 
     class CastSeedOfCorruptionAction : public CastDebuffSpellAction
@@ -138,6 +163,9 @@ namespace ai
         CastShadowfuryAction(PlayerbotAI* ai) : CastSpellAction(ai, "shadowfury") {}
     };
 
+	SNARE_ACTION(CastShadowfurySnareAction, "shadowfury");
+	DEBUFF_ACTION(CastUnstableAfflictionAction, "unstable affliction");
+
     class CastImmolateAction : public CastDebuffSpellAction
     {
     public:
@@ -150,10 +178,10 @@ namespace ai
         CastConflagrateAction(PlayerbotAI* ai) : CastSpellAction(ai, "conflagrate") {}
     };
 
-    class CastIncinirateAction : public CastSpellAction
+    class CastIncinerateAction : public CastSpellAction
     {
     public:
-        CastIncinirateAction(PlayerbotAI* ai) : CastSpellAction(ai, "incinirate") {}
+        CastIncinerateAction(PlayerbotAI* ai) : CastSpellAction(ai, "incinerate") {}
     };
 
     class CastFearAction : public CastDebuffSpellAction
@@ -162,12 +190,10 @@ namespace ai
         CastFearAction(PlayerbotAI* ai) : CastDebuffSpellAction(ai, "fear") {}
     };
 
-    class CastFearOnCcAction : public CastBuffSpellAction
+    class CastFearOnCcAction : public CastCrowdControlSpellAction
     {
     public:
-        CastFearOnCcAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "fear on cc") {}
-        virtual Value<Unit*>* GetTargetValue() { return context->GetValue<Unit*>("cc target", "fear"); }
-        virtual bool Execute(Event event) { return ai->CastSpell("fear", GetTarget()); }
+        CastFearOnCcAction(PlayerbotAI* ai) : CastCrowdControlSpellAction(ai, "fear") {}
     };
 
     class CastLifeTapAction: public CastSpellAction
@@ -178,4 +204,23 @@ namespace ai
         virtual bool isUseful() { return AI_VALUE2(uint8, "health", "self target") > sPlayerbotAIConfig.lowHealth; }
     };
 
+    class CastAmplifyCurseAction : public CastBuffSpellAction
+    {
+    public:
+        CastAmplifyCurseAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "amplify curse") {}
+    };
+
+    class CastSiphonLifeAction : public CastDebuffSpellAction
+    {
+    public:
+        CastSiphonLifeAction(PlayerbotAI* ai) : CastDebuffSpellAction(ai, "siphon life") {}
+    };
+
+    class CastSiphonLifeOnAttackerAction : public CastDebuffSpellOnAttackerAction
+    {
+    public:
+        CastSiphonLifeOnAttackerAction(PlayerbotAI* ai) : CastDebuffSpellOnAttackerAction(ai, "siphon life") {}
+    };
+
+	SPELL_ACTION(CastHowlOfTerrorAction, "howl of terror");
 }

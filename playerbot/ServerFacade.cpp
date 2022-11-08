@@ -15,6 +15,9 @@ ServerFacade::~ServerFacade() {}
 
 float ServerFacade::GetDistance2d(Unit *unit, WorldObject* wo)
 {
+    if (!unit || !wo)
+        return false;
+
     float dist =
 #ifdef MANGOS
     unit->GetDistance2d(wo);
@@ -57,17 +60,16 @@ bool ServerFacade::IsDistanceLessOrEqualThan(float dist1, float dist2)
     return !IsDistanceGreaterThan(dist1, dist2);
 }
 
-void ServerFacade::SetFacingTo(Player* bot, WorldObject* wo, bool force)
+void ServerFacade::SetFacingTo(Unit* unit, float angle, bool force)
 {
-    float angle = bot->GetAngle(wo);
-    MotionMaster &mm = *bot->GetMotionMaster();
-    if (force) mm.Clear();
-    if (!force && isMoving(bot)) bot->SetFacingTo(bot->GetAngle(wo));
+    MotionMaster &mm = *unit->GetMotionMaster();
+    if (!force && !unit->IsStopped()) unit->SetFacingTo(angle);
     else
     {
-        bot->SetOrientation(angle);
-        bot->SendHeartBeat();
+        unit->SetOrientation(angle);
+        unit->SendHeartBeat();
     }
+    //unit->m_movementInfo.RemoveMovementFlag(MovementFlags(MOVEFLAG_SPLINE_ENABLED | MOVEFLAG_FORWARD));
 }
 
 bool ServerFacade::IsFriendlyTo(Unit* bot, Unit* to)
@@ -90,16 +92,44 @@ bool ServerFacade::IsHostileTo(Unit* bot, Unit* to)
 #endif
 }
 
+bool ServerFacade::IsFriendlyTo(WorldObject* bot, Unit* to)
+{
+#ifdef MANGOS
+    return bot->IsFriendlyTo(to);
+#endif
+#ifdef CMANGOS
+    return bot->IsFriend(to);
+#endif
+}
 
-bool ServerFacade::IsSpellReady(Player* bot, uint32 spell)
+bool ServerFacade::IsHostileTo(WorldObject* bot, Unit* to)
+{
+#ifdef MANGOS
+    return bot->IsHostileTo(to);
+#endif
+#ifdef CMANGOS
+    return bot->IsEnemy(to);
+#endif
+}
+
+
+bool ServerFacade::IsSpellReady(Player* bot, uint32 spell, uint32 itemId)
 {
 #ifdef MANGOS
     return !bot->HasSpellCooldown(spell);
 #endif
 #ifdef CMANGOS
-    return bot->IsSpellReady(spell);
+    if (itemId)
+    {
+        const ItemPrototype* proto = sObjectMgr.GetItemPrototype(itemId);
+        return bot->IsSpellReady(spell, proto);
+    }
+    else
+        return bot->IsSpellReady(spell);
 #endif
 }
+
+
 
 bool ServerFacade::IsUnderwater(Unit *unit)
 {
@@ -142,4 +172,14 @@ Unit* ServerFacade::GetChaseTarget(Unit* target)
 #endif
         return NULL;
     }
+}
+
+bool ServerFacade::isMoving(Unit *unit)
+{
+#ifdef MANGOS
+    return unit->m_movementInfo.HasMovementFlag(movementFlagsMask);
+#endif
+#ifdef CMANGOS
+    return unit->IsMoving();
+#endif
 }

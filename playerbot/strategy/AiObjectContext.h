@@ -8,6 +8,12 @@
 
 namespace ai
 {
+    class UntypedValue;
+    template<class T> class Value;
+}
+
+namespace ai
+{
     class AiObjectContext : public PlayerbotAIAware
     {
     public:
@@ -34,10 +40,15 @@ namespace ai
         }
 
         template<class T>
-        Value<T>* GetValue(string name, uint32 param)
+        Value<T>* GetValue(string name, int32 param)
         {
         	ostringstream out; out << param;
             return GetValue<T>(name, out.str());
+        }
+
+        set<string> GetValues()
+        {
+            return valueContexts.GetCreated();
         }
 
         set<string> GetSupportedStrategies()
@@ -45,24 +56,12 @@ namespace ai
             return strategyContexts.supports();
         }
 
-        string FormatValues()
+        set<string> GetSupportedActions()
         {
-            ostringstream out;
-            set<string> names = valueContexts.GetCreated();
-            for (set<string>::iterator i = names.begin(); i != names.end(); ++i, out << "|")
-            {
-                UntypedValue* value = GetUntypedValue(*i);
-                if (!value)
-                    continue;
-
-                string text = value->Format();
-                if (text == "?")
-                    continue;
-
-                out << "{" << *i << "=" << text << "}";
-            }
-            return out.str();
+            return actionContexts.supports();
         }
+
+        string FormatValues(string findName = "");
 
     public:
         virtual void Update();
@@ -71,7 +70,10 @@ namespace ai
         {
             valueContexts.Add(sharedValues);
         }
+        list<string> Save();
+        void Load(list<string> data);
 
+        vector<string> performanceStack;
     protected:
         NamedObjectContextList<Strategy> strategyContexts;
         NamedObjectContextList<Action> actionContexts;

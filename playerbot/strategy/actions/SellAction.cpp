@@ -2,6 +2,7 @@
 #include "../../playerbot.h"
 #include "SellAction.h"
 #include "../ItemVisitors.h"
+#include "../values/ItemUsageValue.h"
 
 using namespace ai;
 
@@ -37,13 +38,27 @@ public:
     }
 };
 
-
-bool SellAction::Execute(Event event)
+class SellVendorItemsVisitor : public SellItemsVisitor
 {
-    Player* master = GetMaster();
-    if (!master)
-        return false;
+public:
+    SellVendorItemsVisitor(SellAction* action, AiObjectContext* con) : SellItemsVisitor(action) { context = con; }
 
+    AiObjectContext* context;
+
+    virtual bool Visit(Item* item)
+    {
+        ItemUsage usage = context->GetValue<ItemUsage>("item usage", item->GetEntry())->Get();
+
+        if (usage != ITEM_USAGE_VENDOR)
+            return true;
+
+        return SellItemsVisitor::Visit(item);
+    }
+};
+
+
+bool SellAction::Execute(Event& event)
+{
     string text = event.getParam();
 
     if (text == "gray" || text == "*")
@@ -53,12 +68,17 @@ bool SellAction::Execute(Event event)
         return true;
     }
 
-    ItemIds ids = chat->parseItems(text);
-
-    for (ItemIds::iterator i =ids.begin(); i != ids.end(); i++)
+    if (text == "vendor")
     {
-        FindItemByIdVisitor visitor(*i);
-        Sell(&visitor);
+        SellVendorItemsVisitor visitor(this, context);
+        IterateItems(&visitor);
+        return true;
+    }
+
+    list<Item*> items = parseItems(text, ITERATE_ITEMS_IN_BAGS);
+    for (list<Item*>::iterator i = items.begin(); i != items.end(); ++i)
+    {
+        Sell(*i);
     }
 
     return true;
@@ -75,24 +95,33 @@ void SellAction::Sell(FindItemVisitor* visitor)
 
 void SellAction::Sell(Item* item)
 {
-    Player* master = GetMaster();
+    ostringstream out;
     list<ObjectGuid> vendors = ai->GetAiObjectContext()->GetValue<list<ObjectGuid> >("nearest npcs")->Get();
-    bool bought = false;
+
     for (list<ObjectGuid>::iterator i = vendors.begin(); i != vendors.end(); ++i)
     {
         ObjectGuid vendorguid = *i;
         Creature *pCreature = bot->GetNPCIfCanInteractWith(vendorguid,UNIT_NPC_FLAG_VENDOR);
         if (!pCreature)
-            continue;
+            continue;     
 
         ObjectGuid itemguid = item->GetObjectGuid();
         uint32 count = item->GetCount();
+
+        uint32 botMoney = bot->GetMoney();
 
         WorldPacket p;
         p << vendorguid << itemguid << count;
         bot->GetSession()->HandleSellItemOpcode(p);
 
-        ostringstream out; out << "Selling " << chat->formatItem(item->GetProto());
-        ai->TellMaster(out);
+        if (ai->HasCheat(BotCheatMask::gold))
+        {
+            bot->SetMoney(botMoney);
+        }
+
+        out << "Selling " << chat->formatItem(item->GetProto());
+        bot->PlayDistanceSound(120);
+        ai->TellMaster(out, PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+        break;
     }
 }

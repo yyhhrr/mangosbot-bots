@@ -1,50 +1,34 @@
 #include "botpch.h"
 #include "../../playerbot.h"
 #include "TankTargetValue.h"
+#include "AttackersValue.h"
 
 using namespace ai;
 
-class FindTargetForTankStrategy : public FindTargetStrategy
+class FindTargetForTankStrategy : public FindNonCcTargetStrategy
 {
 public:
-    FindTargetForTankStrategy(PlayerbotAI* ai) : FindTargetStrategy(ai)
+    FindTargetForTankStrategy(PlayerbotAI* ai) : FindNonCcTargetStrategy(ai)
     {
         minThreat = 0;
-        minTankCount = 0;
-        maxDpsCount = 0;
     }
 
 public:
     virtual void CheckAttacker(Unit* creature, ThreatManager* threatManager)
     {
         Player* bot = ai->GetBot();
-        Group* group = bot->GetGroup();
-        if (group)
-        {
-            uint64 guid = group->GetTargetIcon(4);
-            if (guid && creature->GetObjectGuid() == ObjectGuid(guid))
-                return;
-        }
+        if (IsCcTarget(creature)) return;
 
         float threat = threatManager->getThreat(bot);
-        int tankCount, dpsCount;
-        GetPlayerCount(creature, &tankCount, &dpsCount);
-
-        if (!result ||
-            (minThreat >= threat &&
-            (minTankCount >= tankCount || maxDpsCount <= dpsCount)))
+        if (!result || (minThreat - threat) > 0.1f)
         {
             minThreat = threat;
-            minTankCount = tankCount;
-            maxDpsCount = dpsCount;
             result = creature;
         }
     }
 
 protected:
     float minThreat;
-    int minTankCount;
-    int maxDpsCount;
 };
 
 

@@ -5,7 +5,13 @@
 #include "PlayerbotAIBase.h"
 #include "PlayerbotAIConfig.h"
 
+#include <mutex>
+#include <chrono>
+#include <ctime>
+
 using namespace std;
+
+typedef vector<string> PerformanceStack;
 
 struct PerformanceData
 {
@@ -27,11 +33,13 @@ enum PerformanceMetric
 class PerformanceMonitorOperation
 {
 public:
-    PerformanceMonitorOperation(PerformanceData* data);
+    PerformanceMonitorOperation(PerformanceData* data, string name, PerformanceStack* stack);
     void finish();
 
 private:
     PerformanceData* data;
+    string name;
+    PerformanceStack* stack;
 #ifdef CMANGOS
     std::chrono::milliseconds started;
 #endif
@@ -49,12 +57,15 @@ class PerformanceMonitor
         }
 
 	public:
-        PerformanceMonitorOperation* start(PerformanceMetric metric, string name);
-        void PrintStats();
+        PerformanceMonitorOperation* start(PerformanceMetric metric, string name, PerformanceStack* stack = nullptr);
+        void PrintStats(bool perTick = false,  bool fullStack = false);
         void Reset();
 
 	private:
         map<PerformanceMetric, map<string, PerformanceData*> > data;
+#ifdef CMANGOS
+		std::mutex lock;
+#endif
 };
 
 

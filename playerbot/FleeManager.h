@@ -1,5 +1,7 @@
 #pragma once
 
+#include "TravelMgr.h"
+
 using namespace std;
 
 class Player;
@@ -8,64 +10,43 @@ namespace ai
 {
     class Engine;
 
-	class RangePair {
-	public:
-		RangePair() {
-			min = -1.0f;
-			max = -1.0f;
-		}
-
-	public:
-		float min;
-		float max;
-
-	public:
-		void probe(float d) {
-			if (min < 0 || min > d)
-				min = d;
-
-			if (max < 0 || max < d)
-				max = d;
-		}
-	};
-
 	class FleePoint {
 	public:
-		FleePoint(float x, float y, float z) {
+        FleePoint(PlayerbotAI* ai, float x, float y, float z) : ai(ai), sumDistance(0.0f), minDistance(0.0f) {
 			this->x = x;
 			this->y = y;
 			this->z = z;
 		}
-
-    public:
-        bool isReasonable();
 
 	public:
 		float x;
 		float y;
 		float z;
 
-		RangePair toCreatures;
-		RangePair toAllPlayers;
-		RangePair toMeleePlayers;
-		RangePair toRangedPlayers;
+        float sumDistance;
+        float minDistance;
+
+    private:
+        PlayerbotAI* ai;
 	};
 
 	class FleeManager
 	{
 	public:
-		FleeManager(Player* bot, float maxAllowedDistance, float followAngle) {
+        FleeManager(Player* bot, float maxAllowedDistance, float followAngle, bool forceMaxDistance = false, WorldPosition startPosition = WorldPosition()) {
 			this->bot = bot;
 			this->maxAllowedDistance = maxAllowedDistance;
 			this->followAngle = followAngle;
+            this->forceMaxDistance = forceMaxDistance;
+			this->startPosition = startPosition ? startPosition : WorldPosition(bot);
 		}
 
 	public:
 		bool CalculateDestination(float* rx, float* ry, float* rz);
+        bool isUseful();
 
 	private:
 		void calculatePossibleDestinations(list<FleePoint*> &points);
-		void calculateDistanceToPlayers(FleePoint *point);
 		void calculateDistanceToCreatures(FleePoint *point);
 		void cleanup(list<FleePoint*> &points);
 		FleePoint* selectOptimalDestination(list<FleePoint*> &points);
@@ -75,6 +56,8 @@ namespace ai
 		Player* bot;
 		float maxAllowedDistance;
 		float followAngle;
+        bool forceMaxDistance;
+		WorldPosition startPosition;
 	};
 
 };

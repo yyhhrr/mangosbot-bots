@@ -4,28 +4,18 @@
 
 using namespace ai;
 
-bool CastCasterFormAction::Execute(Event event)
+bool CastCasterFormAction::Execute(Event& event)
 {
     ai->RemoveShapeshift();
     return true;
 }
 
-NextAction** CastAbolishPoisonAction::getAlternatives()
+Value<Unit*>* CastHibernateCcAction::GetTargetValue()
 {
-    return NextAction::merge( NextAction::array(0, new NextAction("cure poison"), NULL), CastSpellAction::getPrerequisites());
+    return context->GetValue<Unit*>("cc target", "hibernate");
 }
 
-NextAction** CastAbolishPoisonOnPartyAction::getAlternatives()
+bool CastHibernateCcAction::Execute(Event& event)
 {
-    return NextAction::merge( NextAction::array(0, new NextAction("cure poison on party"), NULL), CastSpellAction::getPrerequisites());
-}
-
-Value<Unit*>* CastEntanglingRootsCcAction::GetTargetValue()
-{
-    return context->GetValue<Unit*>("cc target", "entangling roots");
-}
-
-bool CastEntanglingRootsCcAction::Execute(Event event)
-{
-    return ai->CastSpell("entangling roots", GetTarget()); 
+    return ai->CastSpell("hibernate", GetTarget());
 }

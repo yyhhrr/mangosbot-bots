@@ -8,9 +8,11 @@ namespace ai
     {
     public:
         EmoteActionBase(PlayerbotAI* ai, string name);
+        static uint32 GetNumberOfEmoteVariants(TextEmotes emote, uint8 race, uint8 gender);
 
     protected:
-        bool Emote(Unit* target, uint32 type);
+        bool Emote(Unit* target, uint32 type, bool textEmote = false);
+        bool ReceiveEmote(Player* source, uint32 emote, bool verbal = false);
         Unit* GetTarget();
         void InitEmotes();
         static map<string, uint32> emotes;
@@ -22,7 +24,7 @@ namespace ai
     {
     public:
         EmoteAction(PlayerbotAI* ai);
-        virtual bool Execute(Event event);
+        virtual bool Execute(Event& event);
         bool isUseful();
     };
 
@@ -30,8 +32,8 @@ namespace ai
     {
     public:
         TalkAction(PlayerbotAI* ai) : EmoteActionBase(ai, "talk") {}
-        virtual bool Execute(Event event);
+        virtual bool Execute(Event& event);
 
-        static uint32 GetRandomEmote(Unit* unit);
+        static uint32 GetRandomEmote(Unit* unit, bool textEmote = false);
     };
 }

@@ -3,7 +3,7 @@
 
 using namespace std;
 
-enum PlayerbotSecurityLevel
+enum class PlayerbotSecurityLevel : uint8
 {
     PLAYERBOT_SECURITY_DENY_ALL = 0,
     PLAYERBOT_SECURITY_TALK = 1,
@@ -11,7 +11,7 @@ enum PlayerbotSecurityLevel
     PLAYERBOT_SECURITY_ALLOW_ALL = 3
 };
 
-enum DenyReason
+enum class DenyReason : uint8
 {
     PLAYERBOT_DENY_NONE,
     PLAYERBOT_DENY_LOW_LEVEL,
@@ -22,7 +22,11 @@ enum DenyReason
     PLAYERBOT_DENY_DEAD,
     PLAYERBOT_DENY_FAR,
     PLAYERBOT_DENY_INVITE,
-    PLAYERBOT_DENY_FULL_GROUP
+    PLAYERBOT_DENY_FULL_GROUP,
+    PLAYERBOT_DENY_NOT_LEADER,
+    PLAYERBOT_DENY_IS_LEADER,
+    PLAYERBOT_DENY_BG,
+    PLAYERBOT_DENY_LFG
 };
 
 class PlayerbotSecurity

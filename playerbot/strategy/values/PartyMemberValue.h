@@ -18,13 +18,13 @@ namespace ai
     class PartyMemberValue : public UnitCalculatedValue
 	{
 	public:
-        PartyMemberValue(PlayerbotAI* ai) : UnitCalculatedValue(ai) {}
+        PartyMemberValue(PlayerbotAI* ai, string name = "party member") : UnitCalculatedValue(ai, name) {}
 
     public:
         bool IsTargetOfSpellCast(Player* target, SpellEntryPredicate &predicate);
 
     protected:
-        Unit* FindPartyMember(FindPlayerPredicate &predicate);
+        Unit* FindPartyMember(FindPlayerPredicate &predicate, bool ignoreOutOfGroup = false);
         Unit* FindPartyMember(list<Player*>* party, FindPlayerPredicate &predicate);
         bool Check(Unit* player);
 	};

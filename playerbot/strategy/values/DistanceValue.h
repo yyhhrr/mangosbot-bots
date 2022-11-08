@@ -10,7 +10,7 @@ namespace ai
     class DistanceValue : public FloatCalculatedValue, public Qualified
 	{
 	public:
-        DistanceValue(PlayerbotAI* ai) : FloatCalculatedValue(ai) {}
+        DistanceValue(PlayerbotAI* ai, string name = "distance") : FloatCalculatedValue(ai, name) {}
 
     public:
         float Calculate()
@@ -31,20 +31,48 @@ namespace ai
             if (qualifier.find("position_") == 0)
             {
                 string position = qualifier.substr(9);
-                ai::Position pos = context->GetValue<ai::PositionMap&>("position")->Get()[position];
+                ai::PositionEntry pos = context->GetValue<ai::PositionMap&>("position")->Get()[position];
                 if (!pos.isSet()) return 0.0f;
+                if (ai->GetBot()->GetMapId() != pos.mapId) return 0.0f;
                 return sServerFacade.GetDistance2d(ai->GetBot(), pos.x, pos.y);
             }
 
             Unit* target = NULL;
             if (qualifier == "rpg target")
             {
-                ObjectGuid rpgTarget = AI_VALUE(ObjectGuid, qualifier);
-                target = ai->GetUnit(rpgTarget);
+                GuidPosition rpgTarget = AI_VALUE(GuidPosition, qualifier);
+                return rpgTarget.distance(bot);
+            }
+            else if (qualifier == "travel target")
+            {
+                TravelTarget * travelTarget = AI_VALUE(TravelTarget *, qualifier);
+                return travelTarget->distance(ai->GetBot());
+            }
+            else if (qualifier == "last long move")
+            {
+                WorldPosition target = AI_VALUE(WorldPosition, qualifier);
+                return target.distance(ai->GetBot());
+            }
+            else if (qualifier == "home bind")
+            {
+                WorldPosition target = AI_VALUE(WorldPosition, qualifier);
+                return target.distance(ai->GetBot());
+            }
+            else if (qualifier == "current target")
+            {
+                Stance* stance = AI_VALUE(Stance*, "stance");
+                WorldLocation loc = stance->GetLocation();
+                return sServerFacade.GetDistance2d(ai->GetBot(), loc.coord_x, loc.coord_y);
             }
             else
             {
                 target = AI_VALUE(Unit*, qualifier);
+                if (target && target == GetMaster() && target != bot)
+                {
+                    Formation* formation = AI_VALUE(Formation*, "formation");
+                    WorldLocation loc = formation->GetLocation();
+                    return sServerFacade.GetDistance2d(ai->GetBot(), loc.coord_x, loc.coord_y);
+                }
             }
 
             if (!target || !target->IsInWorld())
@@ -54,6 +82,24 @@ namespace ai
                 return 0.0f;
 
             return sServerFacade.GetDistance2d(ai->GetBot(), target);
+        }
+    };
+
+    class InsideTargetValue : public BoolCalculatedValue, public Qualified
+    {
+    public:
+        InsideTargetValue(PlayerbotAI* ai, string name = "inside target") : BoolCalculatedValue(ai, name) {}
+
+    public:
+        bool Calculate()
+        {
+            Unit* target = AI_VALUE(Unit*, qualifier);
+
+            if (!target || !target->IsInWorld() || target == ai->GetBot())
+                return false;
+
+            float dist = sServerFacade.GetDistance2d(ai->GetBot(), target->GetPositionX(), target->GetPositionY());
+            return sServerFacade.IsDistanceLessThan(dist, target->GetObjectBoundingRadius());
         }
     };
 }

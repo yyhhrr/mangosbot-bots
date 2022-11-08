@@ -16,7 +16,7 @@ inline int strcmpi(const char* s1, const char* s2)
 }
 #endif
 
-bool WhoAction::Execute(Event event)
+bool WhoAction::Execute(Event& event)
 {
     Player* owner = event.getOwner();
     if (!owner)
@@ -38,7 +38,7 @@ bool WhoAction::Execute(Event event)
 
     if (!out.str().empty())
     {
-        if (AreaTableEntry const* areaEntry = GetAreaEntryByAreaID(bot->GetAreaId()))
+        if (AreaTableEntry const* areaEntry = GetAreaEntryByAreaID(sServerFacade.GetAreaId(bot)))
         {
             out << ", (|cffb04040" << areaEntry->area_name[0] << "|r)";
         }
@@ -113,7 +113,7 @@ string WhoAction::QuerySpec(string text)
 
     int spec = AiFactory::GetPlayerSpecTab(bot);
     out << "|h|cffffffff" << chat->formatClass(bot, spec);
-    out << " (|h|cff00ff00" << (uint32)bot->getLevel() << "|h|cffffffff lvl), ";
+    out << " (|h|cff00ff00" << (uint32)bot->GetLevel() << "|h|cffffffff lvl), ";
     out << "|h|cff00ff00" << ai->GetEquipGearScore(bot, false, false) << "|h|cffffffff GS (";
 
     ItemCountByQuality visitor;

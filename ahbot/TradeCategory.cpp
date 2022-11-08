@@ -1,11 +1,20 @@
-#include "Globals/ObjectMgr.h"
 #include "TradeCategory.h"
 #include "Category.h"
 #include "AhBotConfig.h"
 #include "PricingStrategy.h"
 #include "ServerFacade.h"
 #include "SQLStorages.h"
+#include "DBCStructure.h"
+#include "ItemPrototype.h"
+#ifdef CMANGOS
+#include "Globals/ObjectMgr.h"
 #include "SpellEffectDefines.h"
+#endif
+#ifdef MANGOS
+#include "Object/ObjectMgr.h"
+#include "SharedDefines.h"
+#endif
+
 
 using namespace ahbot;
 
@@ -79,7 +88,7 @@ bool TradeSkill::ContainsInternal(ItemPrototype const* proto)
             (recipe->SubClass == ITEM_SUBCLASS_ALCHEMY_RECIPE && skill == SKILL_ALCHEMY) ||
             (recipe->SubClass == ITEM_SUBCLASS_FIRST_AID_MANUAL && skill == SKILL_FIRST_AID) ||
             (recipe->SubClass == ITEM_SUBCLASS_ENCHANTING_FORMULA && skill == SKILL_ENCHANTING) ||
-#ifdef MANGOSBOT_ONE
+#ifndef MANGOSBOT_ZERO
             (recipe->SubClass == ITEM_SUBCLASS_JEWELCRAFTING_RECIPE && skill == SKILL_JEWELCRAFTING) ||
 #endif
             (recipe->SubClass == ITEM_SUBCLASS_FISHING_MANUAL && skill == SKILL_FISHING)
@@ -107,7 +116,6 @@ bool TradeSkill::IsCraftedBySpell(ItemPrototype const* proto, uint32 spellId)
 
 bool TradeSkill::IsCraftedBySpell(ItemPrototype const* proto, SpellEntry const *entry)
 {
-
     if (reagent)
     {
         for (uint32 x = 0; x < MAX_SPELL_REAGENTS; ++x)
@@ -152,12 +160,11 @@ bool TradeSkill::IsCraftedBy(ItemPrototype const* proto, uint32 spellId)
     for (uint32 effect = EFFECT_INDEX_0; effect < MAX_EFFECT_INDEX; ++effect)
     {
         uint32 craftId = entry->EffectTriggerSpell[effect];
-        SpellEntry const *craft = sServerFacade.LookupSpellInfo(craftId);
-        if (!craft)
-            continue;
 
-        if (IsCraftedBySpell(proto, craft))
+        if (IsCraftedBySpell(proto, craftId))
             return true;
+
+        continue;
     }
 
     return false;
@@ -192,13 +199,51 @@ string TradeSkill::GetName()
         name = "trade.herbalism"; break;
     case SKILL_FIRST_AID:
         name = "trade.firstaid"; break;
-#ifdef MANGOSBOT_ONE
+#ifndef MANGOSBOT_ZERO
     case SKILL_JEWELCRAFTING:
         name = "trade.jewelcrafting"; break;
 #endif
     }
 
     return reagent ? name : name + ".craft";
+}
+
+string TradeSkill::GetMainName()
+{
+    string name;
+    switch (skill)
+    {
+    case SKILL_TAILORING:
+        name = "trade.tailoring"; break;
+    case SKILL_LEATHERWORKING:
+        name = "trade.leatherworking"; break;
+    case SKILL_ENGINEERING:
+        name = "trade.engineering"; break;
+    case SKILL_BLACKSMITHING:
+        name = "trade.blacksmithing"; break;
+    case SKILL_ALCHEMY:
+        name = "trade.alchemy"; break;
+    case SKILL_COOKING:
+        name = "trade.cooking"; break;
+    case SKILL_FISHING:
+        name = "trade.fishing"; break;
+    case SKILL_ENCHANTING:
+        name = "trade.enchanting"; break;
+    case SKILL_MINING:
+        name = "trade.mining"; break;
+    case SKILL_SKINNING:
+        name = "trade.skinning"; break;
+    case SKILL_HERBALISM:
+        name = "trade.herbalism"; break;
+    case SKILL_FIRST_AID:
+        name = "trade.firstaid"; break;
+#ifndef MANGOSBOT_ZERO
+    case SKILL_JEWELCRAFTING:
+        name = "trade.jewelcrafting"; break;
+#endif
+    }
+
+    return name;
 }
 
 string TradeSkill::GetLabel()
@@ -229,7 +274,7 @@ string TradeSkill::GetLabel()
             return "ore and stone";
         case SKILL_FIRST_AID:
             return "first aid reagents";
-    #ifdef MANGOSBOT_ONE
+#ifndef MANGOSBOT_ZERO
         case SKILL_JEWELCRAFTING:
             return "jewelcrafting";
     #endif
@@ -261,10 +306,11 @@ string TradeSkill::GetLabel()
             return "ore and stone";
         case SKILL_FIRST_AID:
             return "bandages";
-    #ifdef MANGOSBOT_ONE
+#ifndef MANGOSBOT_ZERO
         case SKILL_JEWELCRAFTING:
             return "jewels";
     #endif
         }
     }
+    return "unknown";
 }

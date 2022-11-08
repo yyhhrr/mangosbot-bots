@@ -3,188 +3,98 @@
 
 namespace ai
 {
-    // all
-    class CastHeroicStrikeAction : public CastMeleeSpellAction {
-    public:
-        CastHeroicStrikeAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "heroic strike") {}
-    };
+    // stances
+    BUFF_ACTION(CastBattleStanceAction, "battle stance");
+    BUFF_ACTION(CastDefensiveStanceAction, "defensive stance");
+    BUFF_ACTION(CastBerserkerStanceAction, "berserker stance");
 
-    // all
-    class CastCleaveAction : public CastMeleeSpellAction {
-    public:
-        CastCleaveAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "cleave") {}
-    };
+    // shouts
+    BUFF_ACTION(CastBattleShoutAction, "battle shout");
+    MELEE_ACTION_U(CastBattleShoutTauntAction, "battle shout", CastSpellAction::isUseful()); // useful to rebuff
+    DEBUFF_ACTION_R(CastDemoralizingShoutAction, "demoralizing shout", 8.0f); // low range debuff
+    MELEE_ACTION(CastChallengingShoutAction, "challenging shout");
+    DEBUFF_ACTION_R(CastIntimidatingShoutAction, "intimidating shout", 8.0f);
+    // shouts 2.4.3
+    BUFF_ACTION(CastCommandingShoutAction, "commanding shout");
 
-    // battle, berserker
-    class CastMockingBlowAction : public CastMeleeSpellAction {
-    public:
-        CastMockingBlowAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "mocking blow") {}
-    };
+    // arms
+    MELEE_ACTION(CastHeroicStrikeAction, "heroic strike");
+    REACH_ACTION(CastChargeAction, "charge", 8.0f);
+    DEBUFF_ACTION(CastRendAction, "rend");
+    DEBUFF_ENEMY_ACTION(CastRendOnAttackerAction, "rend");
+    DEBUFF_ACTION_R(CastThunderClapAction, "thunder clap", 8.0f);
+    SNARE_ACTION(CastThunderClapSnareAction, "thunder clap");
+    SNARE_ACTION(CastHamstringAction, "hamstring");
+    MELEE_ACTION(CastOverpowerAction, "overpower");
+    MELEE_ACTION(CastMockingBlowAction, "mocking blow");
+    BUFF_ACTION(CastRetaliationAction, "retaliation");
+    // arms 3.3.5
+    SPELL_ACTION(CastHeroicThrowAction, "heroic throw");
+    SNARE_ACTION(CastHeroicThrowSnareAction, "heroic throw");
+    DEBUFF_ACTION(CastShatteringThrowAction, "shattering throw");
+    
+    // arms talents
+    MELEE_ACTION(CastMortalStrikeAction, "mortal strike");
+    BUFF_ACTION(CastSweepingStrikesAction, "sweeping strikes");
+    // arms talents 3.3.5
+    BUFF_ACTION(CastBladestormAction, "bladestorm");
 
-    class CastBloodthirstAction : public CastMeleeSpellAction {
-    public:
-        CastBloodthirstAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "bloodthirst") {}
-    };
+    // fury
+    MELEE_ACTION(CastCleaveAction, "cleave");
+    MELEE_ACTION(CastExecuteAction, "execute");
+    REACH_ACTION(CastInterceptAction, "intercept", 8.0f);
+    ENEMY_HEALER_ACTION(CastInterceptOnEnemyHealerAction, "intercept");
+    SNARE_ACTION(CastInterceptOnSnareTargetAction, "intercept");
+    MELEE_ACTION(CastSlamAction, "slam");
+    BUFF_ACTION(CastBerserkerRageAction, "berserker rage");
+    MELEE_ACTION(CastWhirlwindAction, "whirlwind");
+    MELEE_ACTION(CastPummelAction, "pummel");
+    ENEMY_HEALER_ACTION(CastPummelOnEnemyHealerAction, "pummel");
+    BUFF_ACTION(CastRecklessnessAction, "recklessness");
+    // fury 2.4.3
+    MELEE_ACTION(CastVictoryRushAction, "victory rush");
+    // fury 3.3.5
+    BUFF_ACTION(CastEnragedRegenerationAction, "enraged regeneration");
+    BUFF_ACTION(CastHeroicFuryAction, "heroic fury");
 
-    // battle, berserker
-    class CastExecuteAction : public CastMeleeSpellAction {
-    public:
-        CastExecuteAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "execute") {}
-    };
+    // fury talents
+    BUFF_ACTION(CastDeathWishAction, "death wish");
+    MELEE_ACTION(CastBloodthirstAction, "bloodthirst");
+    DEBUFF_ACTION_R(CastPiercingHowlAction, "piercing howl", 8.0f);
+    // fury talents 2.4.3
+    BUFF_ACTION(CastRampageAction, "rampage");
 
-    // battle
-    class CastOverpowerAction : public CastMeleeSpellAction {
-    public:
-        CastOverpowerAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "overpower") {}
-    };
+    // protection
+    MELEE_ACTION_U(CastTauntAction, "taunt", GetTarget() && GetTarget()->GetVictim() && GetTarget()->GetVictim() != bot);
+    SNARE_ACTION(CastTauntOnSnareTargetAction, "taunt");
+    BUFF_ACTION(CastBloodrageAction, "bloodrage");
+    MELEE_ACTION(CastShieldBashAction, "shield bash");
+    ENEMY_HEALER_ACTION(CastShieldBashOnEnemyHealerAction, "shield bash");
+    MELEE_ACTION(CastRevengeAction, "revenge");
+    BUFF_ACTION(CastShieldBlockAction, "shield block");
+    DEBUFF_ACTION_U(CastDisarmAction, "disarm", GetTarget() && GetTarget()->IsPlayer() ? !ai->IsRanged((Player*)GetTarget()) : CastDebuffSpellAction::isUseful());
+    DEBUFF_ENEMY_ACTION(CastDisarmOnAttackerAction, "disarm");
+    BUFF_ACTION(CastShieldWallAction, "shield wall");
+    // protection 2.4.3
+    PROTECT_ACTION(CastInterveneAction, "intervene");
+    BUFF_ACTION(CastSpellReflectionAction, "spell reflection");
 
-    // battle, berserker
-    class CastHamstringAction : public CastSnareSpellAction {
-    public:
-        CastHamstringAction(PlayerbotAI* ai) : CastSnareSpellAction(ai, "hamstring") {}
-    };
+    // protection talents
+    BUFF_ACTION(CastLastStandAction, "last stand");
+    MELEE_ACTION(CastShieldSlamAction, "shield slam");
+    MELEE_ACTION(CastConcussionBlowAction, "concussion blow");
+    // protection talents 2.4.3
+    MELEE_ACTION(CastDevastateAction, "devastate");
+    // protection talents 3.3.5
+    DEBUFF_ACTION_R(CastShockwaveAction, "shockwave", 8.0f);
+    SNARE_ACTION(CastShockwaveSnareAction, "shockwave");
 
-    // defensive
-    class CastTauntAction : public CastMeleeSpellAction {
-    public:
-        CastTauntAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "taunt") {}
-    };
-
-    // defensive
-    class CastShieldBlockAction : public CastBuffSpellAction {
-    public:
-        CastShieldBlockAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "shield block") {}
-    };
-
-    // defensive
-    class CastShieldWallAction : public CastMeleeSpellAction {
-    public:
-        CastShieldWallAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "shield wall") {}
-    };
-
-    class CastBloodrageAction : public CastBuffSpellAction {
-    public:
-        CastBloodrageAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "bloodrage") {}
-    };
-
-    // defensive
-    class CastDevastateAction : public CastMeleeSpellAction {
-    public:
-        CastDevastateAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "devastate") {}
-    };
-
-    // all
-    class CastSlamAction : public CastMeleeSpellAction {
-    public:
-        CastSlamAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "slam") {}
-    };
-
-	// all
-	class CastShieldSlamAction : public CastMeleeSpellAction {
-	public:
-		CastShieldSlamAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "shield slam") {}
-	};
-
-    // after dodge
-    BEGIN_MELEE_SPELL_ACTION(CastRevengeAction, "revenge")
-    END_SPELL_ACTION()
-
-
-    //debuffs
-    BEGIN_DEBUFF_ACTION(CastRendAction, "rend")
-    END_SPELL_ACTION()
-
-    class CastRendOnAttackerAction : public CastDebuffSpellOnAttackerAction
+    class CastSunderArmorAction : public CastOnlyDebuffSpellAction
     {
     public:
-        CastRendOnAttackerAction(PlayerbotAI* ai) : CastDebuffSpellOnAttackerAction(ai, "rend") {}
-    };
-
-    BEGIN_DEBUFF_ACTION(CastDisarmAction, "disarm")
-    END_SPELL_ACTION()
-
-    BEGIN_DEBUFF_ACTION(CastSunderArmorAction, "sunder armor") // 5 times
-    END_SPELL_ACTION()
-
-    class CastDemoralizingShoutAction : public CastDebuffSpellAction {
-    public:
-        CastDemoralizingShoutAction(PlayerbotAI* ai) : CastDebuffSpellAction(ai, "demoralizing shout") {
+        CastSunderArmorAction(PlayerbotAI* ai) : CastOnlyDebuffSpellAction(ai, "sunder armor") {
             range = ATTACK_DISTANCE;
         }
-    };
-
-    BEGIN_MELEE_SPELL_ACTION(CastChallengingShoutAction, "challenging shout")
-    END_SPELL_ACTION()
-
-    // stuns
-    BEGIN_MELEE_SPELL_ACTION(CastShieldBashAction, "shield bash")
-    END_SPELL_ACTION()
-
-    BEGIN_MELEE_SPELL_ACTION(CastIntimidatingShoutAction, "intimidating shout")
-    END_SPELL_ACTION()
-
-    BEGIN_MELEE_SPELL_ACTION(CastThunderClapAction, "thunder clap")
-    END_SPELL_ACTION()
-
-    // buffs
-	class CastBattleShoutAction : public CastBuffSpellAction {
-	public:
-		CastBattleShoutAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "battle shout") {
-		    range = ATTACK_DISTANCE;
-		}
-	};
-
-	class CastDefensiveStanceAction : public CastBuffSpellAction {
-	public:
-		CastDefensiveStanceAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "defensive stance") {}
-	};
-
-	class CastBattleStanceAction : public CastBuffSpellAction {
-	public:
-		CastBattleStanceAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "battle stance") {}
-	};
-
-    BEGIN_RANGED_SPELL_ACTION(CastChargeAction, "charge")
-    END_SPELL_ACTION()
-
-	class CastDeathWishAction : public CastBuffSpellAction {
-	public:
-		CastDeathWishAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "death wish") {}
-	};
-
-	class CastBerserkerRageAction : public CastBuffSpellAction {
-	public:
-		CastBerserkerRageAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "berserker rage") {}
-	};
-
-	class CastLastStandAction : public CastBuffSpellAction {
-	public:
-		CastLastStandAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "last stand") {}
-	};
-
-	// defensive
-	class CastShockwaveAction : public CastMeleeSpellAction {
-	public:
-		CastShockwaveAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "shockwave") {}
-	};
-
-	// defensive
-	class CastConcussionBlowAction : public CastSnareSpellAction {
-	public:
-		CastConcussionBlowAction(PlayerbotAI* ai) : CastSnareSpellAction(ai, "concussion blow") {}
-	};
-
-	BEGIN_MELEE_SPELL_ACTION(CastVictoryRushAction, "victory rush")
-	END_SPELL_ACTION()
-
-    class CastShieldBashOnEnemyHealerAction : public CastSpellOnEnemyHealerAction
-    {
-    public:
-        CastShieldBashOnEnemyHealerAction(PlayerbotAI* ai) : CastSpellOnEnemyHealerAction(ai, "shield bash") {}
-    };
-
-    class CastBattleShoutTauntAction : public CastMeleeSpellAction {
-    public:
-	    CastBattleShoutTauntAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "battle shout") {}
+        virtual bool isUseful() { return GetTarget() && !ai->HasAura("sunder armor", GetTarget(), true); }
     };
 }

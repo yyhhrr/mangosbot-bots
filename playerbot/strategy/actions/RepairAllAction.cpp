@@ -6,7 +6,7 @@
 
 using namespace ai;
 
-bool RepairAllAction::Execute(Event event)
+bool RepairAllAction::Execute(Event& event)
 {
     list<ObjectGuid> npcs = AI_VALUE(list<ObjectGuid>, "nearest npcs");
     for (list<ObjectGuid>::iterator i = npcs.begin(); i != npcs.end(); i++)
@@ -25,17 +25,61 @@ bool RepairAllAction::Execute(Event event)
 
         sServerFacade.SetFacingTo(bot, unit);
         float discountMod = bot->GetReputationPriceDiscount(unit);
-        uint32 totalCost = bot->DurabilityRepairAll(true, discountMod
-#ifdef MANGOSBOT_ONE
+
+        float durability = AI_VALUE(uint8, "durability");
+
+        uint32 botMoney = bot->GetMoney();
+        if (ai->HasCheat(BotCheatMask::gold))
+        {
+            bot->SetMoney(10000000);
+        }
+
+        //Repair weapons first.
+        uint32 totalCost = bot->DurabilityRepair(EQUIPMENT_SLOT_MAINHAND, true, discountMod
+#ifndef MANGOSBOT_ZERO
             , false
 #endif
         );
 
-        ostringstream out;
-        out << "Repair: " << chat->formatMoney(totalCost) << " (" << unit->GetName() << ")";
-        ai->TellMasterNoFacing(out.str());
+        totalCost += bot->DurabilityRepair(EQUIPMENT_SLOT_RANGED, true, discountMod
+#ifndef MANGOSBOT_ZERO
+            , false
+#endif
+        );
 
-        return true;
+        totalCost += bot->DurabilityRepair(EQUIPMENT_SLOT_OFFHAND, true, discountMod
+#ifndef MANGOSBOT_ZERO
+            , false
+#endif
+        );
+
+        totalCost += bot->DurabilityRepairAll(true, discountMod
+#ifndef MANGOSBOT_ZERO
+            , false
+#endif
+        );
+
+        if (ai->HasCheat(BotCheatMask::gold))
+        {
+            bot->SetMoney(botMoney);
+        }
+
+        //Totalcost is bugged in core. For now we use this work-around.
+        totalCost = botMoney - bot->GetMoney();
+
+        if (totalCost > 0)
+        {
+            ostringstream out;
+            out << "Repair: " << chat->formatMoney(totalCost) << " (" << unit->GetName() << ")";
+            ai->TellMasterNoFacing(out.str(),PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+            bot->PlayDistanceSound(1116);
+
+            sPlayerbotAIConfig.logEvent(ai, "RepairAllAction", to_string(durability), to_string(totalCost));
+        }
+
+        context->GetValue<uint32>("death count")->Set(0);
+
+        return durability < 100 && AI_VALUE(uint8, "durability") > durability;
     }
 
     ai->TellError("Cannot find any npc to repair at");

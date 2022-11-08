@@ -22,8 +22,8 @@ bool Formation::IsNullLocation(WorldLocation const& loc)
 
 WorldLocation MoveAheadFormation::GetLocation()
 {
-    Player* master = GetMaster();
-    if (!master)
+    Player* master = ai->GetGroupMaster();
+    if (!master || master == bot)
         return WorldLocation();
 
     WorldLocation loc = GetLocationInternal();
@@ -57,8 +57,8 @@ WorldLocation MoveAheadFormation::GetLocation()
     if (ground <= INVALID_HEIGHT)
         return Formation::NullLocation;
 
-    z += CONTACT_DISTANCE;
-    bot->UpdateAllowedPositionZ(x, y, z);
+    //z += CONTACT_DISTANCE;
+    //bot->UpdateAllowedPositionZ(x, y, z);
     return WorldLocation(master->GetMapId(), x, y, z);
 }
 
@@ -84,7 +84,7 @@ namespace ai
         NearFormation(PlayerbotAI* ai) : MoveAheadFormation(ai, "near") {}
         virtual WorldLocation GetLocationInternal()
         {
-            Player* master = GetMaster();
+            Player* master = ai->GetGroupMaster();
             if (!master)
                 return WorldLocation();
 
@@ -101,8 +101,20 @@ namespace ai
             if (ground <= INVALID_HEIGHT)
                 return Formation::NullLocation;
 
-            z += CONTACT_DISTANCE;
-            bot->UpdateAllowedPositionZ(x, y, z);
+            // prevent going into terrain
+            float ox, oy, oz;
+            master->GetPosition(ox, oy, oz);
+#ifdef MANGOSBOT_TWO
+            master->GetMap()->GetHitPosition(ox, oy, oz + bot->GetCollisionHeight(), x, y, z, bot->GetPhaseMask(), -0.5f);
+#else
+            master->GetMap()->GetHitPosition(ox, oy, oz + bot->GetCollisionHeight(), x, y, z, -0.5f);
+#endif
+
+            if (!bot->IsFlying() && !bot->IsFreeFlying())
+            {
+                z += CONTACT_DISTANCE;
+                bot->UpdateAllowedPositionZ(x, y, z);
+            }
             return WorldLocation(master->GetMapId(), x, y, z);
         }
 
@@ -116,7 +128,7 @@ namespace ai
         ChaosFormation(PlayerbotAI* ai) : MoveAheadFormation(ai, "chaos"), lastChangeTime(0) {}
         virtual WorldLocation GetLocationInternal()
         {
-            Player* master = GetMaster();
+            Player* master = ai->GetGroupMaster();
             if (!master)
                 return WorldLocation();
 
@@ -142,8 +154,11 @@ namespace ai
             if (ground <= INVALID_HEIGHT)
                 return Formation::NullLocation;
 
-            z += CONTACT_DISTANCE;
-            bot->UpdateAllowedPositionZ(x, y, z);
+            if (!bot->IsFlying() && !bot->IsFreeFlying())
+            {
+                z += CONTACT_DISTANCE;
+                bot->UpdateAllowedPositionZ(x, y, z);
+            }
             return WorldLocation(master->GetMapId(), x, y, z);
         }
 
@@ -163,8 +178,8 @@ namespace ai
             float range = 2.0f;
 
             Unit* target = AI_VALUE(Unit*, "current target");
-            Player* master = GetMaster();
-            if (!target)
+            Player* master = ai->GetGroupMaster();
+            if (!target && target != bot)
                 target = master;
 
             if (!target)
@@ -176,15 +191,15 @@ namespace ai
             case CLASS_MAGE:
             case CLASS_PRIEST:
             case CLASS_WARLOCK:
-                range = sPlayerbotAIConfig.fleeDistance;
+                range = ai->GetRange("flee");
                 break;
             case CLASS_DRUID:
                 if (!ai->IsTank(bot))
-                    range = sPlayerbotAIConfig.fleeDistance;
+                    range = ai->GetRange("flee");
                 break;
             case CLASS_SHAMAN:
                 if (ai->IsHeal(bot))
-                    range = sPlayerbotAIConfig.fleeDistance;
+                    range = ai->GetRange("flee");
                 break;
             }
 
@@ -200,8 +215,11 @@ namespace ai
             if (ground <= INVALID_HEIGHT)
                 return Formation::NullLocation;
 
-            z += CONTACT_DISTANCE;
-            bot->UpdateAllowedPositionZ(x, y, z);
+            if (!bot->IsFlying() && !bot->IsFreeFlying())
+            {
+                z += CONTACT_DISTANCE;
+                bot->UpdateAllowedPositionZ(x, y, z);
+            }
             return WorldLocation(bot->GetMapId(), x, y, z);
         }
     };
@@ -218,7 +236,7 @@ namespace ai
 
             float range = 2.0f;
 
-            Player* master = GetMaster();
+            Player* master = ai->GetGroupMaster();
             if (!master)
                 return Formation::NullLocation;
 
@@ -256,7 +274,7 @@ namespace ai
 
             float range = sPlayerbotAIConfig.followDistance;
 
-            Player* master = GetMaster();
+            Player* master = ai->GetGroupMaster();
             if (!master)
                 return Formation::NullLocation;
 
@@ -318,8 +336,8 @@ namespace ai
             float range = sPlayerbotAIConfig.farDistance;
             float followRange = sPlayerbotAIConfig.followDistance;
 
-            Player* master = GetMaster();
-            if (!master)
+            Player* master = ai->GetGroupMaster();
+            if (!master || master == bot)
                 return Formation::NullLocation;
 
             if (sServerFacade.GetDistance2d(bot, master) <= range)
@@ -339,7 +357,7 @@ namespace ai
             if (ground <= INVALID_HEIGHT)
             {
                 float minDist = 0, minX = 0, minY = 0;
-                for (float angle = 0.0f; angle <= 2 * M_PI; angle += M_PI / 16.0f)
+                for (double angle = 0.0f; angle <= 2 * M_PI; angle += M_PI / 16.0f)
                 {
                     x = master->GetPositionX() + cos(angle) * range + cos(followAngle) * followRange;
                     y = master->GetPositionY() + sin(angle) * range + sin(followAngle) * followRange;
@@ -358,16 +376,30 @@ namespace ai
                 }
                 if (minDist)
                 {
-                    z += CONTACT_DISTANCE;
-                    bot->UpdateAllowedPositionZ(minX, minY, z);
+                    if (!bot->IsFlying() && !bot->IsFreeFlying())
+                    {
+                        z += CONTACT_DISTANCE;
+                        bot->UpdateAllowedPositionZ(minX, minY, z);
+                    }
                     return WorldLocation(bot->GetMapId(), minX, minY, z);
                 }
 
                 return Formation::NullLocation;
             }
 
-            z += CONTACT_DISTANCE;
-            bot->UpdateAllowedPositionZ(x, y, z);
+            // prevent going into terrain
+            float ox, oy, oz;
+            master->GetPosition(ox, oy, oz);
+#ifdef MANGOSBOT_TWO
+            master->GetMap()->GetHitPosition(ox, oy, oz + bot->GetCollisionHeight(), x, y, z, bot->GetPhaseMask(), -0.5f);
+#else
+            master->GetMap()->GetHitPosition(ox, oy, oz + bot->GetCollisionHeight(), x, y, z, -0.5f);
+#endif
+            if (!bot->IsFlying() && !bot->IsFreeFlying())
+            {
+                z += CONTACT_DISTANCE;
+                bot->UpdateAllowedPositionZ(x, y, z);
+            }
             return WorldLocation(bot->GetMapId(), x, y, z);
         }
     };
@@ -375,11 +407,11 @@ namespace ai
 
 float Formation::GetFollowAngle()
 {
-    Player* master = GetMaster();
+    Player* master = ai->GetGroupMaster();
     Group* group = bot->GetGroup();
-    int index = 0, total = 1;
-    float start = (master ? master->GetOrientation() : 0.0f);
-    if (!group && master)
+    PlayerbotAI* ai = bot->GetPlayerbotAI();
+    int index = 1, total = 1;
+    if (!group && master && !master->GetPlayerbotAI() && master->GetPlayerbotMgr())
     {
         for (PlayerBotMap::const_iterator i = master->GetPlayerbotMgr()->GetPlayerBotsBegin(); i != master->GetPlayerbotMgr()->GetPlayerBotsEnd(); ++i)
         {
@@ -387,20 +419,47 @@ float Formation::GetFollowAngle()
             total++;
         }
     }
-    else
+    else if (group)
     {
+        vector<Player*> roster;
         for (GroupReference *ref = group->GetFirstMember(); ref; ref = ref->next())
         {
-            if( ref->getSource() == master)
-                continue;
-
-            if( ref->getSource() == bot)
-                index = total;
-
-            total++;
+            Player* member = ref->getSource();
+            if (!member || !sServerFacade.IsAlive(member) || bot->GetMapId() != member->GetMapId()) continue;
+            if (member && member != master && !ai->IsTank(member) && !ai->IsHeal(member))
+            {
+                roster.insert(roster.begin() + roster.size() / 2, member);
+            }
         }
-    }
+        for (GroupReference *ref = group->GetFirstMember(); ref; ref = ref->next())
+        {
+            Player* member = ref->getSource();
+            if (!member || !sServerFacade.IsAlive(member) || bot->GetMapId() != member->GetMapId()) continue;
+            if (member && member != master && ai->IsHeal(member))
+            {
+                roster.insert(roster.begin() + roster.size() / 2, member);
+            }
+        }
+        bool left = true;
+        for (GroupReference *ref = group->GetFirstMember(); ref; ref = ref->next())
+        {
+            Player* member = ref->getSource();
+            if (!member || !sServerFacade.IsAlive(member) || bot->GetMapId() != member->GetMapId()) continue;
+            if (member && member != master && ai->IsTank(member))
+            {
+                if (left) roster.push_back(member); else roster.insert(roster.begin(), member);
+                left = !left;
+            }
+        }
 
+        for (vector<Player*>::iterator i = roster.begin(); i != roster.end(); ++i)
+        {
+            if (*i == bot) break;
+            index++;
+        }
+        total = roster.size() + 1;
+    }
+    float start = (master ? master->GetOrientation() : 0.0f);
     return start + (0.125f + 1.75f * index / total + (total == 2 ? 0.125f : 0.0f)) * M_PI;
 }
 
@@ -408,11 +467,70 @@ FormationValue::FormationValue(PlayerbotAI* ai) : ManualSetValue<Formation*>(ai,
 {
 }
 
-bool SetFormationAction::Execute(Event event)
+string FormationValue::Save()
+{
+    return value ? value->getName() : "?";
+}
+
+bool FormationValue::Load(string formation)
+{
+
+    if (formation == "melee")
+    {
+        if (value) delete value;
+        value = new MeleeFormation(ai);
+    }
+    else if (formation == "queue")
+    {
+        if (value) delete value;
+        value = new QueueFormation(ai);
+    }
+    else if (formation == "chaos")
+    {
+        if (value) delete value;
+        value = new ChaosFormation(ai);
+    }
+    else if (formation == "circle")
+    {
+        if (value) delete value;
+        value = new CircleFormation(ai);
+    }
+    else if (formation == "line")
+    {
+        if (value) delete value;
+        value = new LineFormation(ai);
+    }
+    else if (formation == "shield")
+    {
+        if (value) delete value;
+        value = new ShieldFormation(ai);
+    }
+    else if (formation == "arrow")
+    {
+        if (value) delete value;
+        value = new ArrowFormation(ai);
+    }
+    else if (formation == "near" || formation == "default")
+    {
+        if (value) delete value;
+        value = new NearFormation(ai);
+    }
+    else if (formation == "far")
+    {
+        if (value) delete value;
+        value = new FarFormation(ai);
+    }
+    else return false;
+
+    return true;
+}
+
+
+bool SetFormationAction::Execute(Event& event)
 {
     string formation = event.getParam();
 
-	Value<Formation*>* value = context->GetValue<Formation*>("formation");
+    FormationValue* value = (FormationValue*)context->GetValue<Formation*>("formation");
     if (formation == "?" || formation.empty())
     {
         ostringstream str; str << "Formation: |cff00ff00" << value->Get()->getName();
@@ -420,56 +538,20 @@ bool SetFormationAction::Execute(Event event)
         return true;
     }
 
-    if (formation == "melee")
+    if (formation == "show")
     {
-        if (value->Get()) delete value->Get();
-        value->Set(new MeleeFormation(ai));
+        WorldLocation loc = value->Get()->GetLocation();
+        if (!Formation::IsNullLocation(loc))
+            ai->Ping(loc.coord_x, loc.coord_y);
+
+        return true;
     }
-    else if (formation == "queue")
-    {
-        if (value->Get()) delete value->Get();
-        value->Set(new QueueFormation(ai));
-    }
-    else if (formation == "chaos")
-    {
-        if (value->Get()) delete value->Get();
-        value->Set(new ChaosFormation(ai));
-    }
-    else if (formation == "circle")
-    {
-        if (value->Get()) delete value->Get();
-        value->Set(new CircleFormation(ai));
-    }
-    else if (formation == "line")
-    {
-        if (value->Get()) delete value->Get();
-        value->Set(new LineFormation(ai));
-    }
-    else if (formation == "shield")
-    {
-        if (value->Get()) delete value->Get();
-        value->Set(new ShieldFormation(ai));
-    }
-    else if (formation == "arrow")
-    {
-        if (value->Get()) delete value->Get();
-        value->Set(new ArrowFormation(ai));
-    }
-    else if (formation == "near" || formation == "default")
-    {
-        if (value->Get()) delete value->Get();
-        value->Set(new NearFormation(ai));
-    }
-    else if (formation == "far")
-    {
-        if (value->Get()) delete value->Get();
-        value->Set(new FarFormation(ai));
-    }
-    else
+
+    if (!value->Load(formation))
     {
         ostringstream str; str << "Invalid formation: |cffff0000" << formation;
         ai->TellMaster(str);
-        ai->TellMaster("Please set to any of:|cffffffff melee (default), queue, chaos, circle, line, shield, arrow, near, far");
+        ai->TellMaster("Please set to any of:|cffffffff near (default), queue, chaos, circle, line, shield, arrow, melee, far");
         return false;
     }
 
@@ -535,8 +617,11 @@ WorldLocation MoveFormation::MoveSingleLine(vector<Player*> line, float diff, fl
             if (ground <= INVALID_HEIGHT)
                 return Formation::NullLocation;
 
-            lz += CONTACT_DISTANCE;
-            bot->UpdateAllowedPositionZ(lx, ly, lz);
+            if (!bot->IsFlying() && !bot->IsFreeFlying())
+            {
+                lz += CONTACT_DISTANCE;
+                bot->UpdateAllowedPositionZ(lx, ly, lz);
+            }
             return WorldLocation(bot->GetMapId(), lx, ly, lz);
         }
 

@@ -3,11 +3,19 @@
 #include "SpellIdValue.h"
 #include "../../PlayerbotAIConfig.h"
 #include "../../ServerFacade.h"
+#ifdef MANGOSBOT_TWO
+#include "Entities/Vehicle.h"
+#endif
 
 using namespace ai;
 
 SpellIdValue::SpellIdValue(PlayerbotAI* ai) :
         CalculatedValue<uint32>(ai, "spell id")
+{
+}
+
+VehicleSpellIdValue::VehicleSpellIdValue(PlayerbotAI* ai) :
+    CalculatedValue<uint32>(ai, "vehicle spell id")
 {
 }
 
@@ -95,15 +103,126 @@ uint32 SpellIdValue::Calculate()
 
     int saveMana = (int) round(AI_VALUE(double, "mana save level"));
     int rank = 1;
-    int highest = 0;
-    int lowest = 0;
-    for (set<uint32>::reverse_iterator i = spellIds.rbegin(); i != spellIds.rend(); ++i)
+    int highestRank = 0;
+    int highestSpellId = 0;
+    int lowestRank = 0;
+    int lowestSpellId = 0;
+
+    if (saveMana <= 1)
     {
-        if (!highest) highest = *i;
-        if (saveMana == rank) return *i;
-        lowest = *i;
-        rank++;
+        for (set<uint32>::reverse_iterator itr = spellIds.rbegin(); itr != spellIds.rend(); ++itr)
+        {
+            const SpellEntry* pSpellInfo = sServerFacade.LookupSpellInfo(*itr);
+            if (!pSpellInfo)
+                continue;
+
+            std::string spellName = pSpellInfo->Rank[0];
+
+            // For atoi, the input string has to start with a digit, so lets search for the first digit
+            size_t i = 0;
+            for (; i < spellName.length(); i++) { if (isdigit(spellName[i])) break; }
+
+            // remove the first chars, which aren't digits
+            spellName = spellName.substr(i, spellName.length() - i);
+
+            // convert the remaining text to an integer
+            int id = atoi(spellName.c_str());
+
+            if (!id)
+            {
+                highestSpellId = *itr;
+                continue;
+            }
+
+            if (!highestRank || id > highestRank)
+            {
+                highestRank = id;
+                highestSpellId = *itr;
+            }
+
+            if (!lowestRank || (lowestRank && id < lowestRank))
+            {
+                lowestRank = id;
+                lowestSpellId = *itr;
+            }
+        }
+    }
+    else
+    {
+        for (set<uint32>::reverse_iterator i = spellIds.rbegin(); i != spellIds.rend(); ++i)
+        {
+            if (!highestSpellId) highestSpellId = *i;
+            if (sSpellMgr.IsSpellHigherRankOfSpell(*i, highestSpellId)) highestSpellId = *i;
+            if (saveMana == rank) return *i;
+            lowestSpellId = *i;
+            rank++;
+        }
     }
 
-    return saveMana > 1 ? lowest : highest;
+    return saveMana > 1 ? lowestSpellId : highestSpellId;
+}
+
+uint32 VehicleSpellIdValue::Calculate()
+{
+#ifdef MANGOSBOT_TWO
+    TransportInfo* transportInfo = bot->GetTransportInfo();
+    if (!transportInfo || !transportInfo->IsOnVehicle())
+        return 0;
+
+    Unit* vehicle = (Unit*)transportInfo->GetTransport();
+    if (!vehicle || !vehicle->IsAlive())
+        return 0;
+
+    // do not allow if no spells
+    VehicleSeatEntry const* seat = vehicle->GetVehicleInfo()->GetSeatEntry(transportInfo->GetTransportSeat());
+    if (!seat || !seat->HasFlag(SEAT_FLAG_CAN_CAST))
+        return 0;
+
+    string namepart = qualifier;
+
+    PlayerbotChatHandler handler(bot);
+    uint32 extractedSpellId = handler.extractSpellId(namepart);
+    if (extractedSpellId)
+    {
+        const SpellEntry* pSpellInfo = sServerFacade.LookupSpellInfo(extractedSpellId);
+        if (pSpellInfo) namepart = pSpellInfo->SpellName[0];
+    }
+
+    wstring wnamepart;
+
+    if (!Utf8toWStr(namepart, wnamepart))
+        return 0;
+
+    wstrToLower(wnamepart);
+    char firstSymbol = tolower(namepart[0]);
+    int spellLength = wnamepart.length();
+
+    int loc = bot->GetSession()->GetSessionDbcLocale();
+
+    //Creature* creature = static_cast<Creature*>(vehicle);
+    std::vector<uint32> spells = vehicle->GetCharmSpells();
+    for (uint32 x = 0; x < CREATURE_MAX_SPELLS; ++x)
+    {
+        uint32 spellId = spells[x];
+
+        if (spellId == 2)
+            continue;
+        if (IsPassiveSpell(spellId))
+            continue;
+        else
+        {
+            const SpellEntry* pSpellInfo = sServerFacade.LookupSpellInfo(spellId);
+            if (!pSpellInfo)
+                continue;
+
+            char* spellName = pSpellInfo->SpellName[loc];
+            if (tolower(spellName[0]) != firstSymbol || strlen(spellName) != spellLength || !Utf8FitTo(spellName, wnamepart))
+                continue;
+
+            return spellId;
+        }
+    }
+#endif
+
+    return 0;
 }

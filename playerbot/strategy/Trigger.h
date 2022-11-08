@@ -1,21 +1,15 @@
 #pragma once
-#include "Action.h"
 #include "Event.h"
-#include "../PlayerbotAIAware.h"
+#include "Value.h"
+#include "AiObject.h"
 
-#define NEXT_TRIGGERS(name, relevance) \
-    virtual NextAction* getNextAction() { return new NextAction(name, relevance); }
+class Unit;
 
-#define BEGIN_TRIGGER(clazz, super) \
-class clazz : public super \
-    { \
-    public: \
-        clazz(PlayerbotAI* ai) : super(ai) {} \
-    public: \
-        virtual bool IsActive();
-
-#define END_TRIGGER() \
-    };
+namespace ai
+{
+    class NextAction;
+    template<class T> class Value;
+}
 
 namespace ai
 {
@@ -66,10 +60,7 @@ namespace ai
             this->handlers = handlers;
             this->trigger = NULL;
         }
-        virtual ~TriggerNode()
-        {
-            NextAction::destroy(handlers);
-        }
+        virtual ~TriggerNode();
 
     public:
         Trigger* getTrigger() { return trigger; }
@@ -77,11 +68,11 @@ namespace ai
         string getName() { return name; }
 
     public:
-        NextAction** getHandlers() { return NextAction::merge(NextAction::clone(handlers), trigger->getHandlers()); }
-
+        NextAction** getHandlers();
+        float getFirstRelevance();
     private:
+        std::string name;
         Trigger* trigger;
         NextAction** handlers;
-        std::string name;
     };
 }

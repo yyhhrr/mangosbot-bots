@@ -33,6 +33,10 @@ namespace ai
         CastConcussiveShotAction(PlayerbotAI* ai) : CastSnareSpellAction(ai, "concussive shot") {}
     };
 
+    SPELL_ACTION(CastSteadyShotAction, "steady shot");
+
+    SNARE_ACTION(CastScatterShotAction, "scatter shot");
+
     BEGIN_RANGED_SPELL_ACTION(CastDistractingShotAction, "distracting shot")
     END_SPELL_ACTION()
 
@@ -44,9 +48,6 @@ namespace ai
 
     BEGIN_RANGED_SPELL_ACTION(CastSerpentStingAction, "serpent sting")
     virtual bool isUseful();
-    END_SPELL_ACTION()
-
-    BEGIN_RANGED_SPELL_ACTION(CastWyvernStingAction, "wyvern sting")
     END_SPELL_ACTION()
 
     BEGIN_RANGED_SPELL_ACTION(CastViperStingAction, "viper sting")
@@ -118,16 +119,12 @@ namespace ai
         CastFeignDeathAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "feign death") {}
     };
 
+    REMOVE_BUFF_ACTION(RemoveFeignDeathAction, "feign death");
+
 	class CastRapidFireAction : public CastBuffSpellAction
 	{
 	public:
 		CastRapidFireAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "rapid fire") {}
-	};
-
-	class CastReadinessAction : public CastBuffSpellAction
-	{
-	public:
-		CastReadinessAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "readiness") {}
 	};
 
 	class CastBlackArrow : public CastDebuffSpellAction
@@ -136,24 +133,33 @@ namespace ai
 		CastBlackArrow(PlayerbotAI* ai) : CastDebuffSpellAction(ai, "black arrow") {}
 	};
 
-    class CastFreezingTrap : public CastDebuffSpellAction
-    {
-    public:
-        CastFreezingTrap(PlayerbotAI* ai) : CastDebuffSpellAction(ai, "freezing trap") {}
-        virtual Value<Unit*>* GetTargetValue();
-    };
-
+    BUFF_ACTION(CastFreezingTrapAction, "freezing trap");
+    BUFF_ACTION(CastFrostTrapAction, "frost trap");
+    BUFF_ACTION(CastExplosiveTrapAction, "explosive trap");
+    SNARE_ACTION(CastBlackArrowSnareAction, "black arrow");
+    SPELL_ACTION(CastSilencingShotAction, "silencing shot");
+    ENEMY_HEALER_ACTION(CastSilencingShotOnHealerAction, "silencing shot");
+    BUFF_ACTION(CastReadinessAction, "readiness");
+;
     class CastWingClipAction : public CastMeleeSpellAction
     {
     public:
         CastWingClipAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "wing clip") {}
+
         virtual bool isUseful()
         {
-            return CastMeleeSpellAction::isUseful() && !ai->HasAura(spell, GetTarget());
+            return CastMeleeSpellAction::isUseful() && !ai->HasAura(GetSpellName(), GetTarget());
         }
-        virtual NextAction** getPrerequisites()
+    };
+
+    class CastRaptorStrikeAction : public CastMeleeSpellAction
+    {
+    public:
+        CastRaptorStrikeAction(PlayerbotAI* ai) : CastMeleeSpellAction(ai, "raptor strike") {}
+
+        virtual bool isUseful()
         {
-            return NULL;
+            return CastMeleeSpellAction::isUseful() && ai->HasStrategy("close", BotState::BOT_STATE_COMBAT);
         }
     };
 
@@ -167,6 +173,32 @@ namespace ai
     {
     public:
         FeedPetAction(PlayerbotAI* ai) : Action(ai, "feed pet") {}
-        virtual bool Execute(Event event);
+        virtual bool Execute(Event& event);
     };
+
+    class CastBestialWrathAction : public CastBuffSpellAction
+    {
+    public:
+        CastBestialWrathAction(PlayerbotAI* ai) : CastBuffSpellAction(ai, "bestial wrath") {}
+    };
+
+    class CastScareBeastAction : public CastSpellAction
+    {
+    public:
+        CastScareBeastAction(PlayerbotAI* ai) : CastSpellAction(ai, "scare beast") {}
+    };
+
+    class CastScareBeastCcAction : public CastSpellAction
+    {
+    public:
+        CastScareBeastCcAction(PlayerbotAI* ai) : CastSpellAction(ai, "scare beast on cc") {}
+        virtual Value<Unit*>* GetTargetValue();
+        virtual bool Execute(Event& event);
+    };
+
+    BUFF_ACTION(IntimidationAction, "intimidation");
+    BUFF_ACTION(DeterrenceAction, "deterrence");
+    MELEE_ACTION(CastCounterattackAction, "counterattack");
+    SNARE_ACTION(WyvernStingSnareAction, "wyvern sting");
+    MELEE_ACTION(MongooseBiteAction, "mongoose bite");
 }

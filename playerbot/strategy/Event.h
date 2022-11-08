@@ -1,5 +1,12 @@
 #pragma once
 
+#include "ObjectGuid.h"
+#include "WorldPacket.h"
+
+class Player;
+
+using namespace std;
+
 namespace ai
 {
     class Event
@@ -16,10 +23,11 @@ namespace ai
         Event(string source) : source(source) {}
         Event(string source, string param, Player* owner = NULL) : source(source), param(param), owner(owner) {}
         Event(string source, WorldPacket &packet, Player* owner = NULL) : source(source), packet(packet), owner(owner) {}
+        Event(string source, ObjectGuid object, Player* owner = NULL) : source(source), owner(owner) { packet << object; }
         virtual ~Event() {}
 
 	public:
-        string getSource() { return source; }
+        string getSource() const { return source; }
         string getParam() { return param; }
         WorldPacket& getPacket() { return packet; }
         ObjectGuid getObject();
@@ -30,7 +38,6 @@ namespace ai
         string source;
         string param;
         WorldPacket packet;
-        ObjectGuid object;
-        Player* owner;
+        Player* owner = nullptr;
 	};
 }

@@ -3,14 +3,32 @@
 
 namespace ai
 {
+    DEFLECT_TRIGGER(FireWardTrigger, "fire ward");
+    DEFLECT_TRIGGER(FrostWardTrigger, "frost ward");
+
+    class BlinkTrigger : public Trigger
+    {
+    public:
+        BlinkTrigger(PlayerbotAI* ai) : Trigger(ai, "blink", 2) {}
+        virtual bool IsActive()
+        {
+            return bot->HasAuraType(SPELL_AURA_MOD_ROOT) ||
+                bot->HasAuraType(SPELL_AURA_MOD_STUN);
+        }
+    };
+
     class ArcaneIntellectOnPartyTrigger : public BuffOnPartyTrigger {
     public:
-        ArcaneIntellectOnPartyTrigger(PlayerbotAI* ai) : BuffOnPartyTrigger(ai, "arcane intellect", 7) {}
+        ArcaneIntellectOnPartyTrigger(PlayerbotAI* ai) : BuffOnPartyTrigger(ai, "arcane intellect", 2) {}
+
+        virtual bool IsActive() { return BuffOnPartyTrigger::IsActive() && !ai->HasAura("arcane brilliance", GetTarget()); }
     };
 
     class ArcaneIntellectTrigger : public BuffTrigger {
     public:
-        ArcaneIntellectTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "arcane intellect", 5) {}
+        ArcaneIntellectTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "arcane intellect", 2) {}
+
+        virtual bool IsActive() { return BuffTrigger::IsActive() && !ai->HasAura("arcane brilliance", GetTarget()); }
     };
 
     class MageArmorTrigger : public BuffTrigger {
@@ -31,7 +49,7 @@ namespace ai
 
     class PyroblastTrigger : public DebuffTrigger {
     public:
-        PyroblastTrigger(PlayerbotAI* ai) : DebuffTrigger(ai, "pyroblast") {}
+        PyroblastTrigger(PlayerbotAI* ai) : DebuffTrigger(ai, "pyroblast", 10) {}
     };
 
     class HotStreakTrigger : public HasAuraTrigger {
@@ -67,6 +85,8 @@ namespace ai
         IcyVeinsTrigger(PlayerbotAI* ai) : BoostTrigger(ai, "icy veins") {}
     };
 
+    BOOST_TRIGGER(WaterElementalBoostTrigger, "summon water elemental");
+
     class PolymorphTrigger : public HasCcTargetTrigger
     {
     public:
@@ -96,4 +116,25 @@ namespace ai
     public:
         CounterspellEnemyHealerTrigger(PlayerbotAI* ai) : InterruptEnemyHealerTrigger(ai, "counterspell") {}
     };
+
+    class ArcanePowerTrigger : public BuffTrigger
+    {
+    public:
+        ArcanePowerTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "arcane power") {}
+    };
+
+    class PresenceOfMindTrigger : public BuffTrigger
+    {
+    public:
+        PresenceOfMindTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "presence of mind") {}
+    };
+
+    class ManaShieldTrigger : public BuffTrigger
+    {
+    public:
+        ManaShieldTrigger(PlayerbotAI* ai) : BuffTrigger(ai, "mana shield", 5) {}
+        virtual bool IsActive();
+    };
+
+    DEBUFF_TRIGGER_A(IceLanceTrigger, "ice lance");
 }

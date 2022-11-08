@@ -1,6 +1,8 @@
 #include "botpch.h"
 #include "../../playerbot.h"
 #include "InvalidTargetValue.h"
+#include "AttackersValue.h"
+#include "EnemyPlayerValue.h"
 #include "../../PlayerbotAIConfig.h"
 #include "../../ServerFacade.h"
 
@@ -9,22 +11,19 @@ using namespace ai;
 bool InvalidTargetValue::Calculate()
 {
     Unit* target = AI_VALUE(Unit*, qualifier);
+    if (!target || !target->IsInWorld() || target->GetMapId() != bot->GetMapId())
+        return true;
+
+    Unit* duel = AI_VALUE(Unit*, "duel target");
+    if (duel && duel == target)
+        return false;
+
     if (qualifier == "current target")
     {
-        return !target ||
-                target->GetMapId() != bot->GetMapId() ||
-                sServerFacade.UnitIsDead(target) ||
-                target->IsPolymorphed() ||
-                sServerFacade.IsCharmed(target) ||
-                sServerFacade.IsFeared(target) ||
-#ifdef CMANGOS
-                target->IsInEvadeMode() ||
-#endif
-                target->hasUnitState(UNIT_STAT_ISOLATED) ||
-                sServerFacade.IsFriendlyTo(target, bot) ||
-                !bot->IsWithinDistInMap(target, sPlayerbotAIConfig.sightDistance) ||
-                !sServerFacade.IsWithinLOSInMap(bot, target);
+        if (target->GetObjectGuid() != bot->GetSelectionGuid())
+            return true;
     }
 
-    return !target;
+    bool validTarget = AttackersValue::IsValidTarget(target, bot);
+    return !validTarget;
 }

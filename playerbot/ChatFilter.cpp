@@ -35,7 +35,15 @@ public:
         if (heal && !ai->IsHeal(bot))
             return "";
 
-        if (tank || dps || heal)
+        bool ranged = message.find("@ranged") == 0;
+        if (ranged && !ai->IsRanged(bot))
+            return "";
+
+        bool melee = message.find("@melee") == 0;
+        if (melee && ai->IsRanged(bot))
+            return "";
+
+        if (tank || dps || heal || ranged || melee)
             return ChatFilter::Filter(message);
 
         return message;
@@ -56,17 +64,17 @@ public:
 
         if (message.find("-") != string::npos)
         {
-            int fromLevel = atoi(message.substr(message.find("@") + 1, message.find("-")).c_str());
-            int toLevel = atoi(message.substr(message.find("-") + 1, message.find(" ")).c_str());
+            uint32 fromLevel = atoi(message.substr(message.find("@") + 1, message.find("-")).c_str());
+            uint32 toLevel = atoi(message.substr(message.find("-") + 1, message.find(" ")).c_str());
 
-            if (bot->getLevel() >= fromLevel && bot->getLevel() <= toLevel)
+            if (bot->GetLevel() >= fromLevel && bot->GetLevel() <= toLevel)
                 return ChatFilter::Filter(message);
 
             return message;
         }
 
-		int level = atoi(message.substr(message.find("@") + 1, message.find(" ")).c_str());
-        if (bot->getLevel() == level)
+        uint32 level = atoi(message.substr(message.find("@") + 1, message.find(" ")).c_str());
+        if (bot->GetLevel() == level)
             return ChatFilter::Filter(message);
 
         return message;
@@ -188,7 +196,9 @@ class ClassChatFilter : public ChatFilter
 public:
     ClassChatFilter(PlayerbotAI* ai) : ChatFilter(ai)
     {
-        //classNames["@death_knight"] = CLASS_DEATH_KNIGHT;
+#ifdef MANGOSBOT_TWO
+        classNames["@death_knight"] = CLASS_DEATH_KNIGHT;
+#endif
         classNames["@druid"] = CLASS_DRUID;
         classNames["@hunter"] = CLASS_HUNTER;
         classNames["@mage"] = CLASS_MAGE;
@@ -227,7 +237,37 @@ private:
     map<string, uint8> classNames;
 };
 
+class SubGroupChatFilter : public ChatFilter
+{
+public:
+    SubGroupChatFilter(PlayerbotAI* ai) : ChatFilter(ai) {}
 
+    virtual string Filter(string message)
+    {
+        Player* bot = ai->GetBot();
+
+        if (message.find("@group") == 0)
+        {
+            string pnum = message.substr(6, message.find(" "));
+            int from = atoi(pnum.c_str());
+            int to = from;
+            if (pnum.find("-") != string::npos)
+            {
+                from = atoi(pnum.substr(pnum.find("@") + 1, pnum.find("-")).c_str());
+                to = atoi(pnum.substr(pnum.find("-") + 1, pnum.find(" ")).c_str());
+            }
+
+            if (!bot->GetGroup())
+                return message;
+
+            int sg = (int)bot->GetSubGroup() + 1;
+            if (sg >= from && sg <= to)
+                return ChatFilter::Filter(message);
+        }
+
+        return message;
+    }
+};
 
 CompositeChatFilter::CompositeChatFilter(PlayerbotAI* ai) : ChatFilter(ai)
 {
@@ -236,6 +276,7 @@ CompositeChatFilter::CompositeChatFilter(PlayerbotAI* ai) : ChatFilter(ai)
     filters.push_back(new RtiChatFilter(ai));
     filters.push_back(new CombatTypeChatFilter(ai));
     filters.push_back(new LevelChatFilter(ai));
+    filters.push_back(new SubGroupChatFilter(ai));
 }
 
 CompositeChatFilter::~CompositeChatFilter()

@@ -14,7 +14,7 @@ public:
         creators["fire blast"] = &fire_blast;
         creators["scorch"] = &scorch;
         creators["frost nova"] = &frost_nova;
-        creators["icy veins"] = &icy_veins;
+        creators["cone of cold"] = &cone_of_cold;
         creators["combustion"] = &combustion;
         creators["evocation"] = &evocation;
         creators["dragon's breath"] = &dragons_breath;
@@ -46,14 +46,14 @@ private:
     }
     static ActionNode* frost_nova(PlayerbotAI* ai)
     {
-        return new ActionNode ("frost nova",
+        return new ActionNode("frost nova",
             /*P*/ NULL,
-            /*A*/ NULL,
+            /*A*/ NextAction::array(0, new NextAction("cone of cold"), NULL),
             /*C*/ NULL);
     }
-    static ActionNode* icy_veins(PlayerbotAI* ai)
+    static ActionNode* cone_of_cold(PlayerbotAI* ai)
     {
-        return new ActionNode ("icy veins",
+        return new ActionNode("cone of cold",
             /*P*/ NULL,
             /*A*/ NULL,
             /*C*/ NULL);
@@ -102,34 +102,34 @@ private:
     }
 };
 
-GenericMageStrategy::GenericMageStrategy(PlayerbotAI* ai) : RangedCombatStrategy(ai)
+GenericMageStrategy::GenericMageStrategy(PlayerbotAI* ai) : CombatStrategy(ai)
 {
     actionNodeFactories.Add(new GenericMageStrategyActionNodeFactory());
 }
 
 void GenericMageStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
 {
-    RangedCombatStrategy::InitTriggers(triggers);
+    CombatStrategy::InitTriggers(triggers);
 
     triggers.push_back(new TriggerNode(
-        "enemy too close for spell",
-        NextAction::array(0, new NextAction("flee", 49.0f), NULL)));
+        "enemy out of spell",
+        NextAction::array(0, new NextAction("reach spell", 60.0f), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "enemy is close",
-        NextAction::array(0, new NextAction("frost nova", 50.0f), new NextAction("flee", 49.0f), NULL)));
+        "enemy ten yards",
+        NextAction::array(0, new NextAction("frost nova", 61.0f), NULL)));
 
     triggers.push_back(new TriggerNode(
         "counterspell on enemy healer",
         NextAction::array(0, new NextAction("counterspell on enemy healer", 40.0f), NULL)));
 
+    triggers.push_back(new TriggerNode(
+        "counterspell",
+        NextAction::array(0, new NextAction("counterspell", 40.0f), NULL)));
+
 	triggers.push_back(new TriggerNode(
 		"critical health",
 		NextAction::array(0, new NextAction("ice block", 80.0f), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "polymorph",
-        NextAction::array(0, new NextAction("polymorph", 30.0f), NULL)));
 
 	triggers.push_back(new TriggerNode(
 		"spellsteal",
@@ -137,21 +137,61 @@ void GenericMageStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
 
     triggers.push_back(new TriggerNode(
         "medium threat",
-        NextAction::array(0, new NextAction("invisibility", 60.0f), NULL)));
+        NextAction::array(0, new NextAction("invisibility", 40.0f), NULL)));
 
     triggers.push_back(new TriggerNode(
         "low mana",
-        NextAction::array(0, new NextAction("evocation", ACTION_EMERGENCY + 5), NULL)));
+        NextAction::array(0, new NextAction("evocation", ACTION_HIGH - 1), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "fire ward",
+        NextAction::array(0, new NextAction("fire ward", ACTION_HIGH), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "frost ward",
+        NextAction::array(0, new NextAction("frost ward", ACTION_HIGH), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "blink",
+        NextAction::array(0, new NextAction("blink", 61.0f), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "target critical health",
+        NextAction::array(0, new NextAction("fire blast", ACTION_HIGH), NULL)));
+}
+
+MageCureStrategy::MageCureStrategy(PlayerbotAI* ai) : Strategy(ai)
+{
+    actionNodeFactories.Add(new GenericMageStrategyActionNodeFactory());
 }
 
 void MageCureStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
 {
     triggers.push_back(new TriggerNode(
         "remove curse",
-        NextAction::array(0, new NextAction("remove curse", 41.0f), NULL)));
+        NextAction::array(0, new NextAction("remove curse", ACTION_DISPEL + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
         "remove curse on party",
-        NextAction::array(0, new NextAction("remove curse on party", 40.0f), NULL)));
+        NextAction::array(0, new NextAction("remove curse on party", ACTION_DISPEL), NULL)));
 
+}
+
+void MageBoostStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
+{
+    triggers.push_back(new TriggerNode(
+        "arcane power",
+        NextAction::array(0, new NextAction("arcane power", 41.0f), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "presence of mind",
+        NextAction::array(0, new NextAction("presence of mind", 42.0f), NULL)));
+
+}
+
+void MageCcStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
+{
+    triggers.push_back(new TriggerNode(
+        "polymorph",
+        NextAction::array(0, new NextAction("polymorph", 30.0f), NULL)));
 }
