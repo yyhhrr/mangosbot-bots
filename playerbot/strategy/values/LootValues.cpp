@@ -2,7 +2,7 @@
 #include "../../playerbot.h"
 #include "SharedValueContext.h"
 #include "LootValues.h"
-#include "../../Strategy/Actions/LootAction.h"
+#include "../actions/LootAction.h"
 
 using namespace ai;
 
@@ -209,8 +209,6 @@ uint32 StackSpaceForItem::Calculate()
 
 bool ShouldLootObject::Calculate()
 {
-	uint64 guidRaw;
-	
 	GuidPosition guid(stoull(getQualifier()), WorldPosition(bot));
 
 	if (!guid)
