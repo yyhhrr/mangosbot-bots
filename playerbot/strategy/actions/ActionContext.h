@@ -56,6 +56,7 @@
 #include "UseTrinketAction.h"
 #include "BotStateActions.h"
 #include "WaitForAttackAction.h"
+#include "PullActions.h"
 
 namespace ai
 {
@@ -79,14 +80,14 @@ namespace ai
             creators["melee"] = &ActionContext::melee;
             creators["switch to melee"] = &ActionContext::switch_to_melee;
             creators["switch to ranged"] = &ActionContext::switch_to_ranged;
-            creators["reach spell"] = &ActionContext::ReachSpell;
-            creators["reach melee"] = &ActionContext::ReachMelee;
+            creators["reach spell"] = &ActionContext::reach_spell;
+            creators["reach melee"] = &ActionContext::reach_melee;
+            creators["reach pull"] = &ActionContext::reach_pull;
             creators["reach party member to heal"] = &ActionContext::reach_party_member_to_heal;
             creators["flee"] = &ActionContext::flee;
             creators["flee with pet"] = &ActionContext::flee_with_pet;
             creators["wait for attack keep safe distance"] = &ActionContext::wait_for_attack_keep_safe_distance;
             creators["shoot"] = &ActionContext::shoot;
-            creators["end pull"] = &ActionContext::end_pull;
             creators["healthstone"] = &ActionContext::healthstone;
             creators["healing potion"] = &ActionContext::healing_potion;
             creators["mana potion"] = &ActionContext::mana_potion;
@@ -110,6 +111,10 @@ namespace ai
             creators["attack anything"] = &ActionContext::attack_anything;
             creators["attack least hp target"] = &ActionContext::attack_least_hp_target;
             creators["attack enemy player"] = &ActionContext::attack_enemy_player;
+            creators["pull my target"] = &ActionContext::pull_my_target;
+            creators["pull start"] = &ActionContext::pull_start;
+            creators["pull action"] = &ActionContext::pull_action;
+            creators["pull end"] = &ActionContext::pull_end;
             creators["emote"] = &ActionContext::emote;
             creators["talk"] = &ActionContext::talk;
             creators["suggest what to do"] = &ActionContext::suggest_what_to_do;
@@ -170,6 +175,8 @@ namespace ai
             creators["oil of immolation"] = &ActionContext::oil_of_immolation;
             creators["dark rune"] = &ActionContext::dark_rune;
             creators["adamantite grenade"] = &ActionContext::adamantite_grenade;
+            creators["bg banner"] = &ActionContext::bg_banner;
+            creators["use bandage"] = &ActionContext::use_bandage;
 
             // BG Tactics
             creators["bg tactics"] = &ActionContext::bg_tactics;
@@ -284,13 +291,13 @@ namespace ai
         static Action* melee(PlayerbotAI* ai) { return new MeleeAction(ai); }
         static Action* switch_to_melee(PlayerbotAI* ai) { return new SwitchToMeleeAction(ai); }
         static Action* switch_to_ranged(PlayerbotAI* ai) { return new SwitchToRangedAction(ai); }
-        static Action* ReachSpell(PlayerbotAI* ai) { return new ReachSpellAction(ai); }
-        static Action* ReachMelee(PlayerbotAI* ai) { return new ReachMeleeAction(ai); }
+        static Action* reach_spell(PlayerbotAI* ai) { return new ReachSpellAction(ai); }
+        static Action* reach_melee(PlayerbotAI* ai) { return new ReachMeleeAction(ai); }
+        static Action* reach_pull(PlayerbotAI* ai) { return new ReachPullAction(ai); }
         static Action* reach_party_member_to_heal(PlayerbotAI* ai) { return new ReachPartyMemberToHealAction(ai); }
         static Action* flee_with_pet(PlayerbotAI* ai) { return new FleeWithPetAction(ai); }
         static Action* wait_for_attack_keep_safe_distance(PlayerbotAI* ai) { return new WaitForAttackKeepSafeDistanceAction(ai); }
         static Action* flee(PlayerbotAI* ai) { return new FleeAction(ai); }
-        static Action* end_pull(PlayerbotAI* ai) { return new ChangeCombatStrategyAction(ai, "-pull"); }
 
         //racials      
         static Action* war_stomp(PlayerbotAI* ai) { return new CastWarStompAction(ai); }
@@ -318,6 +325,10 @@ namespace ai
         static Action* attack_anything(PlayerbotAI* ai) { return new AttackAnythingAction(ai); }
         static Action* attack_least_hp_target(PlayerbotAI* ai) { return new AttackLeastHpTargetAction(ai); }
         static Action* attack_enemy_player(PlayerbotAI* ai) { return new AttackEnemyPlayerAction(ai); }
+        static Action* pull_my_target(PlayerbotAI* ai) { return new PullMyTargetAction(ai); }
+        static Action* pull_start(PlayerbotAI* ai) { return new PullStartAction(ai); }
+        static Action* pull_action(PlayerbotAI* ai) { return new PullAction(ai); }
+        static Action* pull_end(PlayerbotAI* ai) { return new PullEndAction(ai); }
         static Action* stay(PlayerbotAI* ai) { return new StayAction(ai); }
         static Action* sit(PlayerbotAI* ai) { return new SitAction(ai); }
         static Action* runaway(PlayerbotAI* ai) { return new RunAwayAction(ai); }
@@ -379,6 +390,8 @@ namespace ai
         static Action* oil_of_immolation(PlayerbotAI* ai) { return new CastOilOfImmolationAction(ai); }
         static Action* dark_rune(PlayerbotAI* ai) { return new DarkRuneAction(ai); }
         static Action* adamantite_grenade(PlayerbotAI* ai) { return new UseAdamantiteGrenadeAction(ai); }
+        static Action* bg_banner(PlayerbotAI* ai) { return new UseBgBannerAction(ai); }
+        static Action* use_bandage(PlayerbotAI* ai) { return new UseBandageAction(ai); }
         
         // BG Tactics
         static Action* bg_tactics(PlayerbotAI* ai) { return new BGTactics(ai); }

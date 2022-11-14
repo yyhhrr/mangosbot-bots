@@ -322,21 +322,43 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget, Uni
            if (item->GetProto()->Spells[i].SpellTrigger == ITEM_SPELLTRIGGER_ON_USE)
            {
                spellid = item->GetProto()->Spells[i].SpellId;
+               spell_index = i;
                break;
            }
        }
 
        if (SpellEntry const* spellInfo = sSpellTemplate.LookupEntry<SpellEntry>(spellid))
        {
+           if (!bot->IsSpellReady(spellid, item->GetProto()))
+               return false;
+
            if (spellInfo->Targets & TARGET_FLAG_DEST_LOCATION)
            {
                targetFlag = TARGET_FLAG_DEST_LOCATION;
                Position pos = unitTarget->GetPosition();
                SpellCastTargets targets;
                targets.setDestination(pos.x, pos.y, pos.z);
-               packet << targetFlag;
-               targets.write(packet);
-               targetSelected = true;
+               targets.m_targetMask = TARGET_FLAG_DEST_LOCATION;
+
+               const auto spell = new Spell(bot, spellInfo, false, bot->GetObjectGuid());
+               spell->m_targets = targets;
+               if (spell->CheckRange(true) != SPELL_CAST_OK)
+               {
+                   delete spell;
+                   return false;
+               }
+               delete spell;
+#ifdef MANGOSBOT_ZERO
+               bot->CastItemUseSpell(item, targets, spell_index);
+#endif
+#ifdef MANGOSBOT_ONE
+               bot->CastItemUseSpell(item, targets, 1, spell_index);
+#endif
+#ifdef MANGOSBOT_TWO
+               bot->CastItemUseSpell(item, targets, 1, 0, spellid);
+#endif
+
+               return true;
            }
        }
    }

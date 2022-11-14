@@ -27,6 +27,9 @@ bool AttackAnythingAction::isUseful()
     if (!target)
         return false;
 
+    if (ai->ContainsStrategy(STRATEGY_TYPE_HEAL))
+        return false;
+
     if(!target->IsPlayer() && bot->isInFront(target,target->GetAttackDistance(bot)*1.5f, M_PI_F*0.5f) && target->CanAttackOnSight(bot) && target->GetLevel() < bot->GetLevel() + 3.0) //Attack before being attacked.
         return true;
 
@@ -60,7 +63,7 @@ bool ai::AttackAnythingAction::Execute(Event& event)
             const char* grindName = grindTarget->GetName();
             if (grindName)
             {
-                context->GetValue<ObjectGuid>("pull target")->Set(grindTarget->GetObjectGuid());
+                context->GetValue<ObjectGuid>("attack target")->Set(grindTarget->GetObjectGuid());
                 ai->StopMoving();
             }
         }
@@ -98,11 +101,11 @@ bool SelectNewTargetAction::Execute(Event& event)
     }
 
     // Clear the target variables
-    ObjectGuid pullTarget = AI_VALUE(ObjectGuid, "pull target");
+    ObjectGuid attackTarget = AI_VALUE(ObjectGuid, "attack target");
     list<ObjectGuid> possible = AI_VALUE(list<ObjectGuid>, "possible targets no los");
-    if (pullTarget && find(possible.begin(), possible.end(), pullTarget) == possible.end())
+    if (attackTarget && find(possible.begin(), possible.end(), attackTarget) == possible.end())
     {
-        SET_AI_VALUE(ObjectGuid, "pull target", ObjectGuid());
+        SET_AI_VALUE(ObjectGuid, "attack target", ObjectGuid());
     }
 
     // Save the old target and clear the current target
@@ -141,7 +144,7 @@ bool SelectNewTargetAction::Execute(Event& event)
     }
 
     // Check if there is any enemy targets available to attack
-    if (!AI_VALUE(list<ObjectGuid>, "combat targets").empty())
+    if (!AI_VALUE(list<ObjectGuid>, "attackers").empty())
     {
         // Check if there is an enemy player nearby
         Unit* enemyPlayer = AI_VALUE(Unit*, "enemy player target");
