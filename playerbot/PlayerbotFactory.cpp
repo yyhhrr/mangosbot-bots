@@ -596,10 +596,20 @@ void PlayerbotFactory::InitPet()
 #endif
             pet->SetPower(POWER_HAPPINESS, HAPPINESS_LEVEL_SIZE * 2);
             pet->GetCharmInfo()->SetPetNumber(sObjectMgr.GeneratePetNumber(), true);
-            pet->AIM_Initialize();
+
 #ifdef CMANGOS
             pet->GetMap()->Add((Creature*)pet);
+
+            Unit* owner = pet->GetOwner();
+            if (!owner)
+                sLog.outError("no owner");
+            else
+                sLog.outError("owner: %s", owner->GetName());
+
             pet->AIM_Initialize();
+
+            if (!owner)
+                sLog.outError("owner gone");
 #endif
 #ifdef MANGOS
             pet->GetMap()->Add((Creature*)pet);
