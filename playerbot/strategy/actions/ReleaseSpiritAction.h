@@ -80,6 +80,9 @@ namespace ai
             if (!sServerFacade.UnitIsDead(bot))
                 return false;
 
+            if (bot->GetCorpse()) //Must have released.
+                return false;
+
 #ifndef MANGOSBOT_ZERO
             if (bot->InArena())
                 return false;
