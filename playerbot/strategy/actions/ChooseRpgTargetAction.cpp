@@ -374,13 +374,13 @@ bool ChooseRpgTargetAction::isFollowValid(Player* bot, WorldPosition pos)
 
     if (ai->HasActivePlayerMaster())
     {
-        if (realMaster->IsInWorld() &&
+        if (realMaster->IsInWorld() && !realMaster->IsBeingTeleported() &&
             realMaster->GetMap()->IsDungeon() &&
             bot->GetMapId() == realMaster->GetMapId())
             inDungeon = true;
 
         if (realMaster &&
-            realMaster->IsInWorld() &&
+            realMaster->IsInWorld() && !realMaster->IsBeingTeleported() &&
             realMaster->GetMap()->IsDungeon() &&
             (realMaster->GetMapId() != pos.getMapId()))
             return false;

@@ -11,6 +11,9 @@ bool TellReputationAction::Execute(Event& event)
     if (!master)
         return false;
 
+    if (master->IsBeingTeleported())
+        return false;
+
     ObjectGuid selection = master->GetSelectionGuid();
     if (selection.IsEmpty())
         return false;
