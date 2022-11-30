@@ -73,7 +73,7 @@ namespace ai
             if (!trigger)
                 return false;
 
-            if(forceCommand)
+            if(!forceCommand)
                 trigger->ExternalEvent(param, owner);
             else
                 trigger->ExternalEventForce(param, owner);
