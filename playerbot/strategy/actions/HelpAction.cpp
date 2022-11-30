@@ -19,7 +19,13 @@ HelpAction::~HelpAction()
 bool HelpAction::Execute(Event& event)
 {
     string param = event.getParam();
-    string helpTopic = ChatHelper::parseHelpTopic(param);
+    string helpTopic;
+    if(param.find("Hvalue:help") != string::npos)
+        helpTopic = ChatHelper::parseValue("help",param);
+    else if (param.find("[h:") != string::npos)
+    {
+        helpTopic = param.substr(3,param.size()-4);
+    }
 
     if (helpTopic.empty())
         helpTopic = "help:main";
