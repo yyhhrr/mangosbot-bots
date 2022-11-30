@@ -54,7 +54,10 @@ namespace ai
 
 		virtual void OnStrategyAdded() {}
 		virtual void OnStrategyRemoved() {}
-
+#ifndef GenerateBotHelp
+		virtual string GetHelpDescription() { return "This is a strategy."; }
+		virtual vector<string> GetRelatedStrategies() { return {}; }
+#endif
     protected:
         NamedObjectFactoryList<ActionNode> actionNodeFactories;
     };
