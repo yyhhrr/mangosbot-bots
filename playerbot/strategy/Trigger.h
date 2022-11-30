@@ -52,7 +52,9 @@ namespace ai
 		}
 
 #ifndef GenerateBotHelp
+        virtual string GetHelpName() { return "dummy"; } //Must equal iternal name
         virtual string GetHelpDescription() { return "This is a trigger."; }
+        virtual vector<string> GetUsedTriggers() { return {}; }
         virtual vector<string> GetUsedValues() { return {}; }
 #endif
 

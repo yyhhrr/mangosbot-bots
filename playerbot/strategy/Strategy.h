@@ -55,6 +55,7 @@ namespace ai
 		virtual void OnStrategyAdded() {}
 		virtual void OnStrategyRemoved() {}
 #ifndef GenerateBotHelp
+		virtual string GetHelpName() { return "dummy"; } //Must equal iternal name
 		virtual string GetHelpDescription() { return "This is a strategy."; }
 		virtual vector<string> GetRelatedStrategies() { return {}; }
 #endif
