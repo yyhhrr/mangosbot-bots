@@ -65,26 +65,12 @@ string PlayerbotHelpMgr::makeList(vector<string>const parts, string partFormat, 
         }
         string subPart = partFormat;
 
-        replace(partFormat, "<part>", part);
+        replace(subPart, "<part>", part);
 
-        currentLine += part + " ";
+        currentLine += subPart + " ";
     }
 
     return retString + currentLine;
-}
-
-void PlayerbotHelpMgr::SaveTemplates()
-{
-    for (auto text : botHelpText)
-    {
-        if (!text.second.m_templateChanged)
-            continue;
-
-        if(text.second.m_new)
-            PlayerbotDatabase.PExecute("INSERT INTO `ai_playerbot_help_texts` (`name`, `template_text`, `template_changed`, `text`) VALUES ('%s', '%s', 1, '%s')", text.first, text.second.m_templateText, text.second.m_templateText);
-        else
-            PlayerbotDatabase.PExecute("UPDATE `ai_playerbot_help_texts` set  `template_text` = '%s',  `template_changed` = 1 where `name` = '%s'", text.second.m_templateText, text.first);
-    }
 }
 
 void PlayerbotHelpMgr::LoadStrategies(string className, AiObjectContext* context)
@@ -139,6 +125,8 @@ void PlayerbotHelpMgr::LoadStrategies(string className, AiObjectContext* context
 
 void PlayerbotHelpMgr::LoadAllStrategies()
 {
+    classMap.clear();
+
     AiObjectContext* genericContext = new AiObjectContext(ai);
     LoadStrategies("generic", genericContext);
 
@@ -147,15 +135,13 @@ void PlayerbotHelpMgr::LoadAllStrategies()
     classContext["hunter"] = new HunterAiObjectContext(ai);
     classContext["rogue"] = new RogueAiObjectContext(ai);
     classContext["priest"] = new PriestAiObjectContext(ai);
-#ifdef MANGOSBOT_TWO
+//#ifdef MANGOSBOT_TWO
     classContext["deathknight"] = new DKAiObjectContext(ai);
-#endif
+//#endif
     classContext["shaman"] = new ShamanAiObjectContext(ai);
     classContext["mage"] = new MageAiObjectContext(ai);
     classContext["warlock"] = new WarlockAiObjectContext(ai);
     classContext["druid"] = new DruidAiObjectContext(ai);
-
-    classMap.clear();
 
     for (auto cc : classContext)
     {
@@ -188,7 +174,6 @@ string PlayerbotHelpMgr::GetStrategyBehaviour(string className, Strategy* strate
 
             for (auto act : trig.second)
             {
-
                 line += "[h:action|" + act.first->getName() + "] (" + formatFloat(act.second) + ")";
             }
 
@@ -221,8 +206,14 @@ void PlayerbotHelpMgr::GenerateStrategyHelp()
 
             string helpTemplate = botHelpText["template:strategy"].m_templateText;
 
-            string description = strategy->GetHelpDescription();
-            string related = makeList(strategy->GetRelatedStrategies(), "[h:strategy|<part>]");
+
+
+            string description, related;
+            if (strategy->GetHelpName() == strategyName) //Only get description if defined in trigger
+            {
+                description = strategy->GetHelpDescription();
+                related = makeList(strategy->GetRelatedStrategies(), "[h:strategy|<part>]");
+            }
 
             if (!related.empty())
                 related = "\nRelated strategies:\n" + related;
@@ -245,15 +236,132 @@ void PlayerbotHelpMgr::GenerateStrategyHelp()
     }
 }
 
+string PlayerbotHelpMgr::GetTriggerBehaviour(string className, Trigger* trigger)
+{
+    string behavior;
 
+    AiObjectContext* context = classContext[className];
+
+    for(auto strat : classMap[className])
+    {
+        if (strat.second.find(trigger) == strat.second.end())
+            continue;
+
+        if(behavior.empty())
+            behavior = "\nBehavior:";
+
+        string line;
+
+        line = "Activates: ";
+
+        for (auto act : strat.second[trigger])
+        {
+            line += "[h:action|" + act.first->getName() + "] (" + formatFloat(act.second) + ")";
+        }
+
+        line += " with [h:strategy|" + strat.first->getName() + "]";
+
+        behavior += "\n" + line;
+    }
+
+    return behavior;
+}
+
+void PlayerbotHelpMgr::GenerateTriggerHelp()
+{
+    for (auto& strategyClass : classMap)
+    {
+        string className = strategyClass.first;
+
+        vector<string> trigLinks;
+        vector<string> triggers;
+
+        for (auto& strat : strategyClass.second)
+        {
+            for (auto& trig : strat.second)
+            {
+                Trigger* trigger = trig.first;
+
+                if (!trigger) //Ignore default actions
+                    continue;
+
+                string triggerName = trigger->getName();
+                string linkName = triggerName;
+
+                if (std::find(triggers.begin(), triggers.end(), triggerName) != triggers.end())
+                    continue;
+
+                triggers.push_back(triggerName);
+
+                if (className != "generic")
+                    linkName = className + " " + triggerName;
+
+                trigLinks.push_back("[h:trigger:" + linkName + "|" + triggerName + "]");
+
+                string helpTemplate = botHelpText["template:trigger"].m_templateText;
+
+
+                string description, relatedTrig, relatedVal; 
+                if (trigger->GetHelpName() == triggerName) //Only get description if defined in trigger
+                {
+                    description = trigger->GetHelpDescription();
+                    relatedTrig = makeList(trigger->GetUsedTriggers(), "[h:trigger|<part>]");
+                    relatedVal = makeList(trigger->GetUsedValues(), "[h:value|<part>]");
+                }
+                
+
+                if (!relatedTrig.empty())
+                    relatedTrig = "\nUsed triggers:\n" + relatedTrig;
+                if (!relatedVal.empty())
+                    relatedVal = "\nUsed values:\n" + relatedVal;
+
+                string behavior = GetTriggerBehaviour(className, trigger);
+
+                replace(helpTemplate, "<name>", triggerName);
+                replace(helpTemplate, "<description>", description);
+                replace(helpTemplate, "<used trig>", relatedTrig);
+                replace(helpTemplate, "<used val>", relatedVal);
+                replace(helpTemplate, "<behavior>", behavior);
+
+                if (botHelpText["trigger:" + linkName].m_templateText != helpTemplate)
+                    botHelpText["trigger:" + linkName].m_templateChanged = true;
+                botHelpText["trigger:" + linkName].m_templateText = helpTemplate;
+            }
+        }
+
+        GameObject* go;
+        go->GetEntry();
+
+        std::sort(trigLinks.begin(), trigLinks.end());
+
+        botHelpText["list:" + className + " trigger"].m_templateText = className + " triggers : \n" + makeList(trigLinks);
+    }
+}
+
+
+
+void PlayerbotHelpMgr::SaveTemplates()
+{
+    for (auto text : botHelpText)
+    {
+        if (!text.second.m_templateChanged)
+            continue;
+
+        if (text.second.m_new)
+            PlayerbotDatabase.PExecute("INSERT INTO `ai_playerbot_help_texts` (`name`, `template_text`, `template_changed`) VALUES ('%s', '%s', 1)", text.first, text.second.m_templateText);
+        else
+            PlayerbotDatabase.PExecute("UPDATE `ai_playerbot_help_texts` set  `template_text` = '%s',  `template_changed` = 1 where `name` = '%s'", text.second.m_templateText, text.first);
+    }
+}
 
 void PlayerbotHelpMgr::GenerateHelp()
 {
     ai = new PlayerbotAI();
 
     LoadAllStrategies();
-
+    
     GenerateStrategyHelp();
+    GenerateTriggerHelp();
 
     //SaveTemplates();
 }
@@ -346,6 +454,9 @@ void PlayerbotHelpMgr::LoadBotHelpTexts()
             string name = fields[0].GetString();
             templateText = fields[1].GetString();
             text = fields[2].GetString();
+
+            if (text.empty())
+                text = templateText;
 
             for (uint8 i = 1; i < MAX_LOCALE; ++i)
             {

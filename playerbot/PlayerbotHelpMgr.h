@@ -45,13 +45,16 @@ class PlayerbotHelpMgr
 
         static string formatFloat(float num);
         static void replace(string& text, const string what, const string with);
-        static string makeList(vector<string>const parts, string partFormat = "<part> ", uint32 maxLength = 2048);
+        static string makeList(vector<string>const parts, string partFormat = "<part> ", uint32 maxLength = 1024);
 
         void LoadStrategies(string className, AiObjectContext* context);
         void LoadAllStrategies();
 
         string GetStrategyBehaviour(string className, Strategy* strategy);
         void GenerateStrategyHelp();
+
+        string GetTriggerBehaviour(string className, Trigger* trigger);
+        void GenerateTriggerHelp();
 
         void SaveTemplates();
         
