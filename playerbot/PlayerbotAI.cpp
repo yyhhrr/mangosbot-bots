@@ -855,7 +855,7 @@ void PlayerbotAI::HandleCommand(uint32 type, const string& text, Player& fromPla
     if (ChatHelper::parseValue("command", filtered).substr(0, 3) == "do ")
     {
         std::string action = ChatHelper::parseValue("command", filtered);
-        action = action.substr(0,3);
+        action = action.substr(3);
         DoSpecificAction(action);
     }
     else if (type != CHAT_MSG_WHISPER && filtered.size() > 6 && filtered.substr(0, 6) == "queue ")
