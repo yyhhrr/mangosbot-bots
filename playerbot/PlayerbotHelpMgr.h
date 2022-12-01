@@ -37,7 +37,8 @@ class PlayerbotHelpMgr
 	public:
 #ifdef GenerateBotHelp
         PlayerbotAI* ai;
-        typedef unordered_map<NextAction*, float> actionMap;
+        AiObjectContext* genericContext;
+        typedef unordered_map<Action*, float> actionMap;
         typedef unordered_map<Trigger*, actionMap> triggerMap;
         typedef unordered_map<Strategy*, triggerMap> strategyMap;
         unordered_map<string, strategyMap> classMap;
@@ -47,6 +48,10 @@ class PlayerbotHelpMgr
         static void replace(string& text, const string what, const string with);
         static string makeList(vector<string>const parts, string partFormat = "<part> ", uint32 maxLength = 1024);
 
+        bool IsGenericSupported(PlayerbotAIAware* object);
+        string GetObjectName(PlayerbotAIAware* object, string className);
+        string GetObjectLink(PlayerbotAIAware* object, string className);
+
         void LoadStrategies(string className, AiObjectContext* context);
         void LoadAllStrategies();
 
@@ -55,6 +60,11 @@ class PlayerbotHelpMgr
 
         string GetTriggerBehaviour(string className, Trigger* trigger);
         void GenerateTriggerHelp();
+
+        string GetActionBehaviour(string className, Action* Action);
+        void GenerateActionHelp();
+
+        void GenerateValueHelp();
 
         void SaveTemplates();
         

@@ -73,8 +73,48 @@ string PlayerbotHelpMgr::makeList(vector<string>const parts, string partFormat, 
     return retString + currentLine;
 }
 
+bool PlayerbotHelpMgr::IsGenericSupported(PlayerbotAIAware* object)
+{
+    set<string> supported;
+    if (dynamic_cast<Strategy*>(object))
+        supported = genericContext->GetSupportedStrategies();
+    if (dynamic_cast<Trigger*>(object))
+        supported = genericContext->GetSupportedTriggers();
+    if (dynamic_cast<Action*>(object))
+        supported = genericContext->GetSupportedActions();
+    if (dynamic_cast<UntypedValue*>(object))
+        supported = genericContext->GetSupportedValues();
+
+    return supported.find(object->getName()) != supported.end();
+}
+
+string PlayerbotHelpMgr::GetObjectName(PlayerbotAIAware* object, string className)
+{
+    return IsGenericSupported(object) ? object->getName() : className + " " + object->getName();
+}
+
+string PlayerbotHelpMgr::GetObjectLink(PlayerbotAIAware* object, string className)
+{
+    string prefix = "unkown";
+    if (dynamic_cast<Strategy*>(object))
+        prefix = "strategy";
+    if (dynamic_cast<Trigger*>(object))
+        prefix = "trigger";
+    if (dynamic_cast<Action*>(object))
+        prefix = "action";
+    if (dynamic_cast<UntypedValue*>(object))
+        prefix = "value";
+
+    if (className != "generic")
+        return "[h:" + prefix + ":" + GetObjectName(object, className) + "|" + object->getName() + "]";
+    
+    return "[h:" + prefix + "|" + object->getName() + "]";   
+}
+
 void PlayerbotHelpMgr::LoadStrategies(string className, AiObjectContext* context)
 {
+    ai->SetAiObjectContext(context);
+
     vector<string> stratLinks;
     for (auto strategyName : context->GetSupportedStrategies())
     {
@@ -83,7 +123,7 @@ void PlayerbotHelpMgr::LoadStrategies(string className, AiObjectContext* context
 
         Strategy* strategy = context->GetStrategy(strategyName);
 
-        if (std::find_if(classMap["generic"].begin(), classMap["generic"].end(), [strategyName](const std::pair<Strategy *, triggerMap>& v) {return v.first->getName() == strategyName;}) != classMap["generic"].end())
+        if (className != "generic" && IsGenericSupported(strategy))
             continue;
 
         std::list<TriggerNode*> triggers;
@@ -105,7 +145,9 @@ void PlayerbotHelpMgr::LoadStrategies(string className, AiObjectContext* context
                     {
                         NextAction* nextAction = nextActions[i];
 
-                        classMap[className][strategy][trigger][nextAction] = nextAction->getRelevance();
+                        Action* action = context->GetAction(nextAction->getName());
+                        if(action)
+                            classMap[className][strategy][trigger][action] = nextAction->getRelevance();
                     }
                 }
             }
@@ -117,7 +159,9 @@ void PlayerbotHelpMgr::LoadStrategies(string className, AiObjectContext* context
             {
                 NextAction* nextAction = strategy->getDefaultActions()[i];
 
-                classMap[className][strategy][nullptr][nextAction] = nextAction->getRelevance();
+                Action* action = context->GetAction(nextAction->getName());
+                if(action)
+                    classMap[className][strategy][nullptr][action] = nextAction->getRelevance();
             }
         }
     }
@@ -127,9 +171,9 @@ void PlayerbotHelpMgr::LoadAllStrategies()
 {
     classMap.clear();
 
-    AiObjectContext* genericContext = new AiObjectContext(ai);
-    LoadStrategies("generic", genericContext);
+    genericContext = new AiObjectContext(ai);
 
+    classContext["generic"] = genericContext;
     classContext["warrior"] = new WarriorAiObjectContext(ai);
     classContext["paladin"] = new PaladinAiObjectContext(ai);
     classContext["hunter"] = new HunterAiObjectContext(ai);
@@ -147,8 +191,6 @@ void PlayerbotHelpMgr::LoadAllStrategies()
     {
         LoadStrategies(cc.first, cc.second);
     }
-
-    classContext["generic"] = genericContext;
 }
 
 string PlayerbotHelpMgr::GetStrategyBehaviour(string className, Strategy* strategy)
@@ -170,11 +212,11 @@ string PlayerbotHelpMgr::GetStrategyBehaviour(string className, Strategy* strate
             if (!trig.first)
                 line = "\nDefault:";
             else
-                line = "On: [h:trigger|" + trigger->getName() + "] do";
+                line = "On: " + GetObjectLink(trigger, className) + " do ";
 
             for (auto act : trig.second)
             {
-                line += "[h:action|" + act.first->getName() + "] (" + formatFloat(act.second) + ")";
+                line += GetObjectLink(act.first, className) + " (" + formatFloat(act.second) + ")";
             }
 
             behavior += "\n" + line;
@@ -197,16 +239,11 @@ void PlayerbotHelpMgr::GenerateStrategyHelp()
             Strategy* strategy = strat.first;
 
             string strategyName = strategy->getName();
-            string linkName = strategyName;
+            string linkName = GetObjectName(strategy, className);
 
-            if (className != "generic")
-                linkName = className + " " + strategyName;
-
-            stratLinks.push_back("[h:strategy:" + linkName + "|" + strategyName + "]");
+            stratLinks.push_back(GetObjectLink(strategy, className));
 
             string helpTemplate = botHelpText["template:strategy"].m_templateText;
-
-
 
             string description, related;
             if (strategy->GetHelpName() == strategyName) //Only get description if defined in trigger
@@ -252,14 +289,14 @@ string PlayerbotHelpMgr::GetTriggerBehaviour(string className, Trigger* trigger)
 
         string line;
 
-        line = "Activates: ";
+        line = "Executes: ";
 
         for (auto act : strat.second[trigger])
         {
-            line += "[h:action|" + act.first->getName() + "] (" + formatFloat(act.second) + ")";
+            line += GetObjectLink(act.first, className) + " (" + formatFloat(act.second) + ")";
         }
 
-        line += " with [h:strategy|" + strat.first->getName() + "]";
+        line += " for " + GetObjectLink(strat.first, className);
 
         behavior += "\n" + line;
     }
@@ -286,17 +323,14 @@ void PlayerbotHelpMgr::GenerateTriggerHelp()
                     continue;
 
                 string triggerName = trigger->getName();
-                string linkName = triggerName;
+                string linkName = GetObjectName(trigger, className);
 
                 if (std::find(triggers.begin(), triggers.end(), triggerName) != triggers.end())
                     continue;
 
                 triggers.push_back(triggerName);
 
-                if (className != "generic")
-                    linkName = className + " " + triggerName;
-
-                trigLinks.push_back("[h:trigger:" + linkName + "|" + triggerName + "]");
+                trigLinks.push_back(GetObjectLink(trigger, className));
 
                 string helpTemplate = botHelpText["template:trigger"].m_templateText;
 
@@ -329,16 +363,218 @@ void PlayerbotHelpMgr::GenerateTriggerHelp()
             }
         }
 
-        GameObject* go;
-        go->GetEntry();
-
         std::sort(trigLinks.begin(), trigLinks.end());
 
         botHelpText["list:" + className + " trigger"].m_templateText = className + " triggers : \n" + makeList(trigLinks);
     }
 }
 
+string PlayerbotHelpMgr::GetActionBehaviour(string className, Action* nextAction)
+{
+    string behavior;
 
+    AiObjectContext* context = classContext[className];
+
+    for (auto strat : classMap[className])
+    {
+        for (auto trig : strat.second)
+        {
+            if (trig.second.find(nextAction) == trig.second.end())
+                continue;
+
+            if (behavior.empty())
+                behavior = "\nBehavior:";
+
+            string line;
+
+            if (trig.first)
+                line = "Triggers from: " + GetObjectLink(trig.first, className);
+            else
+                line = "Default action ";
+
+            line += " with relevance (" + formatFloat(trig.second.find(nextAction)->second) + ")";
+            line += " for " + GetObjectLink(strat.first, className);
+
+            behavior += "\n" + line;
+        }
+    }
+
+    return behavior;
+}
+
+void PlayerbotHelpMgr::GenerateActionHelp()
+{
+    for (auto& strategyClass : classMap)
+    {
+        string className = strategyClass.first;
+
+        vector<string> actionLinks;
+        vector<string> actions;
+
+        for (auto& strat : strategyClass.second)
+        {
+            for (auto& trig : strat.second)
+            {
+                Trigger* trigger = trig.first;
+
+                if (!trigger) //Ignore default actions
+                    continue;
+
+                for (auto& act : trig.second)
+                {
+                    string ActionName = act.first->getName();
+                    Action* action = act.first;
+
+                    string linkName = GetObjectName(action, className);
+
+                    if (std::find(actions.begin(), actions.end(), ActionName) != actions.end())
+                        continue;
+
+                    actions.push_back(ActionName);
+
+                    actionLinks.push_back(GetObjectLink(action, className));
+
+                    string helpTemplate = botHelpText["template:action"].m_templateText;
+
+                    string description, relatedAct, relatedVal;
+                    if (action->GetHelpName() == ActionName) //Only get description if defined in trigger
+                    {
+                        description = action->GetHelpDescription();
+                        relatedAct = makeList(action->GetUsedActions(), "[h:action|<part>]");
+                        relatedVal = makeList(action->GetUsedValues(), "[h:value|<part>]");
+                    }
+
+                    if (!relatedAct.empty())
+                        relatedAct = "\nUsed actions:\n" + relatedAct;
+                    if (!relatedVal.empty())
+                        relatedVal = "\nUsed values:\n" + relatedVal;
+
+                    string behavior = GetActionBehaviour(className, act.first);
+
+                    replace(helpTemplate, "<name>", ActionName);
+                    replace(helpTemplate, "<description>", description);
+                    replace(helpTemplate, "<used act>", relatedAct);
+                    replace(helpTemplate, "<used val>", relatedVal);
+                    replace(helpTemplate, "<behavior>", behavior);
+
+                    if (botHelpText["action:" + linkName].m_templateText != helpTemplate)
+                        botHelpText["action:" + linkName].m_templateChanged = true;
+                    botHelpText["action:" + linkName].m_templateText = helpTemplate;
+                }
+            }
+        }
+
+        std::sort(actionLinks.begin(), actionLinks.end());
+
+        botHelpText["list:" + className + " action"].m_templateText = className + " actions : \n" + makeList(actionLinks);
+    }
+}
+
+void PlayerbotHelpMgr::GenerateValueHelp()
+{
+    AiObjectContext* genericContext = classContext["generic"];
+    set<string> genericValues = genericContext->GetSupportedValues();
+
+    for (auto& strategyClass : classMap)
+    {
+        string className = strategyClass.first;
+
+        vector<string> valueLinks;
+        vector<string> values;
+
+        AiObjectContext* context = classContext[className];
+
+        set<string> allValues = context->GetSupportedValues();
+        for (auto& valueName : allValues)
+        {
+            if (className != "generic" && std::find(genericValues.begin(), genericValues.end(), valueName) != genericValues.end())
+                continue;
+
+            UntypedValue* value = context->GetUntypedValue(valueName);
+
+            string linkName = GetObjectName(value, className);
+
+            if (std::find(values.begin(), values.end(), valueName) != values.end())
+                continue;
+
+            values.push_back(valueName);
+
+            valueLinks.push_back(GetObjectLink(value, className));
+
+            string helpTemplate = botHelpText["template:value"].m_templateText;
+
+            string description, usedVal, relatedTrig, relatedAct, relatedVal;
+            if (value->GetHelpName() == valueName) //Only get description if defined in trigger
+            {
+                vector<string> usedInTrigger, usedInAction, usedInValue;
+                for (auto& strat : strategyClass.second)
+                {
+                    for (auto& trig : strat.second)
+                    {
+                        if (!trig.first)
+                            continue;
+
+                        if (trig.first->GetHelpName() == trig.first->getName())
+                            for (auto val : trig.first->GetUsedValues())
+                                if (val == valueName)
+                                    if (std::find(usedInTrigger.begin(), usedInTrigger.end(), trig.first->getName()) == usedInTrigger.end())
+                                        usedInTrigger.push_back(trig.first->getName());
+
+                        for (auto& act : trig.second)
+                        {
+                            if (act.first->GetHelpName() == act.first->getName())
+                                for (auto val : act.first->GetUsedValues())
+                                    if (val == valueName)
+                                        if (std::find(usedInAction.begin(), usedInAction.end(), act.first->getName()) == usedInAction.end())
+                                            usedInAction.push_back(act.first->getName());
+                        }
+                    }
+                }
+
+                for (auto& otherValueName : allValues)
+                {
+                    UntypedValue* otherValue = context->GetUntypedValue(valueName);
+
+                    if (otherValue->GetHelpName() == otherValueName)
+                        for (auto val : otherValue->GetUsedValues())
+                            if (val == valueName)
+                                if (std::find(usedInValue.begin(), usedInValue.end(), otherValue->getName()) == usedInValue.end())
+                                    usedInValue.push_back(otherValue->getName());
+                }
+
+                description = value->GetHelpDescription();
+                relatedTrig = makeList(usedInTrigger, "[h:trigger|<part>]");
+                relatedAct = makeList(usedInAction, "[h:action|<part>]");
+                relatedVal = makeList(usedInValue, "[h:value|<part>]");
+                usedVal = makeList(value->GetUsedValues(), "[h:value|<part>]");
+            }
+
+            if (!usedVal.empty())
+                usedVal = "\nUsed values:\n" + usedVal;
+            if (!relatedTrig.empty())
+                relatedTrig = "\nUsed in triggers:\n" + relatedTrig;
+            if (!relatedAct.empty())
+                relatedAct = "\nUsed in actions:\n" + relatedAct;
+            if (!relatedVal.empty())
+                relatedVal = "\nUsed in values:\n" + relatedVal;
+
+            replace(helpTemplate, "<name>",valueName);
+            replace(helpTemplate, "<description>", description);
+            replace(helpTemplate, "<used in trig>", relatedTrig);
+            replace(helpTemplate, "<used in act>", relatedAct);
+            replace(helpTemplate, "<used in val>", relatedVal);
+            replace(helpTemplate, "<used val>", usedVal);
+
+            if (botHelpText["value:" + linkName].m_templateText != helpTemplate)
+                botHelpText["value:" + linkName].m_templateChanged = true;
+            botHelpText["value:" + linkName].m_templateText = helpTemplate;
+        }
+
+        std::sort(valueLinks.begin(), valueLinks.end());
+
+        botHelpText["list:" + className + " value"].m_templateText = className + " values : \n" + makeList(valueLinks);
+    }
+}
 
 void PlayerbotHelpMgr::SaveTemplates()
 {
@@ -356,12 +592,37 @@ void PlayerbotHelpMgr::SaveTemplates()
 
 void PlayerbotHelpMgr::GenerateHelp()
 {
-    ai = new PlayerbotAI();
+    WorldSession* session = new WorldSession(0, NULL, SEC_PLAYER,
+
+#ifdef MANGOSBOT_TWO
+        2, 0, LOCALE_enUS, "", 0, 0, false);
+#endif
+#ifdef MANGOSBOT_ONE
+    2, 0, LOCALE_enUS, "", 0, 0, false);
+#endif
+#ifdef MANGOSBOT_ZERO
+    0, LOCALE_enUS, "", 0);
+#endif
+
+    session->SetNoAnticheat();
+
+    Player* bot = new Player(session);
+
+    bot->Create(sObjectMgr.GeneratePlayerLowGuid(), "test", 1, 1, 0,
+        0, // skinColor,
+        0,
+        0,
+        0, // hairColor,
+        0, 0);
+
+    ai = new PlayerbotAI(bot);
 
     LoadAllStrategies();
     
     GenerateStrategyHelp();
     GenerateTriggerHelp();
+    GenerateActionHelp();
+    GenerateValueHelp();
 
     //SaveTemplates();
 }
@@ -412,7 +673,7 @@ void PlayerbotHelpMgr::FormatHelpTopic(string& text)
             string topicCode = oldLink.substr(3, oldLink.find("|") - 3);
             std::string topicName = oldLink.substr(oldLink.find("|") + 1);
             topicName.pop_back();                                                                                      
-            string newLink = ChatHelper::formatValue("command", topicCode, topicName, "3a34ebff");
+            string newLink = ChatHelper::formatValue("command", topicCode, topicName, "0000FF00");
 
             text.replace(start_pos, oldLink.length(), newLink);
             start_pos += newLink.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
