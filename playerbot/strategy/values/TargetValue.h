@@ -52,6 +52,11 @@ namespace ai
     {
     public:
         RpgTargetValue(PlayerbotAI* ai, string name = "rpg target") : ManualSetValue<GuidPosition>(ai, GuidPosition(), name) {}
+#ifndef GenerateBotHelp
+        virtual string GetHelpName() { return "rpg target"; } //Must equal iternal name
+        virtual string GetHelpDescription() { return "This value contains the [h:object|objectGuid] of a [h:object|unit] or [h:object|gameObject] to move to and rpg with.\nThis value is manually set."; }
+        virtual vector<string> GetUsedValues() { return {}; }
+#endif 
     };
 
     class TravelTargetValue : public ManualSetValue<TravelTarget *>
