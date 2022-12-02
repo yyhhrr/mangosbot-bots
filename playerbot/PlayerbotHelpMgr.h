@@ -40,16 +40,22 @@ class PlayerbotHelpMgr
         AiObjectContext* genericContext;
         typedef unordered_map<Action*, float> actionMap;
         typedef unordered_map<Trigger*, actionMap> triggerMap;
-        typedef unordered_map<Strategy*, triggerMap> strategyMap;
+        typedef unordered_map<BotState, triggerMap> stateMap;
+        typedef unordered_map<Strategy*, stateMap> strategyMap;
         unordered_map<string, strategyMap> classMap;
         unordered_map<string, AiObjectContext*> classContext;
+
+        unordered_map<BotState, string> states = { {BotState::BOT_STATE_COMBAT, "combat"},  {BotState::BOT_STATE_NON_COMBAT, "non combat"},  {BotState::BOT_STATE_DEAD, "dead state"},  {BotState::BOT_STATE_REACTION, "reaction"},  {BotState::BOT_STATE_ALL, "all"} };
+
+        unordered_map<string, string> supportedActionName;
 
         typedef unordered_map<string, bool> nameCoverageMap;
         unordered_map<string, nameCoverageMap> coverageMap;
 
+        static string initcap(string st) { string s = st; s[0] = toupper(s[0]); return s; }
         static string formatFloat(float num);
         static void replace(string& text, const string what, const string with);
-        static string makeList(vector<string>const parts, string partFormat = "<part> ", uint32 maxLength = 1024);
+        static string makeList(vector<string>const parts, string partFormat = "<part>", uint32 maxLength = 254);
 
         bool IsGenericSupported(PlayerbotAIAware* object);
         string GetObjectName(PlayerbotAIAware* object, string className);
