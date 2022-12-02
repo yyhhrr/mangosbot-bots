@@ -40,7 +40,7 @@ bool HelpAction::Execute(Event& event)
 
         for (auto& line : lines)
         {
-            ai->TellMasterNoFacing(line, PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, true);
+            ai->TellMasterNoFacing(line, PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, true, false);
         }
 
         return true;

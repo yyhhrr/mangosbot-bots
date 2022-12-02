@@ -2002,10 +2002,10 @@ vector<Player*> PlayerbotAI::GetPlayersInGroup()
     return members;
 }
 
-bool PlayerbotAI::TellMasterNoFacing(string text, PlayerbotSecurityLevel securityLevel, bool isPrivate)
+bool PlayerbotAI::TellMasterNoFacing(string text, PlayerbotSecurityLevel securityLevel, bool isPrivate, bool noRepeat)
 {
     time_t lastSaid = whispers[text];
-    if (!lastSaid || (time(0) - lastSaid) >= sPlayerbotAIConfig.repeatDelay / 1000)
+    if (!noRepeat || !lastSaid || (time(0) - lastSaid) >= sPlayerbotAIConfig.repeatDelay / 1000)
     {
         whispers[text] = time(0);
 
