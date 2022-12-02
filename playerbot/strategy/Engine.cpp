@@ -10,7 +10,7 @@
 using namespace ai;
 using namespace std;
 
-Engine::Engine(PlayerbotAI* ai, AiObjectContext *factory) : PlayerbotAIAware(ai), aiObjectContext(factory)
+Engine::Engine(PlayerbotAI* ai, AiObjectContext *factory, BotState state) : PlayerbotAIAware(ai), aiObjectContext(factory), state(state)
 {
     lastRelevance = 0.0f;
     testMode = false;
@@ -103,10 +103,9 @@ void Engine::Init()
     for (map<string, Strategy*>::iterator i = strategies.begin(); i != strategies.end(); i++)
     {
         Strategy* strategy = i->second;
-        strategy->InitMultipliers(multipliers);
-        strategy->InitTriggers(triggers);
-        Event emptyEvent;
-        MultiplyAndPush(strategy->getDefaultActions(), 0.0f, false, emptyEvent, "default");
+        strategy->InitMultipliers(multipliers, state);
+        strategy->InitTriggers(triggers, state);
+        MultiplyAndPush(strategy->getDefaultActions(state), 0.0f, false, Event(), "default");
     }
 
 	if (testMode)
@@ -455,21 +454,26 @@ bool Engine::CanExecuteAction(string name, string qualifier, bool isPossible, bo
 
 void Engine::addStrategy(string name)
 {
-    removeStrategy(name);
+    removeStrategy(name, initMode);
 
     Strategy* strategy = aiObjectContext->GetStrategy(name);
     if (strategy)
     {
         set<string> siblings = aiObjectContext->GetSiblingStrategy(name);
         for (set<string>::iterator i = siblings.begin(); i != siblings.end(); i++)
-            removeStrategy(*i);
+        {
+            removeStrategy(*i, initMode);
+        }
 
         LogAction("S:+%s", strategy->getName().c_str());
         strategies[strategy->getName()] = strategy;
-        strategy->OnStrategyAdded();
+        strategy->OnStrategyAdded(state);
     }
+
     if(!initMode)
+    {
         Init();
+    }
 }
 
 void Engine::addStrategies(string first, ...)
@@ -491,16 +495,21 @@ void Engine::addStrategies(string first, ...)
 	va_end(vl);
 }
 
-bool Engine::removeStrategy(string name)
+bool Engine::removeStrategy(string name, bool init)
 {
     map<string, Strategy*>::iterator i = strategies.find(name);
     if (i == strategies.end())
         return false;
 
     LogAction("S:-%s", name.c_str());
-    i->second->OnStrategyRemoved();
+    i->second->OnStrategyRemoved(state);
     strategies.erase(i);
-    Init();
+
+    if (init)
+    {
+        Init();
+    }
+    
     return true;
 }
 
@@ -589,8 +598,7 @@ void Engine::PushDefaultActions()
     for (map<string, Strategy*>::iterator i = strategies.begin(); i != strategies.end(); i++)
     {
         Strategy* strategy = i->second;
-        Event emptyEvent;
-        MultiplyAndPush(strategy->getDefaultActions(), 0.0f, false, emptyEvent, "default");
+        MultiplyAndPush(strategy->getDefaultActions(state), 0.0f, false, Event(), "default");
     }
 }
 
