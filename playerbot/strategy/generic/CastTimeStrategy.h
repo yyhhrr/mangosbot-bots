@@ -20,6 +20,13 @@ namespace ai
     public:
         virtual void InitMultipliers(std::list<Multiplier*> &multipliers);
         virtual string getName() { return "cast time"; }
+#ifndef GenerateBotHelp
+        virtual string GetHelpName() { return "cast time"; } //Must equal iternal name
+        virtual string GetHelpDescription() {
+            return "This strategy will make bots less likely to cast long casttime spells when the target is at critical health.";
+        }
+        virtual vector<string> GetRelatedStrategies() { return { }; }
+#endif
     };
 
 
