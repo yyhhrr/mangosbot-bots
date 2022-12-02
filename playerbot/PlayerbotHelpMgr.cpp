@@ -250,7 +250,10 @@ void PlayerbotHelpMgr::GenerateStrategyHelp()
             {
                 description = strategy->GetHelpDescription();
                 related = makeList(strategy->GetRelatedStrategies(), "[h:strategy|<part>]");
+                coverageMap["strategy"][strategyName] = true;
             }
+            else
+                coverageMap["strategy"][strategyName] = false;
 
             if (!related.empty())
                 related = "\nRelated strategies:\n" + related;
@@ -341,7 +344,10 @@ void PlayerbotHelpMgr::GenerateTriggerHelp()
                     description = trigger->GetHelpDescription();
                     relatedTrig = makeList(trigger->GetUsedTriggers(), "[h:trigger|<part>]");
                     relatedVal = makeList(trigger->GetUsedValues(), "[h:value|<part>]");
+                    coverageMap["trigger"][triggerName] = true;
                 }
+                else
+                    coverageMap["trigger"][triggerName] = false;
                 
 
                 if (!relatedTrig.empty())
@@ -442,7 +448,10 @@ void PlayerbotHelpMgr::GenerateActionHelp()
                         description = action->GetHelpDescription();
                         relatedAct = makeList(action->GetUsedActions(), "[h:action|<part>]");
                         relatedVal = makeList(action->GetUsedValues(), "[h:value|<part>]");
+                        coverageMap["action"][ActionName] = true;
                     }
+                    else
+                        coverageMap["action"][ActionName] = false;
 
                     if (!relatedAct.empty())
                         relatedAct = "\nUsed actions:\n" + relatedAct;
@@ -547,7 +556,10 @@ void PlayerbotHelpMgr::GenerateValueHelp()
                 relatedAct = makeList(usedInAction, "[h:action|<part>]");
                 relatedVal = makeList(usedInValue, "[h:value|<part>]");
                 usedVal = makeList(value->GetUsedValues(), "[h:value|<part>]");
+                coverageMap["value"][valueName] = true;
             }
+            else
+                coverageMap["value"][valueName] = false;
 
             if (!usedVal.empty())
                 usedVal = "\nUsed values:\n" + usedVal;
@@ -576,6 +588,37 @@ void PlayerbotHelpMgr::GenerateValueHelp()
     }
 }
 
+void PlayerbotHelpMgr::PrintCoverage()
+{
+    for (auto typeCov : coverageMap)
+    {
+        vector<string> missingNames;
+        uint32 totalNames = 0;
+
+        for (auto cov : typeCov.second)
+        {
+            totalNames++;
+
+            if (!cov.second)
+                missingNames.push_back(cov.first);
+        }
+
+        if (!totalNames)
+            continue;
+
+        sLog.outString("%s help coverage %d/%d : %d%%", typeCov.first, (totalNames-missingNames.size()), totalNames, (missingNames.size() / (totalNames * 100)));
+
+        if (missingNames.empty())
+            continue;
+
+        sLog.outBasic("Missing:");
+
+        std::sort(missingNames.begin(), missingNames.end());
+        for (auto name : missingNames)
+            sLog.outBasic("%s", name.c_str());
+    }
+}
+
 void PlayerbotHelpMgr::SaveTemplates()
 {
     for (auto text : botHelpText)
@@ -592,6 +635,8 @@ void PlayerbotHelpMgr::SaveTemplates()
 
 void PlayerbotHelpMgr::GenerateHelp()
 {
+    coverageMap.clear();
+
     WorldSession* session = new WorldSession(0, NULL, SEC_PLAYER,
 
 #ifdef MANGOSBOT_TWO
@@ -624,7 +669,12 @@ void PlayerbotHelpMgr::GenerateHelp()
     GenerateActionHelp();
     GenerateValueHelp();
 
+    PrintCoverage();
+
     //SaveTemplates();
+
+    delete ai;
+    delete bot;
 }
 #endif
 

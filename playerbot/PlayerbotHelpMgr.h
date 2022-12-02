@@ -7,7 +7,7 @@
 #define BOT_HELP(name) sPlayerbotHelpMgr.GetBotText(name)
 
 #ifndef GenerateBotHelp
-#define GenerateBotHelp
+#define GenerateBotHelp //Enable only for help generation
 #endif
 
 using namespace std;
@@ -44,6 +44,9 @@ class PlayerbotHelpMgr
         unordered_map<string, strategyMap> classMap;
         unordered_map<string, AiObjectContext*> classContext;
 
+        typedef unordered_map<string, bool> nameCoverageMap;
+        unordered_map<string, nameCoverageMap> coverageMap;
+
         static string formatFloat(float num);
         static void replace(string& text, const string what, const string with);
         static string makeList(vector<string>const parts, string partFormat = "<part> ", uint32 maxLength = 1024);
@@ -65,6 +68,8 @@ class PlayerbotHelpMgr
         void GenerateActionHelp();
 
         void GenerateValueHelp();
+
+        void PrintCoverage();
 
         void SaveTemplates();
         
