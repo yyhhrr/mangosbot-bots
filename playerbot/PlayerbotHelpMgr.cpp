@@ -419,9 +419,6 @@ string PlayerbotHelpMgr::GetActionBehaviour(string className, Action* nextAction
         string  stateName = sstat.second;
         string stateBehavior;
 
-        if (stateBehavior.empty())
-            stateBehavior += "\n" + initcap(states[state]) + " behavior:";
-
         for (auto strat : classMap[className])
         {
             auto stat = strat.second[state];
@@ -534,11 +531,12 @@ void PlayerbotHelpMgr::GenerateValueHelp()
     AiObjectContext* genericContext = classContext["generic"];
     set<string> genericValues = genericContext->GetSupportedValues();
 
+    unordered_map<string, vector<string>> valueLinks;
+
     for (auto& strategyClass : classMap)
     {
         string className = strategyClass.first;
 
-        vector<string> valueLinks;
         vector<string> values;
 
         AiObjectContext* context = classContext[className];
@@ -558,7 +556,7 @@ void PlayerbotHelpMgr::GenerateValueHelp()
 
             values.push_back(valueName);
 
-            valueLinks.push_back(GetObjectLink(value, className));
+            string valueType;
 
             string helpTemplate = botHelpText["template:value"].m_templateText;
 
@@ -605,6 +603,7 @@ void PlayerbotHelpMgr::GenerateValueHelp()
                 }
 
                 description = value->GetHelpDescription();
+                valueType = value->GetHelpTypeName();
                 relatedTrig = makeList(usedInTrigger, "[h:trigger|<part>]");
                 relatedAct = makeList(usedInAction, "[h:action|<part>]");
                 relatedVal = makeList(usedInValue, "[h:value|<part>]");
@@ -613,6 +612,8 @@ void PlayerbotHelpMgr::GenerateValueHelp()
             }
             else
                 coverageMap["value"][valueName] = false;
+
+            valueLinks[valueType].push_back(GetObjectLink(value, className));
 
             if (!usedVal.empty())
                 usedVal = "\nUsed values:\n" + usedVal;
@@ -623,7 +624,7 @@ void PlayerbotHelpMgr::GenerateValueHelp()
             if (!relatedVal.empty())
                 relatedVal = "\nUsed in values:\n" + relatedVal;
 
-            replace(helpTemplate, "<name>",valueName);
+            replace(helpTemplate, "<name>", valueName);
             replace(helpTemplate, "<description>", description);
             replace(helpTemplate, "<used in trig>", relatedTrig);
             replace(helpTemplate, "<used in act>", relatedAct);
@@ -634,11 +635,80 @@ void PlayerbotHelpMgr::GenerateValueHelp()
                 botHelpText["value:" + linkName].m_templateChanged = true;
             botHelpText["value:" + linkName].m_templateText = helpTemplate;
         }
-
-        std::sort(valueLinks.begin(), valueLinks.end());
-
-        botHelpText["list:" + className + " value"].m_templateText = className + " values : \n" + makeList(valueLinks);
     }
+
+    vector<string> valueTypes;
+
+    for (auto valueLinkSet : valueLinks)
+        if (!valueLinkSet.first.empty())
+            valueTypes.push_back(valueLinkSet.first);
+
+    valueTypes.push_back("");
+
+    vector<string> typeLinks;
+
+    for (auto type : valueTypes)
+    {
+        vector<string> links = valueLinks[type];
+        std::sort(links.begin(), links.end());
+
+        if (type.empty())
+            type = "other";
+
+        botHelpText["list:" + type + " value"].m_templateText = initcap(type) + " values : \n" + makeList(links);
+        typeLinks.push_back("[h:list|" + type + " value]");
+    }
+
+    string valueHelp = botHelpText["object:value"].m_templateText;
+
+    valueHelp = valueHelp.substr(0, valueHelp.find("Values:"));
+    valueHelp += "Values:" + makeList(typeLinks);
+
+    if (botHelpText["object:value"].m_templateText != valueHelp)
+        botHelpText["object:value"].m_templateChanged = true;
+    botHelpText["object:value"].m_templateText = valueHelp;
+}
+
+void PlayerbotHelpMgr::GenerateChatFilterHelp()
+{
+    CompositeChatFilter* filter = new CompositeChatFilter(ai);
+
+    vector<string> filterLinks;
+
+    for (auto subFilter : filter->GetFilters())
+    {
+        string helpTemplate = botHelpText["template:chatfilter"].m_templateText;
+
+        string filterName = subFilter->GetHelpName();
+        string description = subFilter->GetHelpDescription();
+        string examples;
+        for (auto& example : subFilter->GetFilterExamples())
+        {
+            string line = example.first + ": " + example.second;
+            examples += (examples.empty() ? "" : "\n") + line;
+        }
+
+        replace(helpTemplate, "<name>", filterName);
+        replace(helpTemplate, "<description>", description);
+        replace(helpTemplate, "<examples>", examples);
+
+        filterLinks.push_back("[h:chatfilter|" + filterName + "]");
+
+        if (botHelpText["chatfilter:" + filterName].m_templateText != helpTemplate)
+            botHelpText["chatfilter:" + filterName].m_templateChanged = true;
+        botHelpText["chatfilter:" + filterName].m_templateText = helpTemplate;
+    }
+
+    string filterHelp = botHelpText["object:chatfilter"].m_templateText;
+
+    filterHelp = filterHelp.substr(0, filterHelp.find("Filters:"));
+    filterHelp += "Filters:" + makeList(filterLinks);
+
+    if (botHelpText["object:chatfilter"].m_templateText != filterHelp)
+        botHelpText["object:chatfilter"].m_templateChanged = true;
+    botHelpText["object:chatfilter"].m_templateText = filterHelp;
+  
+    delete filter;
 }
 
 void PlayerbotHelpMgr::PrintCoverage()
@@ -646,7 +716,7 @@ void PlayerbotHelpMgr::PrintCoverage()
     for (auto typeCov : coverageMap)
     {
         vector<string> missingNames;
-        uint32 totalNames = 0;
+        uint32 totalNames = 0, hasNames = 0;
 
         for (auto cov : typeCov.second)
         {
@@ -656,10 +726,12 @@ void PlayerbotHelpMgr::PrintCoverage()
                 missingNames.push_back(cov.first);
         }
 
+        hasNames = totalNames - missingNames.size();
+
         if (!totalNames)
             continue;
 
-        sLog.outString("%s help coverage %d/%d : %d%%", typeCov.first, (totalNames-missingNames.size()), totalNames, ((missingNames.size() * 100) / totalNames));
+        sLog.outString("%s help coverage %d/%d : %d%%", typeCov.first, hasNames, totalNames, (hasNames * 100) / totalNames);
 
         if (missingNames.empty())
             continue;
@@ -721,6 +793,7 @@ void PlayerbotHelpMgr::GenerateHelp()
     GenerateTriggerHelp();
     GenerateActionHelp();
     GenerateValueHelp();
+    GenerateChatFilterHelp();
 
     PrintCoverage();
 
@@ -818,9 +891,6 @@ void PlayerbotHelpMgr::LoadBotHelpTexts()
             string name = fields[0].GetString();
             templateText = fields[1].GetString();
             text = fields[2].GetString();
-
-            if (text.empty())
-                text = templateText;
 
             for (uint8 i = 1; i < MAX_LOCALE; ++i)
             {

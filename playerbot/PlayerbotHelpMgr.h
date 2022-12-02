@@ -75,6 +75,8 @@ class PlayerbotHelpMgr
 
         void GenerateValueHelp();
 
+        void GenerateChatFilterHelp();
+
         void PrintCoverage();
 
         void SaveTemplates();
