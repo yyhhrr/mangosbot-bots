@@ -1,5 +1,5 @@
-#include "../generic/NonCombatStrategy.h"
 #pragma once
+#include "../Strategy.h"
 
 namespace ai
 {
@@ -7,7 +7,7 @@ namespace ai
     {
     public:
         AttackEnemyPlayersStrategy(PlayerbotAI* ai) : Strategy(ai) {}
-        virtual string getName() { return "pvp"; }
+        string getName() override { return "pvp"; }
 #ifndef GenerateBotHelp
         virtual string GetHelpName() { return "pvp"; } //Must equal iternal name
         virtual string GetHelpDescription() {
@@ -15,8 +15,7 @@ namespace ai
         }
         virtual vector<string> GetRelatedStrategies() { return {}; }
 #endif
-    public:
-        virtual void InitTriggers(std::list<TriggerNode*> &triggers);
+    private:
+        void InitCombatTriggers(std::list<TriggerNode*> &triggers) override;
     };
-
 }

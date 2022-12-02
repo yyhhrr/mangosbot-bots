@@ -7,10 +7,7 @@ namespace ai
     {
     public:
         ChatCommandHandlerStrategy(PlayerbotAI* ai);
-
-    public:
-        virtual void InitTriggers(std::list<TriggerNode*> &triggers);
-        virtual string getName() { return "chat"; }
+        string getName() override { return "chat"; }
 #ifndef GenerateBotHelp
         virtual string GetHelpName() { return "chat"; } //Must equal iternal name
         virtual string GetHelpDescription() {
@@ -18,5 +15,9 @@ namespace ai
         }
         virtual vector<string> GetRelatedStrategies() { return { }; }
 #endif
+    private:
+        void InitNonCombatTriggers(std::list<TriggerNode*> &triggers) override;
+        void InitCombatTriggers(std::list<TriggerNode*>& triggers) override;
+        void InitDeadTriggers(std::list<TriggerNode*>& triggers) override;
     };
 }

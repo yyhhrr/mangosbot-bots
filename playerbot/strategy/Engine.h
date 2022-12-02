@@ -6,6 +6,7 @@
 #include "Multiplier.h"
 #include "AiObjectContext.h"
 #include "Strategy.h"
+#include "BotState.h"
 
 namespace ai
 {
@@ -61,12 +62,12 @@ namespace ai
     class Engine : public PlayerbotAIAware
     {
     public:
-        Engine(PlayerbotAI* ai, AiObjectContext *factory);
+        Engine(PlayerbotAI* ai, AiObjectContext *factory, BotState state);
 
 	    void Init();
         void addStrategy(string name);
 		void addStrategies(string first, ...);
-        bool removeStrategy(string name);
+        bool removeStrategy(string name, bool init = true);
         bool HasStrategy(string name);
         Strategy* GetStrategy(string name) const;
         void removeAllStrategies();
@@ -118,6 +119,7 @@ namespace ai
         float lastRelevance;
         std::string lastAction;
         ActionExecutionListeners actionExecutionListeners;
+        BotState state;
 
     public:
 		bool testMode;
