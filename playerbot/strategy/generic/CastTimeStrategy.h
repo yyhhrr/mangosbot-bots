@@ -25,5 +25,6 @@ namespace ai
         }
         virtual vector<string> GetRelatedStrategies() { return { }; }
 #endif
+        void InitCombatMultipliers(std::list<Multiplier*>& multipliers);
     };
 }

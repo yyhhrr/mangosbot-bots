@@ -74,6 +74,7 @@ namespace ai
 
 		virtual void InitCombatMultipliers(std::list<Multiplier*>& multipliers) {}
 		virtual void InitNonCombatMultipliers(std::list<Multiplier*>& multipliers) {}
+		virtual void InitDeadMultipliers(std::list<Multiplier*>& multipliers) {}
 		virtual void InitReactionMultipliers(std::list<Multiplier*>& multipliers) {}
 
     protected:
