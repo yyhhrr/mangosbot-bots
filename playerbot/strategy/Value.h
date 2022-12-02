@@ -21,6 +21,7 @@ namespace ai
 
 #ifndef GenerateBotHelp
         virtual string GetHelpName() { return "dummy"; } //Must equal iternal name
+        virtual string GetHelpTypeName() { return ""; }
         virtual string GetHelpDescription() { return "This is a value."; }
         virtual vector<string> GetUsedValues() { return {}; }
 #endif 
