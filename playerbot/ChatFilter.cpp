@@ -29,6 +29,9 @@ public:
         retMap["@tank"] = "All bots that have a tank spec.";
         retMap["@dps"] = "All bots that do not have a tank or healing spec.";
         retMap["@heal"] = "All bots that have a healing spec.";
+        retMap["@notank"] = "All bots that do not have a tank spec.";
+        retMap["@nodps"] = "All bots that have a tank or healing spec.";
+        retMap["@noheal"] = "All bots that do not have a healing spec.";
         retMap["@ranged"] = "All bots that use ranged attacks.";
         retMap["@melee"] = "All bots that use melee attacks.";
         return retMap;
