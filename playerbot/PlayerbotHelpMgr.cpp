@@ -47,6 +47,7 @@ void PlayerbotHelpMgr::replace(string& text, const string what, const string wit
     size_t start_pos = 0;
     while ((start_pos = text.find(what, start_pos)) != std::string::npos) {
         text.replace(start_pos, what.size(), with);
+        start_pos += with.size();
     }
 }
 
@@ -751,10 +752,13 @@ void PlayerbotHelpMgr::SaveTemplates()
         if (!text.second.m_templateChanged)
             continue;
 
+        string temp = text.second.m_templateText.c_str();
+        replace(temp, "\n", "\\n");
+
         if (text.second.m_new)
-            PlayerbotDatabase.PExecute("INSERT INTO `ai_playerbot_help_texts` (`name`, `template_text`, `template_changed`) VALUES ('%s', '%s', 1)", text.first, text.second.m_templateText);
+            PlayerbotDatabase.PExecute("INSERT INTO `ai_playerbot_help_texts` (`name`, `template_text`, `template_changed`) VALUES (`%s`, `%s`, 1)", text.first.c_str(), temp.c_str());
         else
-            PlayerbotDatabase.PExecute("UPDATE `ai_playerbot_help_texts` set  `template_text` = '%s',  `template_changed` = 1 where `name` = '%s'", text.second.m_templateText, text.first);
+            PlayerbotDatabase.PExecute("UPDATE `ai_playerbot_help_texts` set  `template_text` = '%s',  `template_changed` = 1 where `name` = `%s`", temp.c_str(), text.first.c_str());
     }
 }
 
@@ -797,7 +801,7 @@ void PlayerbotHelpMgr::GenerateHelp()
 
     PrintCoverage();
 
-    //SaveTemplates();
+    SaveTemplates();
 
     delete ai;
     delete bot;
