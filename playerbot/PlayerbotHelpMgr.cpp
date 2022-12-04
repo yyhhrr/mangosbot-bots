@@ -752,13 +752,16 @@ void PlayerbotHelpMgr::SaveTemplates()
         if (!text.second.m_templateChanged)
             continue;
 
-        string temp = text.second.m_templateText.c_str();
-        replace(temp, "\n", "\\n");
-
+        string name = text.first;
+        string temp = text.second.m_templateText;
+        replace(name, "'", "''");
+        replace(temp, "\r\n", "\n");
+        replace(temp, "\n", "\\r\\n");
+        replace(temp, "'", "''");
         if (text.second.m_new)
-            PlayerbotDatabase.PExecute("INSERT INTO `ai_playerbot_help_texts` (`name`, `template_text`, `template_changed`) VALUES (`%s`, `%s`, 1)", text.first.c_str(), temp.c_str());
+            PlayerbotDatabase.PExecute("INSERT INTO `ai_playerbot_help_texts` (`name`, `template_text`, `template_changed`) VALUES ('%s', '%s', 1)", name.c_str(), temp.c_str());
         else
-            PlayerbotDatabase.PExecute("UPDATE `ai_playerbot_help_texts` set  `template_text` = '%s',  `template_changed` = 1 where `name` = `%s`", temp.c_str(), text.first.c_str());
+            PlayerbotDatabase.PExecute("UPDATE `ai_playerbot_help_texts` set  `template_text` = '%s',  `template_changed` = 1 where `name` = '%s'", temp.c_str(), name.c_str());
     }
 }
 
