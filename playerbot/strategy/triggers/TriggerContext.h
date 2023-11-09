@@ -364,10 +364,10 @@ namespace ai
         static Trigger* ranged_medium_aoe(PlayerbotAI* ai) { return new RangedMediumAoeTrigger(ai); }
         static Trigger* ranged_high_aoe(PlayerbotAI* ai) { return new RangedHighAoeTrigger(ai); }
         static Trigger* ranged_very_high_aoe(PlayerbotAI* ai) { return new RangedVeryHighAoeTrigger(ai); }
-        static Trigger* melee_light_aoe(PlayerbotAI* ai) { return new RangedLightAoeTrigger(ai); }
-        static Trigger* melee_medium_aoe(PlayerbotAI* ai) { return new RangedMediumAoeTrigger(ai); }
-        static Trigger* melee_high_aoe(PlayerbotAI* ai) { return new RangedHighAoeTrigger(ai); }
-        static Trigger* melee_very_high_aoe(PlayerbotAI* ai) { return new RangedVeryHighAoeTrigger(ai); }
+        static Trigger* melee_light_aoe(PlayerbotAI* ai) { return new MeleeLightAoeTrigger(ai); }
+        static Trigger* melee_medium_aoe(PlayerbotAI* ai) { return new MeleeMediumAoeTrigger(ai); }
+        static Trigger* melee_high_aoe(PlayerbotAI* ai) { return new MeleeHighAoeTrigger(ai); }
+        static Trigger* melee_very_high_aoe(PlayerbotAI* ai) { return new MeleeVeryHighAoeTrigger(ai); }
         static Trigger* HasAreaDebuff(PlayerbotAI* ai) { return new HasAreaDebuffTrigger(ai); }
         static Trigger* LoseAggro(PlayerbotAI* ai) { return new LoseAggroTrigger(ai); }
         static Trigger* HasAggro(PlayerbotAI* ai) { return new HasAggroTrigger(ai); }
