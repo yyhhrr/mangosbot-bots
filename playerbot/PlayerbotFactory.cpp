@@ -1652,7 +1652,7 @@ void PlayerbotFactory::InitEquipment(bool incremental, bool syncWithMaster)
 
                     // do not use items that required level is too low compared to bot's level
                     uint32 reqLevel = sRandomItemMgr.GetMinLevelFromCache(newItemId);
-                    if (reqLevel && proto->Quality < ITEM_QUALITY_LEGENDARY && abs((int)bot->GetLevel() - (int)reqLevel) > sPlayerbotAIConfig.randomGearMaxDiff)
+                    if (reqLevel && proto->Quality < ITEM_QUALITY_LEGENDARY && abs((int)bot->GetLevel() - (int)reqLevel) > (int)sPlayerbotAIConfig.randomGearMaxDiff)
                         continue;
 
                     // filter tank weapons
@@ -1913,7 +1913,7 @@ void PlayerbotFactory::InitSecondEquipmentSet()
 
             // do not use items that required level is too low compared to bot's level
             uint32 reqLevel = sRandomItemMgr.GetMinLevelFromCache(itemId);
-            if (reqLevel && proto->Quality < ITEM_QUALITY_LEGENDARY && abs((int)bot->GetLevel() - (int)reqLevel) > sPlayerbotAIConfig.randomGearMaxDiff)
+            if (reqLevel && proto->Quality < ITEM_QUALITY_LEGENDARY && abs((int)bot->GetLevel() - (int)reqLevel) > (int)sPlayerbotAIConfig.randomGearMaxDiff)
                 continue;
 
             if (!CanEquipItem(proto, desiredQuality))
@@ -3265,7 +3265,7 @@ void PlayerbotFactory::InitInventoryEquip()
 
         // do not use items that required level is too low compared to bot's level
         uint32 reqLevel = sRandomItemMgr.GetMinLevelFromCache(itemId);
-        if (reqLevel && proto->Quality < ITEM_QUALITY_LEGENDARY && abs((int)bot->GetLevel() - (int)reqLevel) > sPlayerbotAIConfig.randomGearMaxDiff)
+        if (reqLevel && proto->Quality < ITEM_QUALITY_LEGENDARY && abs((int)bot->GetLevel() - (int)reqLevel) > (int)sPlayerbotAIConfig.randomGearMaxDiff)
             continue;
 
         if ((proto->Class != ITEM_CLASS_ARMOR && proto->Class != ITEM_CLASS_WEAPON) || (proto->Bonding == BIND_WHEN_PICKED_UP ||
@@ -3446,17 +3446,16 @@ void PlayerbotFactory::InitArenaTeam()
 }
 #endif
 
-void PlayerbotFactory::EnchantEquipment(Player* bot)
+void PlayerbotFactory::EnchantEquipment()
 {
-    return;
-
-    PlayerbotFactory factory(bot, bot->GetLevel());
-    factory.ApplyEnchantTemplate();
-#ifndef MANGOSBOT_ZERO
-    factory.InitGems();
-#endif
-    if (sRandomPlayerbotMgr.GetDatabaseDelay("CharacterDatabase") < 10 * IN_MILLISECONDS)
-        bot->SaveToDB();
+    for (uint8 slot = 0; slot < SLOT_EMPTY; slot++)
+    {
+        Item* item = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
+        if (item)
+        {
+            EnchantItem(item);
+        }
+    }
 }
 
 void PlayerbotFactory::ApplyEnchantTemplate()
