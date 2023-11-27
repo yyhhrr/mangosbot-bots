@@ -7,12 +7,13 @@ using namespace ai;
 
 bool ResetAiAction::Execute(Event& event)
 {
+    Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
     ResetValues();
     ResetStrategies();
 
     if (fullReset)
     {
-        ai->TellError("AI was reset to defaults");
+        ai->TellError(requester, "AI was reset to defaults");
     }
 
     return true;
@@ -32,7 +33,7 @@ void ResetAiAction::ResetValues()
 {
     uint64 guid = ai->GetBot()->GetObjectGuid().GetRawValue();
 
-    QueryResult* results = PlayerbotDatabase.PQuery("SELECT `value` FROM `ai_playerbot_db_store` WHERE `guid` = '%lu' and `key` = 'value'", guid);
+    auto results = PlayerbotDatabase.PQuery("SELECT `value` FROM `ai_playerbot_db_store` WHERE `guid` = '%lu' and `key` = 'value'", guid);
     if (results)
     {
         list<string> values;
@@ -64,11 +65,12 @@ void ResetAiAction::ResetValues()
 
 bool ResetStratsAction::Execute(Event& event)
 {
+    Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
     ResetStrategies();
    
     if (fullReset)
     {
-        ai->TellError("Strategies reset to defaults");
+        ai->TellError(requester, "Strategies reset to defaults");
     }
 
     return true;
@@ -76,11 +78,12 @@ bool ResetStratsAction::Execute(Event& event)
 
 bool ResetValuesAction::Execute(Event& event)
 {
+    Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
     ResetValues();
 
     if (fullReset)
     {
-        ai->TellError("Settings reset to defaults");
+        ai->TellError(requester, "Settings reset to defaults");
     }
 
     return true;

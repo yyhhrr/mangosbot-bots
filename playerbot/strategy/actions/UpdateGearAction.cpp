@@ -13,7 +13,7 @@ UpdateGearAction::UpdateGearAction(PlayerbotAI* ai): Action(ai, "update gear")
 
 bool UpdateGearAction::Execute(Event& event)
 {
-    Player* master = GetMaster();
+    Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
 
     // Get bot class and spec
     const uint8 cls = bot->getClass();
@@ -107,7 +107,7 @@ bool UpdateGearAction::Execute(Event& event)
                 {
                     std::ostringstream ss;
                     ss << "Failed to equip item " << std::to_string(pItemId) << " specified in AiPlayerbot.GearProgressionSystem." << std::to_string(itemProgressionLevel) << "." << std::to_string(cls) << "." << std::to_string(spec) << "." << std::to_string(slot);
-                    ai->TellError(ss.str());
+                    ai->TellError(requester, ss.str());
                 }
             }
         }
@@ -115,7 +115,7 @@ bool UpdateGearAction::Execute(Event& event)
         {
             std::ostringstream ss;
             ss << "Missing configuration for AiPlayerbot.GearProgressionSystem." << std::to_string(itemProgressionLevel) << "." << std::to_string(cls) << "." << std::to_string(spec) << "." << std::to_string(slot);
-            ai->TellError(ss.str());
+            ai->TellError(requester, ss.str());
         }
 
     }
@@ -229,7 +229,7 @@ void UpdateGearAction::EnchantItem(Item* item)
 
         if (enchants.empty())
         {
-            QueryResult* result = PlayerbotDatabase.PQuery("SELECT class, spec, spellid, slotid FROM ai_playerbot_enchants");
+            auto result = PlayerbotDatabase.PQuery("SELECT class, spec, spellid, slotid FROM ai_playerbot_enchants");
             if (result)
             {
                 do
@@ -244,8 +244,6 @@ void UpdateGearAction::EnchantItem(Item* item)
                     enchants.push_back(pEnchant);
                 } 
                 while (result->NextRow());
-
-                delete result;
             }
         }
 
