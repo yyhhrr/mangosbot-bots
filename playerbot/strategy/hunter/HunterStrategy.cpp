@@ -73,10 +73,6 @@ void HunterStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
         NextAction::array(0, new NextAction("flare", ACTION_HIGH + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "hunters pet low health",
-        NextAction::array(0, new NextAction("mend pet", ACTION_HIGH), NULL)));
-
-    triggers.push_back(new TriggerNode(
         "hunter's mark",
         NextAction::array(0, new NextAction("hunter's mark", ACTION_NORMAL + 6), NULL)));
 
@@ -96,26 +92,6 @@ void HunterStrategy::InitNonCombatTriggers(std::list<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode(
         "stealthed nearby",
         NextAction::array(0, new NextAction("flare", ACTION_NORMAL + 3), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "no pet",
-        NextAction::array(0, new NextAction("call pet", ACTION_NORMAL + 2), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "pet not happy",
-        NextAction::array(0, new NextAction("feed pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "hunters pet low health",
-        NextAction::array(0, new NextAction("mend pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "hunters pet dead",
-        NextAction::array(0, new NextAction("revive pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "often",
-        NextAction::array(0, new NextAction("initialize pet", ACTION_NORMAL + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
         "no ammo",
@@ -265,6 +241,10 @@ void HunterBuffStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode(
         "target of attacker close",
         NextAction::array(0, new NextAction("deterrence", ACTION_EMERGENCY + 1), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "feign death",
+        NextAction::array(0, new NextAction("remove feign death", ACTION_HIGH), NULL)));
 }
 
 void HunterBuffStrategy::InitNonCombatTriggers(std::list<TriggerNode*>& triggers)
@@ -557,10 +537,6 @@ void HunterStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
         NextAction::array(0, new NextAction("flare", ACTION_HIGH + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "hunters pet low health",
-        NextAction::array(0, new NextAction("mend pet", ACTION_HIGH), NULL)));
-
-    triggers.push_back(new TriggerNode(
         "hunter's mark",
         NextAction::array(0, new NextAction("hunter's mark", ACTION_NORMAL + 6), NULL)));
 
@@ -580,26 +556,6 @@ void HunterStrategy::InitNonCombatTriggers(std::list<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode(
         "stealthed nearby",
         NextAction::array(0, new NextAction("flare", ACTION_NORMAL + 3), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "no pet",
-        NextAction::array(0, new NextAction("call pet", ACTION_NORMAL + 2), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "pet not happy",
-        NextAction::array(0, new NextAction("feed pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "hunters pet low health",
-        NextAction::array(0, new NextAction("mend pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "hunters pet dead",
-        NextAction::array(0, new NextAction("revive pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "often",
-        NextAction::array(0, new NextAction("initialize pet", ACTION_NORMAL + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
         "no ammo",
@@ -1031,10 +987,6 @@ void HunterStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
         NextAction::array(0, new NextAction("flare", ACTION_HIGH + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
-        "hunters pet low health",
-        NextAction::array(0, new NextAction("mend pet", ACTION_HIGH), NULL)));
-
-    triggers.push_back(new TriggerNode(
         "hunter's mark",
         NextAction::array(0, new NextAction("hunter's mark", ACTION_NORMAL + 6), NULL)));
 
@@ -1054,26 +1006,6 @@ void HunterStrategy::InitNonCombatTriggers(std::list<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode(
         "stealthed nearby",
         NextAction::array(0, new NextAction("flare", ACTION_NORMAL + 3), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "no pet",
-        NextAction::array(0, new NextAction("call pet", ACTION_NORMAL + 2), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "pet not happy",
-        NextAction::array(0, new NextAction("feed pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "hunters pet low health",
-        NextAction::array(0, new NextAction("mend pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "hunters pet dead",
-        NextAction::array(0, new NextAction("revive pet", ACTION_NORMAL + 1), NULL)));
-
-    triggers.push_back(new TriggerNode(
-        "often",
-        NextAction::array(0, new NextAction("initialize pet", ACTION_NORMAL + 1), NULL)));
 
     triggers.push_back(new TriggerNode(
         "no ammo",
@@ -1500,4 +1432,34 @@ void HunterManualAspectStrategy::InitCombatTriggers(std::list<TriggerNode*>& tri
 void HunterManualAspectStrategy::InitNonCombatTriggers(std::list<TriggerNode*>& triggers)
 {
     InitCombatTriggers(triggers);
+}
+
+void HunterPetStrategy::InitCombatTriggers(std::list<TriggerNode*>& triggers)
+{
+    triggers.push_back(new TriggerNode(
+        "hunters pet low health",
+        NextAction::array(0, new NextAction("mend pet", ACTION_HIGH), NULL)));
+}
+
+void HunterPetStrategy::InitNonCombatTriggers(std::list<TriggerNode*>& triggers)
+{
+    triggers.push_back(new TriggerNode(
+        "no pet",
+        NextAction::array(0, new NextAction("call pet", ACTION_NORMAL + 2), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "pet not happy",
+        NextAction::array(0, new NextAction("feed pet", ACTION_NORMAL + 1), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "hunters pet low health",
+        NextAction::array(0, new NextAction("mend pet", ACTION_NORMAL + 1), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "hunters pet dead",
+        NextAction::array(0, new NextAction("revive pet", ACTION_NORMAL + 1), NULL)));
+
+    triggers.push_back(new TriggerNode(
+        "often",
+        NextAction::array(0, new NextAction("initialize pet", ACTION_NORMAL + 1), NULL)));
 }
