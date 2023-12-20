@@ -1622,11 +1622,20 @@ bool MovementAction::Flee(Unit *target)
         return false;
     }
 
+    HostileReference* ref = sServerFacade.GetThreatManager(target).getCurrentVictim();
+    const bool isTarget = ref && ref->getTarget() == bot;
+
     time_t lastFlee = AI_VALUE(LastMovement&, "last movement").lastFlee;
     time_t now = time(0);
     uint32 fleeDelay = urand(2, sPlayerbotAIConfig.returnDelay / 1000);
 
-    if (lastFlee && bot->IsMoving())
+    // let hunter kite mob
+    if (isTarget && bot->getClass() == CLASS_HUNTER)
+    {
+        fleeDelay = 1;
+    }
+
+    if (lastFlee && sServerFacade.isMoving(bot))
     {
         if ((now - lastFlee) <= fleeDelay)
         {
@@ -1639,9 +1648,6 @@ bool MovementAction::Flee(Unit *target)
     const bool isDps = !isHealer && !isTank;
     const bool isRanged = ai->IsRanged(bot);
     const bool needHealer = !isHealer && AI_VALUE2(uint8, "health", "self target") < 50;
-
-    HostileReference *ref = sServerFacade.GetThreatManager(target).getCurrentVictim();
-    const bool isTarget = ref && ref->getTarget() == bot;
 
     Unit* fleeTarget = nullptr;
     Group* group = bot->GetGroup();
@@ -2873,7 +2879,7 @@ bool JumpAction::DoJump(WorldPosition &dest, float angle, float vSpeed, float hS
         bot->m_movementInfo.AddMovementFlag(jumpBackward ? MOVEFLAG_BACKWARD : MOVEFLAG_FORWARD);
         WorldPacket move(jumpBackward ? MSG_MOVE_START_BACKWARD : MSG_MOVE_START_FORWARD);
 // write packet info
-#ifndef MANGOSBOT_ZERO
+#ifdef MANGOSBOT_TWO
         move << bot->GetObjectGuid().WriteAsPacked();
 #endif
         move << bot->m_movementInfo;
@@ -2895,11 +2901,15 @@ bool JumpAction::DoJump(WorldPosition &dest, float angle, float vSpeed, float hS
     sLog.outDetail("%s: Jump x: %f, y: %f, z: %f, time: %f, dist: %f, inPlace: %u, landTime: %u, curTime: %u", bot->GetName(), dest.getX(), dest.getY(), dest.getZ(), timeToLand, distanceToLand, jumpInPlace, jumpTime, curTime);
 
     // send jump packet
+#ifdef MANGOSBOT_ZERO
     bot->m_movementInfo.AddMovementFlag(MOVEFLAG_JUMPING);
+#else
+    bot->m_movementInfo.AddMovementFlag(MOVEFLAG_FALLING);
+#endif
 
     WorldPacket jump(MSG_MOVE_JUMP);
     // write packet info
-#ifndef MANGOSBOT_ZERO
+#ifdef MANGOSBOT_TWO
     jump << bot->GetObjectGuid().WriteAsPacked();
 #endif
     jump << bot->m_movementInfo;
