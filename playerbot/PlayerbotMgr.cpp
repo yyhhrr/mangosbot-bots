@@ -463,11 +463,11 @@ string PlayerbotHolder::ProcessBotCommand(string cmd, ObjectGuid guid, ObjectGui
     {
         Player* player = sObjectMgr.GetPlayer(guid);
         if (!player)
-            return "player is offline";
+            return "Player is offline";
 
         Player* master = sObjectMgr.GetPlayer(masterguid);
         uint32 guildId = Player::GetGuildIdFromDB(guid);
-        if (master && (isMasterAccount || sPlayerbotAIConfig.allowGuildBots && masterGuildId && guildId == masterGuildId))
+        if (master && (isMasterAccount || (sPlayerbotAIConfig.allowGuildBots && masterGuildId && guildId == masterGuildId) || admin))
         {
             if (isRandomAccount)
                 sRandomPlayerbotMgr.Remove(player);
@@ -475,6 +475,10 @@ string PlayerbotHolder::ProcessBotCommand(string cmd, ObjectGuid guid, ObjectGui
                 LogoutPlayerBot(guid.GetCounter());
             else
                 return "Not your bot";
+        }
+        else
+        {
+            return "Not in your guild or account";
         }
 
         return "ok";
