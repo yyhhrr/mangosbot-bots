@@ -624,7 +624,12 @@ bool RandomItemMgr::CanEquipArmor(uint8 clazz, uint8 spec, uint32 level, ItemPro
             ((clazz == CLASS_HUNTER || (clazz == CLASS_SHAMAN && spec != 21)) && level >= 40))
     {
         if (proto->SubClass != ITEM_SUBCLASS_ARMOR_MAIL && proto->InventoryType != INVTYPE_CLOAK)
+        {
+            if (spec == 22 && (proto->SubClass == ITEM_SUBCLASS_ARMOR_LEATHER || proto->SubClass == ITEM_SUBCLASS_ARMOR_CLOTH))
+                return true;
+
             return false;
+        }
     }
 
     if (((clazz == CLASS_HUNTER || clazz == CLASS_SHAMAN) && level < 40) ||
@@ -2210,19 +2215,99 @@ uint32 RandomItemMgr::CalculateEnchantWeight(uint8 playerclass, uint8 spec, uint
             {
                 if (spellInfo->Effect[j] != SPELL_EFFECT_APPLY_AURA)
                     continue;
-                if (spellInfo->EffectApplyAuraName[j] != SPELL_AURA_MOD_STAT)
-                    continue;
 
-                uint32 stat = spellInfo->EffectMiscValue[j];
-                uint32 value = spellInfo->EffectBasePoints[j] + 1;
+                if (spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_STAT)
+                {
+                    uint32 stat = spellInfo->EffectMiscValue[j];
+                    uint32 value = spellInfo->EffectBasePoints[j] + 1;
 
-                if (!value)
-                    continue;
+                    if (!value)
+                        continue;
 
-                if (ItemStatLink.find(stat) == ItemStatLink.end())
-                    continue;
+                    if (ItemStatLink.find(stat) == ItemStatLink.end())
+                        continue;
 
-                weight += CalculateSingleStatWeight(playerclass, spec, ItemStatLink[stat], value);
+                    weight += CalculateSingleStatWeight(playerclass, spec, ItemStatLink[stat], value);
+                }
+#ifdef MANGOSBOT_TWO
+                // spell damage
+                // SPELL_AURA_MOD_DAMAGE_DONE
+                if (spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_DAMAGE_DONE)
+                {                    
+                    uint32 spellDamage = spellInfo->EffectBasePoints[j] + 1;
+
+                    if (spellInfo->EffectMiscValue[j] == SPELL_SCHOOL_MASK_MAGIC)
+                    {
+                        weight += CalculateSingleStatWeight(playerclass, spec, "splpwr", spellDamage);
+                    }
+                    else
+                    {
+                        uint32 specialDamage = 0;
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_ARCANE) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "arcsplpwr", spellDamage);
+
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_FROST) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "frosplpwr", spellDamage);
+
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_FIRE) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "firsplpwr", spellDamage);
+
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_SHADOW) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "shasplpwr", spellDamage);
+
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_NATURE) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "natsplpwr", spellDamage);
+
+                        if (!specialDamage)
+                            return 0;
+
+                        weight += specialDamage;
+                    }
+                }
+#else
+                // spell damage
+                // SPELL_AURA_MOD_DAMAGE_DONE
+                if (spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_DAMAGE_DONE)
+                {
+                    uint32 spellDamage = spellInfo->EffectBasePoints[j] + 1;
+                    // generic spell damage
+                    if (spellInfo->EffectMiscValue[j] == SPELL_SCHOOL_MASK_MAGIC)
+                    {
+                        weight += CalculateSingleStatWeight(playerclass, spec, "splpwr", spellDamage);  
+                    }
+                    else
+                    {
+                        uint32 specialDamage = 0;
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_ARCANE) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "arcsplpwr", spellDamage);
+
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_FROST) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "frosplpwr", spellDamage);
+
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_FIRE) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "firsplpwr", spellDamage);
+
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_SHADOW) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "shasplpwr", spellDamage);
+
+                        if ((spellInfo->EffectMiscValue[j] & SPELL_SCHOOL_MASK_NATURE) != 0)
+                            specialDamage += CalculateSingleStatWeight(playerclass, spec, "natsplpwr", spellDamage);
+
+                        if (!specialDamage)
+                            return 0;
+
+                        weight += specialDamage;
+                    }
+                }
+                // spell healing
+                // SPELL_AURA_MOD_HEALING_DONE
+                if (spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HEALING_DONE)
+                {
+                    weight += CalculateSingleStatWeight(playerclass, spec, "splheal", spellInfo->EffectBasePoints[j] + 1);
+                }
+#endif
+
+                
             }
             break;
         }
