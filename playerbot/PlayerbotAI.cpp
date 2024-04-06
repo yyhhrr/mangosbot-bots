@@ -756,6 +756,11 @@ void PlayerbotAI::UpdateTalentSpec(PlayerTalentSpec spec)
     aiObjectContext->GetValue<PlayerTalentSpec>("talent spec")->Set(spec);
 }
 
+bool PlayerbotAI::CanEnterArea(const AreaTrigger* at)
+{
+    return sRandomPlayerbotMgr.IsRandomBot(GetBot());
+}
+
 bool PlayerbotAI::IsStateActive(BotState state) const
 {
     return currentEngine == engines[(uint8)state];
@@ -6001,6 +6006,7 @@ bool PlayerbotAI::CanMove()
         (sServerFacade.UnitIsDead(bot) && !bot->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST)) ||
         bot->IsBeingTeleported() ||
         bot->hasUnitState(UNIT_STAT_CAN_NOT_REACT_OR_LOST_CONTROL) ||
+        bot->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_CLIENT_CONTROL_LOST) ||
         IsJumping() ||
 #ifdef MANGOSBOT_ONE
         bot->IsFalling() ||
